@@ -19,16 +19,19 @@ This file contains the definition of `tensor_to_kronecker` and `kronecker_to_ten
 
 open_locale tensor_product big_operators kronecker
 
-def tensor_product.to_kronecker {R m n : Type*} [comm_semiring R] [fintype m] [fintype n]
-  [decidable_eq m] [decidable_eq n] :
+section
+
+variables {R m n : Type*} [comm_semiring R]
+  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n]
+
+def tensor_product.to_kronecker :
   (matrix m m R ⊗[R] matrix n n R) →ₗ[R] matrix (m × n) (m × n) R :=
 { to_fun := λ x ij kl, (matrix_equiv_tensor _ _ _).symm x ij.2 kl.2 ij.1 kl.1,
   map_add' := λ x y, by { simp_rw [alg_equiv.map_add, dmatrix.add_apply], refl, },
   map_smul' := λ r x, by { simp only [alg_equiv.map_smul, pi.smul_apply, algebra.id.smul_eq_mul,
     ring_hom.id_apply], refl, } }
 
-lemma tensor_product.to_kronecker_apply {R m n : Type*} [comm_semiring R] [fintype m] [fintype n]
-  [decidable_eq m] [decidable_eq n] (x : matrix m m R) (y : matrix n n R) :
+lemma tensor_product.to_kronecker_apply (x : matrix m m R) (y : matrix n n R) :
   (x ⊗ₜ[R] y).to_kronecker = x ⊗ₖ y :=
 begin
   simp_rw [tensor_product.to_kronecker, linear_map.coe_mk, matrix_equiv_tensor_apply_symm,
@@ -38,29 +41,25 @@ begin
   refl,
 end
 
-def matrix.kronecker_to_tensor_product {R m n : Type*} [comm_semiring R] [fintype m] [fintype n]
-  [decidable_eq m] [decidable_eq n] :
+def matrix.kronecker_to_tensor_product :
   matrix (m × n) (m × n) R →ₗ[R] (matrix m m R ⊗[R] matrix n n R) :=
 { to_fun := λ x, (matrix_equiv_tensor _ (matrix m m R) n) (λ i j k l, x (k, i) (l, j)),
   map_add' := λ x y, by { simp_rw [dmatrix.add_apply, ← alg_equiv.map_add], refl, },
   map_smul' := λ r x, by { simp_rw [pi.smul_apply, ← alg_equiv.map_smul, ring_hom.id_apply],
     refl, } }
 
-lemma tensor_product.to_kronecker_to_tensor_product {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] (x : matrix m m R ⊗[R] matrix n n R) :
+lemma tensor_product.to_kronecker_to_tensor_product (x : matrix m m R ⊗[R] matrix n n R) :
   x.to_kronecker.kronecker_to_tensor_product = x :=
 begin
   simp_rw [tensor_product.to_kronecker, matrix.kronecker_to_tensor_product, linear_map.coe_mk,
     alg_equiv.apply_symm_apply],
 end
 
-lemma matrix.kronecker_to_tensor_product_apply {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] (x : matrix m m R) (y : matrix n n R) :
+lemma matrix.kronecker_to_tensor_product_apply (x : matrix m m R) (y : matrix n n R) :
   (x ⊗ₖ y).kronecker_to_tensor_product = x ⊗ₜ[R] y :=
 by rw [← tensor_product.to_kronecker_apply, tensor_product.to_kronecker_to_tensor_product]
 
-lemma matrix.kronecker_to_tensor_product_to_kronecker {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] (x : matrix (m × n) (m × n) R) :
+lemma matrix.kronecker_to_tensor_product_to_kronecker (x : matrix (m × n) (m × n) R) :
   x.kronecker_to_tensor_product.to_kronecker = x :=
 by simp_rw [matrix.kronecker_to_tensor_product, tensor_product.to_kronecker,
   linear_map.coe_mk, alg_equiv.symm_apply_apply, prod.mk.eta]
@@ -93,13 +92,11 @@ end
 
 open matrix
 
-lemma matrix.kronecker_eq_sum_std_basis {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] (x : matrix (m × n) (m × n) R) :
+lemma matrix.kronecker_eq_sum_std_basis (x : matrix (m × n) (m × n) R) :
   x = ∑ i j k l, x (i,k) (j,l) • (std_basis_matrix i j 1 ⊗ₖ std_basis_matrix k l 1) :=
 kmul_representation _
 
-lemma tensor_product.matrix_eq_sum_std_basis {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] (x : matrix m m R ⊗[R] matrix n n R) :
+lemma tensor_product.matrix_eq_sum_std_basis (x : matrix m m R ⊗[R] matrix n n R) :
   x = ∑ i j k l,
     x.to_kronecker (i,k) (j,l) • (std_basis_matrix i j 1 ⊗ₜ std_basis_matrix k l 1) :=
 begin
@@ -123,8 +120,7 @@ begin
     ... = x : tensor_product.to_kronecker_to_tensor_product _,
 end
 
-lemma tensor_product.to_kronecker_mul {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n]
+lemma tensor_product.to_kronecker_mul
   (x y : matrix m m R ⊗[R] matrix n n R) :
   (x * y).to_kronecker = x.to_kronecker ⬝ y.to_kronecker :=
 begin
@@ -136,8 +132,7 @@ begin
   rw [← x.to_kronecker.kronecker_eq_sum_std_basis, ← y.to_kronecker.kronecker_eq_sum_std_basis],
 end
 
-lemma matrix.kronecker_to_tensor_product_mul {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n]
+lemma matrix.kronecker_to_tensor_product_mul
   (x y : matrix m m R) (z w : matrix n n R) :
   ((x ⊗ₖ z) ⬝ (y ⊗ₖ w)).kronecker_to_tensor_product
     = (x ⊗ₖ z).kronecker_to_tensor_product * (y ⊗ₖ w).kronecker_to_tensor_product :=
@@ -146,8 +141,7 @@ begin
     algebra.tensor_product.tmul_mul_tmul, matrix.mul_eq_mul],
 end
 
-def tensor_to_kronecker {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] :
+def tensor_to_kronecker :
   (matrix m m R ⊗[R] matrix n n R) ≃ₐ[R] (matrix (m × n) (m × n) R) :=
 { to_fun := tensor_product.to_kronecker,
   inv_fun := matrix.kronecker_to_tensor_product,
@@ -158,7 +152,22 @@ def tensor_to_kronecker {R m n : Type*} [comm_semiring R]
   commutes' := λ r, by { simp_rw [algebra.algebra_map_eq_smul_one, smul_hom_class.map_smul],
     rw [algebra.tensor_product.one_def, tensor_product.to_kronecker_apply, one_kronecker_one], } }
 
-def kronecker_to_tensor {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] :
+def kronecker_to_tensor :
   matrix (m × n) (m × n) R ≃ₐ[R] (matrix m m R ⊗[R] matrix n n R) :=
 tensor_to_kronecker.symm
+
+lemma kronecker_to_tensor_to_linear_map_eq :
+  (kronecker_to_tensor : matrix (n × m) (n × m) R ≃ₐ[R] _).to_linear_map
+    = (kronecker_to_tensor_product
+      : matrix (n × m) (n × m) R →ₗ[R] matrix n n R ⊗[R] matrix m m R) :=
+rfl
+
+end
+
+lemma tensor_to_kronecker_to_linear_map_eq {R m n : Type*} [comm_semiring R]
+  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] :
+  (tensor_to_kronecker
+    : (matrix m m R ⊗[R] matrix n n R) ≃ₐ[R] matrix (m × n) (m × n) R).to_linear_map
+  = (tensor_product.to_kronecker
+    : (matrix m m R ⊗[R] matrix n n R) →ₗ[R] matrix (m × n) (m × n) R) :=
+rfl

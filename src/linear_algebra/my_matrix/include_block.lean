@@ -8,6 +8,17 @@ import linear_algebra.matrix.trace
 import data.matrix.basis
 import preq.dite
 import linear_algebra.matrix.hermitian
+import linear_algebra.my_tensor_product
+
+/-!
+
+# Include block
+
+ This file defines `matrix.include_block` which immitates `direct_sum.component_of` but for `pi` instead of `direct_sum` :TODO:
+
+ The direct sum in these files are sort of misleading.
+
+-/
 
 namespace matrix
 
@@ -432,4 +443,39 @@ begin
     simp only [h, false_and, not_false_iff], },
 end
 
+lemma include_block_mul_include_block  {R k : Type*} [comm_semiring R] [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {i j : k} (x : matrix (s i) (s i) R) (y : matrix (s j) (s j) R) :
+  (include_block x) * (include_block y) =
+    dite (j = i) (λ h, include_block (x * (by { rw ← h, exact y, }))) (λ h, 0) :=
+begin
+  ext1,
+  simp [include_block, dite_mul, mul_dite, mul_zero, zero_mul, dite_apply, pi.zero_apply],
+  split_ifs; finish,
+end
+
 end matrix
+
+variables {R k : Type*} [comm_semiring R] [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+local notation x ` ⊗ₘ ` y := tensor_product.map x y
+local notation `ℍ₂` := (Π i, matrix (s i) (s i) R)
+local notation `ℍ_ `i := matrix (s i) (s i) R
+
+open matrix
+
+lemma tensor_product.assoc_include_block
+  {i j : k} :
+  ↑(tensor_product.assoc R ℍ₂ ℍ₂ ℍ₂).symm ∘ₗ
+    ((include_block : (ℍ_ i) →ₗ[R] ℍ₂)
+      ⊗ₘ ((include_block : (ℍ_ j) →ₗ[R] ℍ₂) ⊗ₘ (include_block : (ℍ_ j) →ₗ[R] ℍ₂)))
+  =
+   (((include_block : (ℍ_ i) →ₗ[R] ℍ₂)
+      ⊗ₘ ((include_block : (ℍ_ j) →ₗ[R] ℍ₂))) ⊗ₘ (include_block : (ℍ_ j) →ₗ[R] ℍ₂)) ∘ₗ
+    ↑(tensor_product.assoc R (ℍ_ i) (ℍ_ j) (ℍ_ j)).symm :=
+begin
+  apply tensor_product.ext_threefold',
+  intros x y z,
+  simp only [linear_map.comp_apply, linear_equiv.coe_coe, tensor_product.assoc_symm_tmul,
+    tensor_product.map_tmul],
+end
