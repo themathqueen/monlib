@@ -28,10 +28,32 @@ begin
     (equiv.injective _)],
 end
 
+def multiset.of_list {α : Type*} : list α → multiset α :=
+  quot.mk _
+
+-- instance {α : Type*} : has_coe (list α) (multiset α) :=
+--   ⟨of_list⟩
+
 namespace matrix
+
+open_locale matrix
 
 variables {n 𝕜 : Type*} [is_R_or_C 𝕜] [fintype n] [decidable_eq n]
 
+-- example {n : ℕ} {A₁ : fin n → 𝕜} :
+--   (multiset.of_list (list.of_fn A₁)) =
+
+-- def eq_sets_with_multiplicities {n : ℕ} [decidable_eq 𝕜] (A₁ A₂ : fin n → 𝕜) :
+--   -- (∀ (x : 𝕜), (∃ (i : fin n), A₁ i = x) ↔ ∃ (i : fin n), A₂ i = x)
+--   -- ∧
+--   -- -- (multiset.of_list (list.of_fn A₁))
+--   ∀ i, multiset.count (finset.univ.val.map A₁) i = multiset.count (finset.univ.val.map A₂) i :=
+-- begin
+  
+--   simp only [finset.univ],
+-- end
+
+/-- TODO: change this to say equal spectra with same multiplicities. -/
 lemma is_diagonal.spectrum_eq_iff_rotation [decidable_eq 𝕜]
   (A₁ A₂ : n → 𝕜) :
   spectrum 𝕜 (diagonal A₁ : matrix n n 𝕜).to_lin'
@@ -51,7 +73,32 @@ begin
       set.mem_set_of_eq],
     intros h,
     simp_rw [ite_eq_iff', @eq_comm _ _ (ite _ _ _), ite_eq_iff', eq_self_iff_true,
-      imp_true_iff, and_true],
+      imp_true_iff, and_true, forall_and_distrib],
+    let H : ∀ i j, ((i = j → ¬i = j → 0 = A₂ i) ↔ true),
+    { intros i j,
+      split,
+      { simp_rw [imp_true_iff], },
+      { intros H h1 h2,
+        contradiction, }, },
+    simp only [H, and_true],
+    have H' : ∀ (U : equiv.perm n) i j, (¬i = j → i = j → A₁ ((equiv.symm U) i) = 0) ↔ true,
+    { intros U i j,
+      split,
+      { simp_rw [imp_true_iff], },
+      { intros H h1 h2,
+        contradiction, }, },
+    simp only [H', and_true],
+    clear H H',
+    have : ∀ (U : equiv.perm n), (∀ (i j : n), (i = j → i = j → A₁ ((equiv.symm U) i) = A₂ i)) ↔
+       (∀ i, A₁ (equiv.symm U i) = A₂ i),
+    { intros U,
+      split,
+      { intros h i,--intros U i j,
+        exact h i i rfl rfl, },
+      { intros h i j h1 h2,
+        exact h _, }, },
+    simp only [this],
+    clear this,
     sorry, },
   { rintros ⟨U, hU⟩,
     simp_rw [hU, inner_aut.spectrum_eq], },
