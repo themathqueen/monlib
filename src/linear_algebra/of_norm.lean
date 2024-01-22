@@ -182,7 +182,9 @@ begin
 end
 
 section fromMathlib4
--- mimicking (and copying) the `Mathlib4` code on `InnerProductSpace.ofNorm` for addition and also scalar multiplication
+/-!
+  In this section we show the addition property and scalar-multiplication property by mimicking (and copying) the `Mathlib4` code on `InnerProductSpace.ofNorm`.
+-/
 
 private theorem add_left_aux1
   (h : ∀ x y : X, ‖x + y‖ * ‖x + y‖ + ‖x - y‖ * ‖x - y‖ = 2 * (‖x‖ * ‖x‖ + ‖y‖ * ‖y‖)) (x y z : X) :

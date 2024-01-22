@@ -40,6 +40,19 @@ open_locale matrix
 
 variables {n 𝕜 : Type*} [is_R_or_C 𝕜] [fintype n] [decidable_eq n]
 
+noncomputable def is_hermitian.eigenvalues_multiset [decidable_eq 𝕜]
+  {A : matrix n n 𝕜} (hA : A.is_hermitian) :
+  multiset ℝ :=
+multiset.of_list (list.of_fn (hA.eigenvalues₀))
+
+-- example [decidable_eq 𝕜]
+--   {A B : matrix n n 𝕜} (hA : A.is_hermitian) (hB : B.is_hermitian) :
+--   hA.eigenvalues_multiset = hB.eigenvalues_multiset :=
+-- begin
+--   ext,
+--   congr,
+-- end
+
 -- example {n : ℕ} {A₁ : fin n → 𝕜} :
 --   (multiset.of_list (list.of_fn A₁)) =
 
