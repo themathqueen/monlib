@@ -417,3 +417,71 @@ noncomputable def inner_product_spacce.of_norm
   smul_left := λ r x y, inner_def_smul_left h _ _ _ }
 
 end of_norm
+
+open_locale complex_conjugate
+
+def is_continuous_linear_map (𝕜 : Type*) [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] (f : E → F) : Prop :=
+is_linear_map 𝕜 f ∧ continuous f
+
+def is_continuous_linear_map.mk' {𝕜 : Type*} [normed_field 𝕜] {E : Type*}
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] (f : E → F) (h : is_continuous_linear_map 𝕜 f) :
+  E →L[𝕜] F :=
+⟨h.1.mk' f, h.2⟩
+
+lemma is_bounded_linear_map_iff_is_continuous_linear_map {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] (f : E → F) :
+  is_bounded_linear_map 𝕜 f ↔ is_continuous_linear_map 𝕜 f :=
+begin
+  refine ⟨λ h, ⟨is_bounded_linear_map.to_is_linear_map h, is_bounded_linear_map.continuous h⟩, λ h, _⟩,
+  let f' : E →L[𝕜] F := ⟨h.1.mk' f, h.2⟩,
+  exact f'.is_bounded_linear_map,
+end
+
+private lemma linear_map.is_bounded_linear_map_iff_is_continuous {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] (f : E →ₗ[𝕜] F) :
+  is_bounded_linear_map 𝕜 f ↔ continuous f :=
+begin
+  rw [is_bounded_linear_map_iff_is_continuous_linear_map, is_continuous_linear_map],
+  simp only [and_iff_right_iff_imp, f.is_linear, implies_true_iff],
+end
+
+lemma is_bounded_linear_map.def {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] {f : E → F} :
+  is_bounded_linear_map 𝕜 f ↔ (is_linear_map 𝕜 f ∧ (∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖)) :=
+⟨λ h, ⟨h.1, h.2⟩, λ h, ⟨h.1, h.2⟩⟩
+
+lemma linear_map.with_bound_iff_is_continuous {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] {f : E →ₗ[𝕜] F} :
+  (∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖) ↔ continuous f :=
+begin
+  have := @is_bounded_linear_map_iff_is_continuous_linear_map 𝕜 _ _ _ _ _ _ _ f,
+  simp only [is_bounded_linear_map.def, is_continuous_linear_map, and.congr_right_iff,
+    f.is_linear, true_implies_iff] at this,
+  exact this,
+end
+
+lemma linear_map.ker_coe_def {R E F : Type*} [semiring R] [add_comm_monoid E]
+  [add_comm_monoid F] [module R E] [module R F] {f : E →ₗ[R] F} :
+  (f.ker : set E) = {x : E | f x = 0} := 
+rfl
+
+lemma exists_dual_vector_of_ne {X : Type*} [normed_add_comm_group X]
+  [normed_space 𝕜 X] {x y : X} (h : x ≠ y) :
+  ∃ f : normed_space.dual 𝕜 X, f x ≠ f y :=
+begin
+  rw [ne.def, ← sub_eq_zero] at h,
+  obtain ⟨f, ⟨hf, hxy⟩⟩ := @exists_dual_vector 𝕜 _ X _ _ _ h,
+  rw [map_sub] at hxy,
+  use f,
+  intros H,
+  rw [H, sub_self, eq_comm, is_R_or_C.of_real_eq_zero, norm_eq_zero] at hxy,
+  contradiction,
+end
+
