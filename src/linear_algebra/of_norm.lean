@@ -520,34 +520,23 @@ open_locale classical topology big_operators nnreal
 
 lemma is_continuous_linear_map.of_inner_symmetric_fun {X : Type*} [normed_add_comm_group X] [inner_product_space 𝕜 X]
   [complete_space X] {f : X → X}
-  (h : ∀ a b : X, (inner a (f b) : 𝕜) = inner (f a) b) :
+  (h : ∀ a b : X, (inner (f a) b : 𝕜) = inner a (f b)) :
   is_continuous_linear_map 𝕜 f :=
 begin
   have : is_linear_map 𝕜 f :=
   { map_add := λ x y, by
     { apply @ext_inner_right 𝕜,
       intros z,
-      simp_rw [← h, inner_add_left, h], },
+      simp_rw [h, inner_add_left, h], },
     map_smul := λ r x, by
     { apply @ext_inner_right 𝕜,
       intros z,
-      simp_rw [← h, inner_smul_left, h], } },
+      simp_rw [h, inner_smul_left, h], } },
   let f' : X →ₗ[𝕜] X := is_linear_map.mk' _ this,
   have : f = f' := rfl,
   simp only [this] at *,
   clear this,
-  simp_rw [is_continuous_linear_map, linear_map.is_linear, true_and],
-  apply linear_map.continuous_of_seq_closed_graph,
-  intros u x y hu hfu,
-  rw [← sub_eq_zero, ← @inner_self_eq_zero 𝕜],
-  have hlhs : ∀ k : ℕ, (inner (f' (u k) - f' x) (y - f' x) : 𝕜) = inner (u k - x) (f' (y - f' x)) :=
-  by { intro k, rw [←f'.map_sub, h] },
-  refine tendsto_nhds_unique ((hfu.sub_const _).inner tendsto_const_nhds) _,
-  simp_rw [hlhs],
-  rw ← inner_zero_left (f' (y - f' x)),
-  apply filter.tendsto.inner _ tendsto_const_nhds,
-  rw ← sub_self x,
-  exact (hu.sub_const x),
+  exact ⟨f'.is_linear, linear_map.is_symmetric.continuous h⟩,
 end
 
 structure is_bilinear_map (𝕜 : Type*) [normed_field 𝕜]
