@@ -401,6 +401,10 @@ begin
   ring,
 end
 
+/-!
+ End of section from `Mathlib4`.
+-/
+
 end fromMathlib4
 
 noncomputable def inner_product_spacce.of_norm
@@ -427,9 +431,15 @@ is_linear_map 𝕜 f ∧ continuous f
 
 def is_continuous_linear_map.mk' {𝕜 : Type*} [normed_field 𝕜] {E : Type*}
   [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
-  [normed_space 𝕜 F] (f : E → F) (h : is_continuous_linear_map 𝕜 f) :
+  [normed_space 𝕜 F] {f : E → F} (h : is_continuous_linear_map 𝕜 f) :
   E →L[𝕜] F :=
 ⟨h.1.mk' f, h.2⟩
+
+lemma is_continuous_linear_map.coe_mk' {𝕜 : Type*} [normed_field 𝕜] {E : Type*}
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] {f : E → F} (h : is_continuous_linear_map 𝕜 f) :
+  f = h.mk' :=
+rfl
 
 lemma is_bounded_linear_map_iff_is_continuous_linear_map {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
   [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
@@ -450,16 +460,21 @@ begin
   simp only [and_iff_right_iff_imp, f.is_linear, implies_true_iff],
 end
 
+def with_bound (𝕜 : Type*) {E : Type*} [normed_field 𝕜]
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] (f : E → F) : Prop :=
+∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖
+
 lemma is_bounded_linear_map.def {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
   [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
   [normed_space 𝕜 F] {f : E → F} :
-  is_bounded_linear_map 𝕜 f ↔ (is_linear_map 𝕜 f ∧ (∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖)) :=
+  is_bounded_linear_map 𝕜 f ↔ (is_linear_map 𝕜 f ∧ with_bound 𝕜 f) :=
 ⟨λ h, ⟨h.1, h.2⟩, λ h, ⟨h.1, h.2⟩⟩
 
 lemma linear_map.with_bound_iff_is_continuous {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
   [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
   [normed_space 𝕜 F] {f : E →ₗ[𝕜] F} :
-  (∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖) ↔ continuous f :=
+  with_bound 𝕜 f ↔ continuous f :=
 begin
   have := @is_bounded_linear_map_iff_is_continuous_linear_map 𝕜 _ _ _ _ _ _ _ f,
   simp only [is_bounded_linear_map.def, is_continuous_linear_map, and.congr_right_iff,
@@ -484,4 +499,223 @@ begin
   rw [H, sub_self, eq_comm, is_R_or_C.of_real_eq_zero, norm_eq_zero] at hxy,
   contradiction,
 end
+
+lemma is_linear_map_zero (R : Type*) {E F : Type*} [comm_semiring R]
+  [add_comm_monoid E] [module R E] [add_comm_monoid F] [module R F] :
+  is_linear_map R (0 : E → F) :=
+begin
+  fconstructor;
+  simp only [pi.zero_apply, smul_zero, add_zero];
+  intros;
+  trivial,
+end
+
+lemma is_continuous_linear_map_zero {𝕜 E : Type*} [normed_field 𝕜]
+  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
+  [normed_space 𝕜 F] :
+  is_continuous_linear_map 𝕜 (0 : E → F) :=
+⟨is_linear_map_zero 𝕜, continuous_zero⟩
+
+open_locale classical topology big_operators nnreal
+
+lemma is_continuous_linear_map.of_inner_symmetric_fun {X : Type*} [normed_add_comm_group X] [inner_product_space 𝕜 X]
+  [complete_space X] {f : X → X}
+  (h : ∀ a b : X, (inner a (f b) : 𝕜) = inner (f a) b) :
+  is_continuous_linear_map 𝕜 f :=
+begin
+  have : is_linear_map 𝕜 f :=
+  { map_add := λ x y, by
+    { apply @ext_inner_right 𝕜,
+      intros z,
+      simp_rw [← h, inner_add_left, h], },
+    map_smul := λ r x, by
+    { apply @ext_inner_right 𝕜,
+      intros z,
+      simp_rw [← h, inner_smul_left, h], } },
+  let f' : X →ₗ[𝕜] X := is_linear_map.mk' _ this,
+  have : f = f' := rfl,
+  simp only [this] at *,
+  clear this,
+  simp_rw [is_continuous_linear_map, linear_map.is_linear, true_and],
+  apply linear_map.continuous_of_seq_closed_graph,
+  intros u x y hu hfu,
+  rw [← sub_eq_zero, ← @inner_self_eq_zero 𝕜],
+  have hlhs : ∀ k : ℕ, (inner (f' (u k) - f' x) (y - f' x) : 𝕜) = inner (u k - x) (f' (y - f' x)) :=
+  by { intro k, rw [←f'.map_sub, h] },
+  refine tendsto_nhds_unique ((hfu.sub_const _).inner tendsto_const_nhds) _,
+  simp_rw [hlhs],
+  rw ← inner_zero_left (f' (y - f' x)),
+  apply filter.tendsto.inner _ tendsto_const_nhds,
+  rw ← sub_self x,
+  exact (hu.sub_const x),
+end
+
+structure is_bilinear_map (𝕜 : Type*) [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G] (f : E × F → G) : Prop :=
+(add_left : ∀ (x₁ x₂ : E) (y : F), f (x₁ + x₂, y) = f (x₁, y) + f (x₂, y))
+(smul_left : ∀ (c : 𝕜) (x : E) (y : F), f (c • x, y) = c • f (x, y))
+(add_right : ∀ (x : E) (y₁ y₂ : F), f (x, y₁ + y₂) = f (x, y₁) + f (x, y₂))
+(smul_right : ∀ (c : 𝕜) (x : E) (y : F), f (x, c • y) = c • f (x, y))
+
+def is_left_linear_map (𝕜 : Type*) [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  (f : E × F → G) :
+  Prop :=
+∀ b : F, is_linear_map 𝕜 (λ a, f (a, b))
+lemma is_left_linear_map_iff {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} :
+  is_left_linear_map 𝕜 f ↔ ∀ b : F, is_linear_map 𝕜 (λ a, f (a, b)) :=
+iff.rfl
+def is_right_linear_map (𝕜 : Type*) [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  (f : E × F → G) :
+  Prop :=
+∀ a : E, is_linear_map 𝕜 (λ b, f (a, b))
+lemma is_right_linear_map_iff {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} :
+  is_right_linear_map 𝕜 f ↔ ∀ a : E, is_linear_map 𝕜 (λ b, f (a, b)) :=
+iff.rfl
+
+lemma is_bilinear_map_iff_is_linear_map_left_right
+  {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} :
+  is_bilinear_map 𝕜 f ↔
+    is_left_linear_map 𝕜 f ∧ is_right_linear_map 𝕜 f :=
+begin
+  split,
+  { introsI hf,
+    split,
+    { intros x,
+      exact ⟨λ y z, hf.add_left y z x, λ r a, hf.smul_left r a x⟩, },
+    { intros x,
+      exact ⟨λ y z, hf.add_right x y z, λ r a, hf.smul_right r x a⟩, } },
+  { rintros ⟨h1, h2⟩,
+    fconstructor,
+    { intros x₁ x₂ y,
+      exact (h1 y).map_add _ _, },
+    { intros r x y,
+      exact (h1 y).map_smul _ _, },
+    { intros y x₁ x₂,
+      exact (h2 y).map_add _ _, },
+    { intros r x y,
+      exact (h2 x).map_smul _ _, }, },
+end
+def is_bilinear_map.to_lm_lm {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} (hf : is_bilinear_map 𝕜 f) :
+  E →ₗ[𝕜] (F →ₗ[𝕜] G) :=
+{ to_fun := λ x, 
+  { to_fun := λ y, f (x,y),
+    map_add' := λ y z, hf.add_right x _ _,
+    map_smul' := λ r y, hf.smul_right r x y, },
+  map_add' := λ y z, by {
+    ext,
+    simp only [linear_map.add_apply],
+    exact hf.add_left y z x, },
+  map_smul' := λ r z, by { ext,
+    simp only [linear_map.smul_apply],
+    exact hf.smul_left r z x, } }
+def is_lm_left_is_clm_right.to_lm_clm {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} 
+  (hf₁ : ∀ y, is_linear_map 𝕜 (λ a, f (a, y)))
+  (hf₂ : ∀ x, is_continuous_linear_map 𝕜 (λ a, f (x, a))) :
+  E →ₗ[𝕜] (F →L[𝕜] G) :=
+{ to_fun := λ x, (hf₂ x).mk',
+  map_add' := λ y z, by {
+    ext,
+    simp only [continuous_linear_map.add_apply],
+    exact (hf₁ x).map_add _ _, },
+  map_smul' := λ r z, by { ext,
+    exact (hf₁ x).map_smul _ _, } }
+
+lemma is_bilinear_map.zero_left {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} (h : is_bilinear_map 𝕜 f) (y : F) :
+  f (0, y) = 0 :=
+begin
+  simp only [is_bilinear_map_iff_is_linear_map_left_right] at h,
+  exact (h.1 y).map_zero,
+end
+lemma is_bilinear_map.zero_right {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} (h : is_bilinear_map 𝕜 f) (x : E) :
+  f (x, 0) = 0 :=
+begin
+  simp only [is_bilinear_map_iff_is_linear_map_left_right] at h,
+  exact (h.2 x).map_zero,
+end
+lemma is_bilinear_map.eq_zero_add_self {𝕜 : Type*} [normed_field 𝕜]
+  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
+  {f : E × F → G} (h : is_bilinear_map 𝕜 f) (xy : E × F) :
+  f xy = f (xy.1, 0) + f xy :=
+by simp_rw [h.zero_right, zero_add]
+
+open_locale complex_order
+
+lemma is_continuous_linear_map.to_is_lm
+  {𝕜 X Y : Type*} [normed_field 𝕜] [normed_add_comm_group X]
+  [normed_add_comm_group Y]
+  [normed_space 𝕜 X] [normed_space 𝕜 Y]
+  [complete_space X] [complete_space Y] 
+  {β : X → Y} (hf : is_continuous_linear_map 𝕜 β) :
+  is_linear_map 𝕜 β :=
+hf.1
+
+lemma continuous_linear_map.op_norm_le_iff
+  {𝕜 X Y : Type*} [nontrivially_normed_field 𝕜]
+  [normed_add_comm_group X]
+  [normed_add_comm_group Y]
+  [normed_space 𝕜 X] [normed_space 𝕜 Y]
+  [complete_space X] [complete_space Y]
+  (f : X →L[𝕜] Y) {r : ℝ} (hr : 0 ≤ r) :
+  ‖f‖ ≤ r ↔ ∀ x, ‖f x‖ ≤ r * ‖x‖ :=
+begin
+  split,
+  { intros hf x,
+    exact f.le_of_op_norm_le hf _, },
+  { intros h,
+    exact f.op_norm_le_bound hr h, },
+end
+
+example --is_continuous_bilinear_map_norm_of_clm
+  {𝕜 X Y Z : Type*} [is_R_or_C 𝕜]
+  [normed_add_comm_group X]
+  [normed_add_comm_group Y] [normed_add_comm_group Z]
+  [normed_space 𝕜 X] [normed_space 𝕜 Y] [normed_space 𝕜 Z]
+  [complete_space X] [complete_space Y] [complete_space Z]
+  (β : X →L[𝕜] (Y →L[𝕜] Z)) :
+  ∃ (M : ℝ), ∀ x y, ‖β x y‖ ≤ M * ‖x‖ * ‖y‖ :=
+begin
+  use ‖β‖,
+  intros x y,
+  apply continuous_linear_map.le_of_op_norm_le,
+  exact continuous_linear_map.le_op_norm _ _,
+end
+
 
