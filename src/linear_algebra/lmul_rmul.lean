@@ -151,35 +151,13 @@ lemma linear_map.mul_right_sum {R : Type*} {A : Type*} [comm_semiring R]
   ∑ i : n in s, linear_map.mul_right R (x i) = linear_map.mul_right R (∑ i : n in s, x i) :=
 (linear_map.map_sum rmul).symm
 
-lemma lmul_eq_zero_iff [no_zero_divisors H₁] (x : H₁) :
+lemma lmul_eq_zero_iff {H₁ : Type*} [semiring H₁] [algebra R H₁] (x : H₁) :
   (lmul x : l(R, H₁)) = 0 ↔ x = 0 :=
-begin
-  simp_rw [linear_map.ext_iff, lmul_apply, linear_map.zero_apply, mul_eq_zero,
-    forall_or_distrib_left],
-  refine ⟨λ h, _, λ h, or.inl h⟩,
-  cases h,
-  { exact h, },
-  { exact h _, },
-end
+linear_map.mul_left_eq_zero_iff _
 
-lemma linear_map.mul_left_eq_zero_iff' [no_zero_divisors H₁] (x : H₁) :
-  linear_map.mul_left R x = 0 ↔ x = 0 :=
-lmul_eq_zero_iff _
-
-lemma rmul_eq_zero_iff [no_zero_divisors H₁] (x : H₁) :
+lemma rmul_eq_zero_iff {H₁ : Type*} [semiring H₁] [algebra R H₁] (x : H₁) :
   (rmul x : l(R, H₁)) = 0 ↔ x = 0 :=
-begin
-  simp_rw [linear_map.ext_iff, rmul_apply, linear_map.zero_apply, mul_eq_zero,
-    forall_or_distrib_right],
-  refine ⟨λ h, _, λ h, or.inr h⟩,
-  cases h,
-  { exact h _, },
-  { exact h, },
-end
-
-lemma linear_map.mul_right_eq_zero_iff' [no_zero_divisors H₁] (x : H₁) :
-  linear_map.mul_right R x = 0 ↔ x = 0 :=
-rmul_eq_zero_iff _
+linear_map.mul_right_eq_zero_iff _
 
 lemma lmul_eq_one_iff {H₁ : Type*} [non_assoc_semiring H₁] [module R H₁]
   [smul_comm_class R H₁ H₁] [is_scalar_tower R H₁ H₁] (x : H₁) :
@@ -213,9 +191,7 @@ lemma linear_map.mul_right_eq_one_iff {H₁ : Type*} [non_assoc_semiring H₁] [
   linear_map.mul_right R x = 1 ↔ x = 1 :=
 rmul_eq_one_iff _
 
-lemma linear_map.mul_left_eq_one_or_zero_iff_mul_right_tfae {H₁ : Type*} [non_assoc_semiring H₁] [module R H₁]
-  [smul_comm_class R H₁ H₁] [is_scalar_tower R H₁ H₁]
-  [no_zero_divisors H₁]
+lemma linear_map.mul_left_eq_one_or_zero_iff_mul_right_tfae {H₁ : Type*} [semiring H₁] [algebra R H₁]
   (x : H₁) (p : Prop) [decidable p] :
   tfae [linear_map.mul_left R x = ite p 1 0,
     linear_map.mul_right R x = ite p 1 0,
@@ -224,14 +200,13 @@ begin
   by_cases p,
   { simp_rw [h, if_true, linear_map.mul_left_eq_one_iff, linear_map.mul_right_eq_one_iff],
     tfae_finish, },
-  { simp_rw [h, if_false, linear_map.mul_left_eq_zero_iff', linear_map.mul_right_eq_zero_iff'],
+  { simp_rw [h, if_false, linear_map.mul_left_eq_zero_iff, linear_map.mul_right_eq_zero_iff],
     tfae_finish, },
 end
-lemma linear_map.mul_left_eq_one_or_zero_iff_mul_right {H₁ : Type*} [non_assoc_semiring H₁] [module R H₁]
-  [smul_comm_class R H₁ H₁] [is_scalar_tower R H₁ H₁]
-  [no_zero_divisors H₁] (x : H₁) (p : Prop) [decidable p] :
+lemma linear_map.mul_left_eq_one_or_zero_iff_mul_right {H₁ : Type*}
+  [semiring H₁] [algebra R H₁] (x : H₁) (p : Prop) [decidable p] :
   linear_map.mul_left R x = ite p 1 0 ↔ linear_map.mul_right R x = ite p 1 0 :=
-list.tfae.out (@linear_map.mul_left_eq_one_or_zero_iff_mul_right_tfae R _ H₁ _ _ _ _ _ x p _) 0 1
+list.tfae.out (@linear_map.mul_left_eq_one_or_zero_iff_mul_right_tfae R _ H₁ _ _ x p _) 0 1
 
 
 lemma linear_map.mul_right_smul (x : H₁) (α : R) :

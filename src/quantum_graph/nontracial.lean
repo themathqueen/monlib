@@ -901,8 +901,8 @@ begin
       exact h, },
     { rw [h],
       simp_rw [← linear_map.star_eq_adjoint, star_ite, star_one, star_zero], }, },
-  simp_rw [t3, linear_map.mul_left_sum, linear_map.mul_left_eq_one_or_zero_iff_mul_right,
-    linear_map.mul_right_sum],
+  simp_rw [t3, linear_map.mul_left_sum, linear_map.mul_right_sum,
+    linear_map.mul_left_eq_one_or_zero_iff_mul_right],
 end
 
 lemma qam.real_of_self_adjoint_symm (A : ℍ →ₗ[ℂ] ℍ)

@@ -258,7 +258,7 @@ begin
   letI := hφ.elim.matrix_is_pos_def.invertible,
   have : linear_map.mul_left ℂ φ.matrix (star (x : ℍ)) = linear_map.mul_left ℂ φ.matrix 0,
   { simp_rw [linear_map.mul_left_apply, h, mul_zero], },
-  simp_rw [linear_map.mul_left_inj ℂ φ.matrix, star_eq_zero,
+  simp_rw [linear_map.mul_left_inj φ.matrix, star_eq_zero,
     (set.mem_set_of.mp (subtype.mem x))] at this,
   exact this,
 end
