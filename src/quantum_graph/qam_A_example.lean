@@ -252,7 +252,7 @@ end
 
 lemma qam.iso_preserves_ir_reflexive [nontrivial n] {φ : ℍ →ₗ[ℂ] ℂ}
   [hφ : fact φ.is_faithful_pos_map]
-  {x y : ℍ →ₗ[ℂ] ℍ} {hx : qam φ x} {hy : qam φ y} (hxhy : qam.iso hx hy)
+  {x y : ℍ →ₗ[ℂ] ℍ} {hx : qam φ x} {hy : qam φ y} (hxhy : @qam.iso n _ _ φ _ x y)
   (ir_reflexive : Prop) [decidable ir_reflexive] :
   qam.refl_idempotent hφ.elim x 1 = ite ir_reflexive 1 0
     ↔ qam.refl_idempotent hφ.elim y 1 = ite ir_reflexive 1 0 :=
@@ -362,8 +362,9 @@ theorem qam_A'.fin_two_iso (x y : {x : matrix (fin 2) (fin 2) ℂ // x ≠ 0})
   (hx2 : qam.refl_idempotent trace_is_faithful_pos_map.elim (qam_A trace_is_faithful_pos_map.elim x) 1 = 0)
   (hy1 : _root_.is_self_adjoint (qam_A trace_is_faithful_pos_map.elim y))
   (hy2 : qam.refl_idempotent trace_is_faithful_pos_map.elim (qam_A trace_is_faithful_pos_map.elim y) 1 = 0) :
-  @qam.iso (fin 2) _ _ _ trace_is_faithful_pos_map _ _
-    (qam_A.is_idempotent x) (qam_A.is_idempotent y) :=
+  @qam.iso (fin 2) _ _ _ trace_is_faithful_pos_map
+    (qam_A trace_is_faithful_pos_map.elim x)
+    (qam_A trace_is_faithful_pos_map.elim y) :=
 begin
   simp_rw [qam_A.iso_iff, trace_is_faithful_pos_map_matrix, commute.one_left,
     and_true, smul_hom_class.map_smul],

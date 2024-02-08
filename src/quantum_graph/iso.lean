@@ -336,7 +336,7 @@ begin
 end
 
 lemma inner_aut.qam_is_reflexive [nontrivial n] {U : matrix.unitary_group n ℂ}
-  (hU : commute φ.matrix U) {A : l(ℍ)} (hA : qam φ A) :
+  (hU : commute φ.matrix U) {A : l(ℍ)} :
   @qam_lm_nontracial_is_reflexive n _ _ φ _ (f_{U} ∘ₗ A ∘ₗ f_{star U})
   ↔ @qam_lm_nontracial_is_reflexive _ _ _ _ hφ A :=
 begin
@@ -349,7 +349,7 @@ begin
 end
 
 lemma inner_aut.qam_is_irreflexive [nontrivial n] {U : matrix.unitary_group n ℂ}
-  (hU : commute φ.matrix U) {A : l(ℍ)} (hA : qam φ A) :
+  (hU : commute φ.matrix U) {A : l(ℍ)} :
   @qam_lm_nontracial_is_unreflexive _ _ _ _ hφ (f_{U} ∘ₗ A ∘ₗ f_{star U})
   ↔ @qam_lm_nontracial_is_unreflexive _ _ _ _ hφ A :=
 begin
@@ -362,7 +362,7 @@ begin
   exact h,
 end
 
-def qam.iso [hφ : fact φ.is_faithful_pos_map] {A B : l(ℍ)} (hA : qam φ A) (hB : qam φ B) :
+def qam.iso [hφ : fact φ.is_faithful_pos_map] (A B : l(ℍ)) :
   Prop :=
 ∃ f : ℍ ≃⋆ₐ[ℂ] ℍ, A ∘ₗ f.to_alg_equiv.to_linear_map = f.to_alg_equiv.to_linear_map ∘ₗ B
   ∧ f φ.matrix = φ.matrix
@@ -384,7 +384,7 @@ structure qam_iso [hφ : fact φ.is_faithful_pos_map] {A B : l(ℍ)} (hA : qam �
 
 lemma qam.iso_iff [hφ : fact φ.is_faithful_pos_map]
   {A B : l(ℍ)} [nontrivial n]  (hA : qam φ A) (hB : qam φ B) :
-  qam.iso hA hB
+  @qam.iso n _ _ φ hφ A B
     ↔ ∃ U : unitary_group n ℂ, A ∘ₗ inner_aut U = inner_aut U ∘ₗ B
       ∧ commute φ.matrix U :=
 begin
@@ -407,8 +407,8 @@ begin
     exact ⟨inner_aut_star_alg U, hU⟩, },
 end
 
-lemma qam.iso_preserves_spectrum [hφ : fact φ.is_faithful_pos_map] [nontrivial n] (A B : l(ℍ))
-  (hA : qam φ A) (hB : qam φ B) (h : qam.iso hA hB) :
+lemma qam.iso_preserves_spectrum [hφ : fact φ.is_faithful_pos_map] (A B : l(ℍ))
+  (hA : qam φ A) (hB : qam φ B) (h : @qam.iso n _ _ φ _ A B) :
   spectrum ℂ A = spectrum ℂ B :=
 begin
   obtain ⟨f, ⟨hf, hh⟩⟩ := h,

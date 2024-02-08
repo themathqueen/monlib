@@ -860,11 +860,14 @@ lemma qam_A.iso_iff [nontrivial n] {x y : {x : ℍ // x ≠ 0}}
   -- (hx : _root_.is_self_adjoint (qam_A hφ.elim x))
   -- (hy : _root_.is_self_adjoint (qam_A hφ.elim y))
   :
-  qam.iso (@qam_A.is_idempotent n _ _ φ hφ x) (qam_A.is_idempotent y)
+  -- qam.iso (@qam_A.is_idempotent n _ _ φ hφ x) (qam_A.is_idempotent y)
+    @qam.iso n _ _ φ _ (qam_A hφ.elim x) (qam_A hφ.elim y)
     ↔ ∃ U : unitary_group n ℂ, (∃ β : ℂˣ, (x : ℍ) = inner_aut U ((β : ℂ) • (y : ℍ)))
       ∧ commute φ.matrix U :=
 begin
-  simp_rw [qam.iso_iff, ← inner_aut_star_alg_equiv_to_linear_map, star_alg_equiv.comp_eq_iff],
+  let hx := (@qam_A.is_idempotent n _ _ φ _ x),
+  let hy := (@qam_A.is_idempotent n _ _ φ _ y),
+  simp_rw [qam.iso_iff hx hy, ← inner_aut_star_alg_equiv_to_linear_map, star_alg_equiv.comp_eq_iff],
   split,
   { rintros ⟨U, ⟨hU, hUU⟩⟩,
     refine ⟨U, _, hUU⟩,
