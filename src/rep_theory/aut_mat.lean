@@ -375,7 +375,7 @@ begin
   simp_rw [units.mk0, hy, units.mk_coe],
 end
 
-lemma algebra.aut_inner_eq_aut_inner_iff [decidable_eq n] [nonempty n]
+lemma algebra.aut_inner_eq_aut_inner_iff [decidable_eq n]
   (x y : matrix n n 𝕜) [invertible x] [invertible y] :
   (algebra.aut_inner x : matrix n n 𝕜 ≃ₐ[𝕜] matrix n n 𝕜) = algebra.aut_inner y
     ↔ ∃ α : 𝕜, y = α • x :=

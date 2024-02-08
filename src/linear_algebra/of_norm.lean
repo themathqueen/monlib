@@ -461,8 +461,7 @@ begin
 end
 
 def with_bound (𝕜 : Type*) {E : Type*} [normed_field 𝕜]
-  [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
-  [normed_space 𝕜 F] (f : E → F) : Prop :=
+  [normed_add_comm_group E] {F : Type*} [normed_add_comm_group F] (f : E → F) : Prop :=
 ∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖
 
 lemma is_bounded_linear_map.def {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
@@ -550,27 +549,27 @@ structure is_bilinear_map (𝕜 : Type*) [normed_field 𝕜]
 
 def is_left_linear_map (𝕜 : Type*) [normed_field 𝕜]
   {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
-  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {F : Type*} [normed_add_comm_group F]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   (f : E × F → G) :
   Prop :=
 ∀ b : F, is_linear_map 𝕜 (λ a, f (a, b))
 lemma is_left_linear_map_iff {𝕜 : Type*} [normed_field 𝕜]
   {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
-  {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
+  {F : Type*} [normed_add_comm_group F]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   {f : E × F → G} :
   is_left_linear_map 𝕜 f ↔ ∀ b : F, is_linear_map 𝕜 (λ a, f (a, b)) :=
 iff.rfl
 def is_right_linear_map (𝕜 : Type*) [normed_field 𝕜]
-  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {E : Type*} [normed_add_comm_group E]
   {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   (f : E × F → G) :
   Prop :=
 ∀ a : E, is_linear_map 𝕜 (λ b, f (a, b))
 lemma is_right_linear_map_iff {𝕜 : Type*} [normed_field 𝕜]
-  {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
+  {E : Type*} [normed_add_comm_group E]
   {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   {f : E × F → G} :
@@ -671,7 +670,6 @@ lemma is_continuous_linear_map.to_is_lm
   {𝕜 X Y : Type*} [normed_field 𝕜] [normed_add_comm_group X]
   [normed_add_comm_group Y]
   [normed_space 𝕜 X] [normed_space 𝕜 Y]
-  [complete_space X] [complete_space Y]
   {β : X → Y} (hf : is_continuous_linear_map 𝕜 β) :
   is_linear_map 𝕜 β :=
 hf.1
@@ -681,7 +679,6 @@ lemma continuous_linear_map.op_norm_le_iff
   [normed_add_comm_group X]
   [normed_add_comm_group Y]
   [normed_space 𝕜 X] [normed_space 𝕜 Y]
-  [complete_space X] [complete_space Y]
   (f : X →L[𝕜] Y) {r : ℝ} (hr : 0 ≤ r) :
   ‖f‖ ≤ r ↔ ∀ x, ‖f x‖ ≤ r * ‖x‖ :=
 begin

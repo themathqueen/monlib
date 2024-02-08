@@ -28,7 +28,7 @@ variables {𝕜 E F G : Type*} [field 𝕜] [add_comm_group E] [add_comm_group F
   [add_comm_group G]
   [star_add_monoid E] [star_add_monoid F] [star_add_monoid G] [module 𝕜 E] [module 𝕜 F]
   [module 𝕜 G] [star_ring 𝕜]
-  [star_module 𝕜 E] [star_module 𝕜 F] [star_module 𝕜 G]
+  [star_module 𝕜 G]
   [finite_dimensional 𝕜 E] [finite_dimensional 𝕜 F] [finite_dimensional 𝕜 G]
 
 noncomputable instance tensor_product.has_star :
@@ -38,6 +38,8 @@ noncomputable instance tensor_product.has_star :
     let b₂ := basis.of_vector_space 𝕜 F,
     exact ∑ i j, star (((b₁.tensor_product b₂).repr x) (i,j))
       • (star (b₁ i) ⊗ₜ[𝕜] star (b₂ j)), } }
+
+variables [star_module 𝕜 E] [star_module 𝕜 F]
 
 @[simp] lemma tensor_product.star_tmul (x : E) (y : F) :
   star (x ⊗ₜ[𝕜] y) = (star x) ⊗ₜ[𝕜] (star y) :=
