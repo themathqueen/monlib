@@ -398,6 +398,7 @@ lemma matrix.pos_def.pos_eigenvalues [decidable_eq 𝕜] [decidable_eq n]
   {A : matrix n n 𝕜} (hA : A.pos_def) (i : n) :
   0 < hA.is_hermitian.eigenvalues i :=
 begin
+  letI := hA,
   have := matrix.nonneg_eigenvalues_of_pos_semidef
     (matrix.is_hermitian.eigenvalues_has_eigenvalue hA.1 i)
     (matrix.pos_def.pos_semidef hA),

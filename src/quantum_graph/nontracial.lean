@@ -786,8 +786,8 @@ begin
     alg_equiv.to_linear_map_apply],
 end
 
-def map_sig_injective (t s : ℝ) :
-  function.injective ((hφ.elim.sig t).to_linear_map ⊗ₘ (sigop hφ.elim s)) :=
+theorem map_sig_injective (t s : ℝ) :
+  function.injective ⇑((hφ.elim.sig t).to_linear_map ⊗ₘ (sigop hφ.elim s)) :=
 begin
   intros a b h,
   have : ∀ a, a = ((hφ.elim.sig (-t)).to_linear_map ⊗ₘ (sigop hφ.elim (-s)))

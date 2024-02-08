@@ -142,12 +142,12 @@ end
 open_locale big_operators
 lemma linear_map.mul_left_sum {R : Type*} {A : Type*} [comm_semiring R]
   [non_unital_non_assoc_semiring A] [module R A] [smul_comm_class R A A]
-  [is_scalar_tower R A A] {n : Type*} [fintype n] {s : finset n} {x : n → A} :
+  [is_scalar_tower R A A] {n : Type*} {s : finset n} {x : n → A} :
   ∑ i : n in s, linear_map.mul_left R (x i) = linear_map.mul_left R (∑ i : n in s, x i) :=
 (linear_map.map_sum lmul).symm
 lemma linear_map.mul_right_sum {R : Type*} {A : Type*} [comm_semiring R]
   [non_unital_non_assoc_semiring A] [module R A] [smul_comm_class R A A]
-  [is_scalar_tower R A A] {n : Type*} [fintype n] {s : finset n} {x : n → A} :
+  [is_scalar_tower R A A] {n : Type*} {s : finset n} {x : n → A} :
   ∑ i : n in s, linear_map.mul_right R (x i) = linear_map.mul_right R (∑ i : n in s, x i) :=
 (linear_map.map_sum rmul).symm
 
@@ -217,7 +217,8 @@ lemma linear_map.mul_left_smul (x : H₁) (α : R) :
   linear_map.mul_left R (α • x) = α • linear_map.mul_left R x :=
 lmul.map_smul _ _
 
-lemma linear_map.mul_left_comp_inj {H₁ : Type*} [semiring H₁] [module R H₁]
+lemma linear_map.mul_left_comp_inj {H₁ H₂ : Type*} [semiring H₁] [module R H₁]
+  [add_comm_monoid H₂] [module R H₂]
   [smul_comm_class R H₁ H₁] [is_scalar_tower R H₁ H₁]
   (f g : H₁ →ₗ[R] H₂) (x : H₁) [invertible x] :
   f ∘ₗ linear_map.mul_left R x = g ∘ₗ linear_map.mul_left R x ↔ f = g :=

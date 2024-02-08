@@ -7,3 +7,8 @@ decls.yaml
 /.DS_Store
 .DS_Store
 src/.DS_Store
+/scripts
+/.vscode
+src/monlib.lean
+.github/workflows/build.yml
+.github/workflows/nolints.yml

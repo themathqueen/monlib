@@ -484,7 +484,7 @@ end
 
 lemma linear_map.ker_coe_def {R E F : Type*} [semiring R] [add_comm_monoid E]
   [add_comm_monoid F] [module R E] [module R F] {f : E →ₗ[R] F} :
-  (f.ker : set E) = {x : E | f x = 0} := 
+  (f.ker : set E) = {x : E | f x = 0} :=
 rfl
 
 lemma exists_dual_vector_of_ne {X : Type*} [normed_add_comm_group X]
@@ -610,7 +610,7 @@ def is_bilinear_map.to_lm_lm {𝕜 : Type*} [normed_field 𝕜]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   {f : E × F → G} (hf : is_bilinear_map 𝕜 f) :
   E →ₗ[𝕜] (F →ₗ[𝕜] G) :=
-{ to_fun := λ x, 
+{ to_fun := λ x,
   { to_fun := λ y, f (x,y),
     map_add' := λ y z, hf.add_right x _ _,
     map_smul' := λ r y, hf.smul_right r x y, },
@@ -625,7 +625,7 @@ def is_lm_left_is_clm_right.to_lm_clm {𝕜 : Type*} [normed_field 𝕜]
   {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
   {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
-  {f : E × F → G} 
+  {f : E × F → G}
   (hf₁ : ∀ y, is_linear_map 𝕜 (λ a, f (a, y)))
   (hf₂ : ∀ x, is_continuous_linear_map 𝕜 (λ a, f (x, a))) :
   E →ₗ[𝕜] (F →L[𝕜] G) :=
@@ -671,7 +671,7 @@ lemma is_continuous_linear_map.to_is_lm
   {𝕜 X Y : Type*} [normed_field 𝕜] [normed_add_comm_group X]
   [normed_add_comm_group Y]
   [normed_space 𝕜 X] [normed_space 𝕜 Y]
-  [complete_space X] [complete_space Y] 
+  [complete_space X] [complete_space Y]
   {β : X → Y} (hf : is_continuous_linear_map 𝕜 β) :
   is_linear_map 𝕜 β :=
 hf.1
@@ -706,5 +706,3 @@ begin
   apply continuous_linear_map.le_of_op_norm_le,
   exact continuous_linear_map.le_op_norm _ _,
 end
-
-
