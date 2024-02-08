@@ -40,11 +40,12 @@ begin
     implies_true_iff, and_true, forall_true_iff],
 end
 
-lemma trace_is_faithful_pos_map_matrix :
-  (trace_linear_map n ℂ ℂ : ℍ →ₗ[ℂ] ℂ).matrix = 1 :=
+lemma trace_is_faithful_pos_map_matrix {n : Type*}
+  [fintype n] [decidable_eq n] :
+  (trace_linear_map n ℂ ℂ : matrix n n ℂ →ₗ[ℂ] ℂ).matrix = 1 :=
 begin
   ext1,
-  have := (trace_linear_map n ℂ ℂ : ℍ →ₗ[ℂ] ℂ).linear_functional_eq'
+  have := (trace_linear_map n ℂ ℂ : matrix n n ℂ →ₗ[ℂ] ℂ).linear_functional_eq'
     (λ k l, ite (j = k) (ite (i = l) 1 0) 0),
   simp only [trace_linear_map_apply, trace_iff, mul_apply, mul_ite, mul_zero, mul_one,
     finset.sum_ite_eq, finset.mem_univ, if_true] at this,
@@ -283,10 +284,12 @@ begin
     finset.sum_const_zero, finset.sum_ite_eq, finset.mem_univ, if_true],
 end
 
-noncomputable def matrix.is_almost_hermitian.scalar {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
+noncomputable def matrix.is_almost_hermitian.scalar {n : Type*}
+  {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
   ℂ :=
 by choose α hα using hx; exact α
-noncomputable def matrix.is_almost_hermitian.matrix {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
+noncomputable def matrix.is_almost_hermitian.matrix {n : Type*}
+  {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
   matrix n n ℂ :=
 by choose y hy using (matrix.is_almost_hermitian.scalar._proof_1 hx); exact y
 lemma matrix.is_almost_hermitian.eq_smul_matrix {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
@@ -362,7 +365,7 @@ theorem qam_A'.fin_two_iso (x y : {x : matrix (fin 2) (fin 2) ℂ // x ≠ 0})
   @qam.iso (fin 2) _ _ _ trace_is_faithful_pos_map _ _
     (qam_A.is_idempotent x) (qam_A.is_idempotent y) :=
 begin
-  simp_rw [qam_A.iso_iff hx1 hy1, trace_is_faithful_pos_map_matrix, commute.one_left,
+  simp_rw [qam_A.iso_iff, trace_is_faithful_pos_map_matrix, commute.one_left,
     and_true, smul_hom_class.map_smul],
   have : is_almost_similar_to (x : matrix (fin 2) (fin 2) ℂ) (y : matrix (fin 2) (fin 2) ℂ)
     ↔ ∃ (β : ℂˣ) (U : unitary_group (fin 2) ℂ), (x : matrix (fin 2) (fin 2) ℂ)

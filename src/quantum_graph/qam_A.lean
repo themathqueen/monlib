@@ -857,8 +857,9 @@ begin
 end
 
 lemma qam_A.iso_iff [nontrivial n] {x y : {x : ℍ // x ≠ 0}}
-  (hx : _root_.is_self_adjoint (qam_A hφ.elim x))
-  (hy : _root_.is_self_adjoint (qam_A hφ.elim y)) :
+  -- (hx : _root_.is_self_adjoint (qam_A hφ.elim x))
+  -- (hy : _root_.is_self_adjoint (qam_A hφ.elim y))
+  :
   qam.iso (@qam_A.is_idempotent n _ _ φ hφ x) (qam_A.is_idempotent y)
     ↔ ∃ U : unitary_group n ℂ, (∃ β : ℂˣ, (x : ℍ) = inner_aut U ((β : ℂ) • (y : ℍ)))
       ∧ commute φ.matrix U :=
