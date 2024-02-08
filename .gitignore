@@ -12,3 +12,4 @@ src/.DS_Store
 src/monlib.lean
 .github/workflows/build.yml
 .github/workflows/nolints.yml
+nolints.txt
