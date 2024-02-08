@@ -28,7 +28,8 @@ variables {n : Type*} [fintype n] [decidable_eq n]
 
 local notation `ℍ` := matrix n n ℂ
 
-@[instance] def trace_is_faithful_pos_map {𝕜 : Type*} [is_R_or_C 𝕜] :
+@[instance] def trace_is_faithful_pos_map
+  {n : Type*} [fintype n] {𝕜 : Type*} [is_R_or_C 𝕜] :
   fact (trace_linear_map n 𝕜 𝕜 : matrix n n 𝕜 →ₗ[𝕜] 𝕜).is_faithful_pos_map :=
 begin
   apply fact.mk,
@@ -99,7 +100,7 @@ private lemma aux.ug :
     : (trace_linear_map n ℂ ℂ : ℍ →ₗ[ℂ] ℂ).is_faithful_pos_map).to_matrix.symm
     = to_lin_of_alg_equiv :=
 by { ext1,
-  letI := fact.mk (@trace_is_faithful_pos_map n _ _ ℂ _),
+  letI := fact.mk (@trace_is_faithful_pos_map n _ ℂ _),
   simp_rw [linear_map.is_faithful_pos_map.to_matrix_symm_apply],
   simp_rw [to_lin_of_alg_equiv_eq, rank_one_std_basis, one_smul, linear_map.ext_iff,
     linear_map.sum_apply, linear_map.smul_apply, linear_map.coe_mk,
@@ -252,7 +253,7 @@ end
 
 lemma qam.iso_preserves_ir_reflexive [nontrivial n] {φ : ℍ →ₗ[ℂ] ℂ}
   [hφ : fact φ.is_faithful_pos_map]
-  {x y : ℍ →ₗ[ℂ] ℍ} {hx : qam φ x} {hy : qam φ y} (hxhy : @qam.iso n _ _ φ _ x y)
+  {x y : ℍ →ₗ[ℂ] ℍ} (hxhy : @qam.iso n _ _ φ x y)
   (ir_reflexive : Prop) [decidable ir_reflexive] :
   qam.refl_idempotent hφ.elim x 1 = ite ir_reflexive 1 0
     ↔ qam.refl_idempotent hφ.elim y 1 = ite ir_reflexive 1 0 :=
@@ -292,10 +293,12 @@ noncomputable def matrix.is_almost_hermitian.matrix {n : Type*}
   {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
   matrix n n ℂ :=
 by choose y hy using (matrix.is_almost_hermitian.scalar._proof_1 hx); exact y
-lemma matrix.is_almost_hermitian.eq_smul_matrix {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
+lemma matrix.is_almost_hermitian.eq_smul_matrix
+  {n : Type*} {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
   x = hx.scalar • hx.matrix :=
 (matrix.is_almost_hermitian.matrix._proof_1 hx).1.symm
-lemma matrix.is_almost_hermitian.matrix_is_hermitian {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
+lemma matrix.is_almost_hermitian.matrix_is_hermitian
+  {n : Type*} {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
   hx.matrix.is_hermitian :=
 (matrix.is_almost_hermitian.matrix._proof_1 hx).2
 
@@ -362,7 +365,7 @@ theorem qam_A'.fin_two_iso (x y : {x : matrix (fin 2) (fin 2) ℂ // x ≠ 0})
   (hx2 : qam.refl_idempotent trace_is_faithful_pos_map.elim (qam_A trace_is_faithful_pos_map.elim x) 1 = 0)
   (hy1 : _root_.is_self_adjoint (qam_A trace_is_faithful_pos_map.elim y))
   (hy2 : qam.refl_idempotent trace_is_faithful_pos_map.elim (qam_A trace_is_faithful_pos_map.elim y) 1 = 0) :
-  @qam.iso (fin 2) _ _ _ trace_is_faithful_pos_map
+  @qam.iso (fin 2) _ _ (trace_linear_map _ _ _)
     (qam_A trace_is_faithful_pos_map.elim x)
     (qam_A trace_is_faithful_pos_map.elim y) :=
 begin
