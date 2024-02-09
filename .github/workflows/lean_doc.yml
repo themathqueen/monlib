@@ -63,11 +63,21 @@ jobs:
         cat ../src/all.lean
         lean --path
 
+    - name: Set up olean cache
+      uses: actions/cache@v3
+      with:
+        path: _cache
+        key: oleans
+
     - name: 🔧 Build the lean code
       run: |
         cd doc-gen
         lean -v
         lean --make src/entrypoint.lean
+
+    - name: Save olean cache
+      run: |
+        leanproject mk-cache
 
     - name: 📝 Export Lean symbol information
       run: |
