@@ -43,7 +43,7 @@ jobs:
         mathlib_git_hash="$(sed '/rev/!d;s/.*"\([a-z0-9]*\)".*/\1/' leanpkg.toml)"
         cd doc-gen
         sed -i "s/rev = \"\S*\"/rev = \"$mathlib_git_hash\"/" leanpkg.toml
-        
+
         # Force doc_gen project to match the Lean version used in CI.
         # If they are incompatible, something in doc_gen will fail to compile,
         # but this is better than trying to recompile all of mathlib.
@@ -56,18 +56,29 @@ jobs:
         find "." -name \*.lean -not -name all.lean \
           | sed 's,^\./,,;s,\.lean$,»,;s,/,».«,g;s,^,import «,' \
           | sort >./all.lean);
-        
+
         mkdir ../docs
         cp _target/deps/mathlib/docs/references.bib ../docs
 
         cat ../src/all.lean
         lean --path
 
+    - name: Set up olean cache
+      uses: actions/cache@v3
+      with:
+        path: _cache
+        key: oleans
+
     - name: 🔧 Build the lean code
       run: |
         cd doc-gen
         lean -v
         lean --make src/entrypoint.lean
+
+
+    - name: Save olean cache
+      run: |
+        leanproject mk-cache
 
     - name: 📝 Export Lean symbol information
       run: |
