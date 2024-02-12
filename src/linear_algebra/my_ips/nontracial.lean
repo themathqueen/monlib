@@ -14,6 +14,7 @@ import linear_algebra.my_ips.mat_ips
 import linear_algebra.my_ips.mul_op
 import linear_algebra.my_matrix.include_block
 import linear_algebra.my_ips.op_unop
+import linear_algebra.pi_direct_sum
 
 /-!
 
@@ -724,6 +725,25 @@ begin
     linear_map.is_faithful_pos_map.direct_sum.sig_symm_apply, neg_neg],
 end
 
+lemma linear_map.is_faithful_pos_map.direct_sum.sig_apply_single_block
+  (hψ : Π i, fact (ψ i).is_faithful_pos_map) (z : ℝ) {i : k} (x : ℍ_ i) :
+  linear_map.is_faithful_pos_map.direct_sum.sig hψ z (include_block x)
+    = include_block ((hψ i).elim.sig z x) :=
+begin
+  simp only [linear_map.is_faithful_pos_map.direct_sum.sig_apply,
+    linear_map.is_faithful_pos_map.sig_apply, pi.mul_apply],
+  ext1,
+  simp only [pi.mul_apply, ← mul_eq_mul, include_block_apply, pi.pos_def.rpow,
+    mul_dite, mul_zero, dite_mul, zero_mul],
+  split_ifs; simp; finish,
+end
+
+lemma linear_map.is_faithful_pos_map.direct_sum.sig_eq_direct_sum_blocks
+  (hψ : Π i, fact (ψ i).is_faithful_pos_map) (z : ℝ) (x : ℍ₂) {i : k} :
+  (linear_map.is_faithful_pos_map.direct_sum.sig hψ z x) i
+    = (hψ i).elim.sig z (x i) :=
+rfl
+
 lemma pi.pos_def.rpow.is_pos_def {a : ℍ₂} (ha : Π i, (a i).pos_def) (r : ℝ) :
   Π i, ((pi.pos_def.rpow ha r) i).pos_def :=
 begin
@@ -731,5 +751,154 @@ begin
   simp only [pi.pos_def.rpow],
   exact pos_def.rpow.is_pos_def _ _,
 end
+
+lemma pi.pos_def.rpow.is_self_adjoint {a : ℍ₂}
+  (ha : Π i, (a i).pos_def) (r : ℝ) :
+  star (pi.pos_def.rpow ha r)
+    = pi.pos_def.rpow ha r :=
+begin
+  ext1 i,
+  simp only [pi.pos_def.rpow, star_apply, pi.star_apply],
+  exact pos_def.rpow.is_hermitian _ _,
+end
+
+lemma linear_map.is_faithful_pos_map.direct_sum.sig_star
+  (hψ : Π i, fact (ψ i).is_faithful_pos_map) (z : ℝ) (x : ℍ₂) :
+  star (linear_map.is_faithful_pos_map.direct_sum.sig hψ z x)
+    = linear_map.is_faithful_pos_map.direct_sum.sig hψ (-z) (star x) :=
+begin
+  simp_rw [linear_map.is_faithful_pos_map.direct_sum.sig_apply,
+    star_semigroup.star_mul, pi.pos_def.rpow.is_self_adjoint, mul_assoc, neg_neg],
+end
+
+lemma linear_map.is_faithful_pos_map.direct_sum.sig_apply_sig
+  (hψ : Π i, fact (ψ i).is_faithful_pos_map) (t r : ℝ) (x : ℍ₂) :
+  linear_map.is_faithful_pos_map.direct_sum.sig hψ t
+    (linear_map.is_faithful_pos_map.direct_sum.sig hψ r x)
+  = linear_map.is_faithful_pos_map.direct_sum.sig hψ (t+r) x :=
+begin
+  simp only [linear_map.is_faithful_pos_map.direct_sum.sig_apply,
+    pi.pos_def.rpow_mul_rpow],
+  simp_rw [← mul_assoc, pi.pos_def.rpow_mul_rpow, mul_assoc,
+    pi.pos_def.rpow_mul_rpow, neg_add, add_comm],
+end
+
+lemma linear_map.is_faithful_pos_map.direct_sum.sig_zero
+  (hψ : Π i, fact (ψ i).is_faithful_pos_map) (x : ℍ₂) :
+  linear_map.is_faithful_pos_map.direct_sum.sig hψ 0 x = x :=
+begin
+  simp only [linear_map.is_faithful_pos_map.direct_sum.sig_apply,
+    pi.pos_def.rpow_zero, one_mul, mul_one, neg_zero],
+end
+
+def linear_map.pi_pi_prod (R : Type*) {ι₁ ι₂ : Type*} [semiring R]
+  (φ : ι₁ → Type*) (ψ : ι₂ → Type*)
+  [Π i, add_comm_monoid (φ i)] [Π i, module R (φ i)]
+  [Π i, add_comm_monoid (ψ i)] [Π i, module R (ψ i)]
+  (S : Type u_1) [fintype ι₁] [decidable_eq ι₁]
+  [fintype ι₂] [decidable_eq ι₂]
+  [semiring S] [Π i, module S (ψ i)] [Π i, smul_comm_class R S (ψ i)] :
+    (Π i : ι₁ × ι₂, φ i.1 →ₗ[R] ψ i.2) ≃ₗ[S] (Π i j, φ i →ₗ[R] ψ j) :=
+by { refine linear_equiv.of_linear _ _ _ _,
+  refine { to_fun := λ f j k, f (j,k),
+    map_add' := λ f g, by { simp only [pi.add_apply], ext, refl },
+    map_smul' := λ r f, by { simp only [pi.smul_apply], ext, refl, } },
+  refine { to_fun := λ f i, f i.1 i.2,
+    map_add' := λ f g, by { ext, refl },
+    map_smul' := λ r f, by { ext, refl, } },
+  refl,
+  { rw linear_map.ext_iff,
+    intros x,
+    simp only [linear_map.coe_comp, linear_map.coe_mk,
+      function.comp_app, linear_map.id_coe, id.def],
+    ext,
+    congr,
+    exact prod.mk.eta, } }
+
+def linear_map.pi_prod_swap (R : Type*) {ι₁ ι₂ : Type*} [semiring R]
+  (φ : ι₁ → Type*) (ψ : ι₂ → Type*)
+  [Π i, add_comm_monoid (φ i)] [Π i, module R (φ i)]
+  [Π i, add_comm_monoid (ψ i)] [Π i, module R (ψ i)]
+  (S : Type u_1) [fintype ι₁] [decidable_eq ι₁]
+  [fintype ι₂] [decidable_eq ι₂]
+  [semiring S] [Π i, module S (ψ i)] [Π i, smul_comm_class R S (ψ i)] :
+    (Π i j, φ i →ₗ[R] ψ j) ≃ₗ[S] (Π j i, φ i →ₗ[R] ψ j) :=
+begin
+  refine linear_equiv.of_linear _ _ _ _,
+  refine { to_fun := λ f j i, f i j,
+    map_add' := λ f g, by { ext, refl },
+    map_smul' := λ r f, by { ext, refl, } },
+  refine { to_fun := λ f i j, f j i,
+    map_add' := λ f g, by { ext, refl },
+    map_smul' := λ r f, by { ext, refl, } },
+  refl,
+  { rw linear_map.ext_iff,
+    intros x,
+    simp only [linear_map.coe_comp, linear_map.coe_mk,
+      function.comp_app, linear_map.id_coe, id.def], },
+end
+
+@[simps] def linear_map.rsum (R : Type*) {M : Type*} {ι : Type*}
+  [semiring R] (φ : ι → Type*) [Π (i : ι), add_comm_monoid (φ i)]
+  [Π (i : ι), module R (φ i)]
+  (S : Type*) [add_comm_monoid M] [module R M] [fintype ι] [decidable_eq ι]
+  [semiring S] [Π i, module S (φ i)] [Π i, smul_comm_class R S (φ i)] :
+  (Π i, M →ₗ[R] φ i) ≃ₗ[S] (M →ₗ[R] (Π i, φ i)) :=
+{ to_fun := λ f, linear_map.pi f,
+  inv_fun := λ f i, (linear_map.proj i) ∘ₗ f,
+  map_add' := λ f g, by { ext, simp only [linear_map.pi_apply, pi.add_apply,
+    linear_map.add_apply], },
+  map_smul' := λ r f, by { ext, simp only [linear_map.pi_apply, pi.smul_apply,
+    linear_map.smul_apply, ring_hom.id_apply], },
+  left_inv := λ f, by { ext i x, simp only [linear_map.proj_pi], },
+  right_inv := λ f, by { ext, simp only [linear_map.comp_apply, linear_map.pi_apply],
+    refl, } }
+
+@[simps] def linear_map.lrsum (R : Type*) {ι₁ ι₂ : Type*} [semiring R]
+  (φ : ι₁ → Type*) (ψ : ι₂ → Type*)
+  [Π i, add_comm_monoid (φ i)] [Π i, module R (φ i)]
+  [Π i, add_comm_monoid (ψ i)] [Π i, module R (ψ i)]
+  (S : Type u_1) [fintype ι₁] [decidable_eq ι₁]
+  [fintype ι₂] [decidable_eq ι₂]
+  [semiring S] [Π i, module S (ψ i)] [Π i, smul_comm_class R S (ψ i)] :
+  (Π i : ι₁ × ι₂, φ i.1 →ₗ[R] ψ i.2)
+    ≃ₗ[S] (Π i, φ i) →ₗ[R] (Π i, ψ i) :=
+begin
+  let h₂ : (Π (j : ι₂) (i : ι₁), φ i →ₗ[R] ψ j)
+    ≃ₗ[S] Π j, (Π i, φ i) →ₗ[R] ψ j,
+  { apply linear_equiv.Pi_congr_right,
+    intros j,
+    exact linear_map.lsum R φ S, },
+  exact (((linear_map.pi_pi_prod R φ ψ S).trans
+    (linear_map.pi_prod_swap R φ ψ S)).trans h₂).trans
+    (linear_map.rsum R ψ S),
+end
+
+-- noncomputable def linear_map.is_faithful_pos_map.direct_sum.to_matrix'
+--   (hψ : ∀ (i : k), (ψ i).is_faithful_pos_map) :
+--   l(ℍ₂) ≃ₐ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂ :=
+-- begin
+--   have : (linear_map.is_faithful_pos_map.direct_sum.to_matrix hψ) x = 0,
+--   let h : (Π (i : k), matrix (s i × s i) (s i × s i) ℂ)
+--     ≃ₗ[ℂ] (Π i, (ℍ_ i) ⊗[ℂ] (ℍ_ i)),
+--   { apply linear_equiv.Pi_congr_right,
+--     intros i,
+--     exact alg_equiv.to_linear_equiv kronecker_to_tensor, },
+--   let h' := h.to_linear_map ∘ₗ block_diag'_linear_map
+--     ∘ₗ (linear_map.is_faithful_pos_map.direct_sum.to_matrix hψ).to_linear_map,
+-- end
+
+
+-- def linear_map.is_faithful_pos_map.direct_sum.Psi
+--   (hψ : Π i, fact (ψ i).is_faithful_pos_map) (t r : ℝ) :
+--   l(ℍ₂) ≃ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂ᵐᵒᵖ) :=
+-- begin
+--   letI : ∀ (i : k), smul_comm_class ℂ ℂ ((λ (i : k), matrix (s i) (s i) ℂ) i) :=
+--   λ i, by apply_instance,
+--   let h₁ := (linear_map.lrsum ℂ (λ i, ℍ_ i) (λ i, ℍ_ i) ℂ).symm,
+--   let h₂ := @direct_sum_tensor ℂ _ k k _ _ _ _ (λ i, ℍ_ i) (λ i, ℍ_ i) _ _
+--     (λ i, matrix.module) (λ i, matrix.module),
+-- end
+
 
 end direct_sum
