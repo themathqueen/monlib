@@ -7,6 +7,7 @@ import linear_algebra.my_ips.functional
 import linear_algebra.my_matrix.pos_def_rpow
 import linear_algebra.mul''
 import linear_algebra.my_ips.basic
+import linear_algebra.pi_direct_sum
 
 /-!
 
@@ -737,11 +738,6 @@ lemma direct_sum.orthonormal_basis_apply' [hψ : Π i, fact (ψ i).is_faithful_p
       ⬝ (hψ i).elim.matrix_is_pos_def.rpow (-(1/2 : ℝ))) :=
 direct_sum.orthonormal_basis_apply
 
-noncomputable def direct_sum.to_matrix (hψ : Π i, (ψ i).is_faithful_pos_map) :
-  ((Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ))
-    ≃ₐ[ℂ] _ :=
-linear_map.to_matrix_alg_equiv (direct_sum.basis hψ)
-
 lemma direct_sum.inner_coord [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (ijk : Σ i, s i × s i) (y : Π i, matrix (s i) (s i) ℂ) :
   ⟪direct_sum.basis (λ i, (hψ i).elim) ijk, y⟫_ℂ
@@ -802,6 +798,49 @@ begin
   ext1,
   simp_rw [pi.mul_apply, pi.inv_apply, linear_map.direct_sum_matrix_block_apply,
     mul_eq_mul, pi.one_apply, mul_inv_of_invertible],
+end
+
+lemma linear_map.sum_single_comp_proj {R : Type*} {ι : Type*} [fintype ι] [decidable_eq ι] [semiring R] {φ : ι → Type*}
+  [Π (i : ι), add_comm_monoid (φ i)] [Π (i : ι), module R (φ i)] :
+  ∑ i : ι, linear_map.single i ∘ₗ linear_map.proj i
+    = (linear_map.id : (Π i, φ i) →ₗ[R] (Π i, φ i)) :=
+begin
+  simp_rw [linear_map.ext_iff, linear_map.sum_apply, linear_map.id_apply,
+    linear_map.comp_apply, linear_map.proj_apply,
+    linear_map.coe_single, pi.single, function.funext_iff,
+    finset.sum_apply, function.update, pi.zero_apply,
+    finset.sum_dite_eq, finset.mem_univ, if_true],
+  intros x y, trivial,
+end
+
+lemma linear_map.lrsum_eq_single_proj_lrcomp (f : (Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ)) :
+  ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
+    ∘ₗ (linear_map.single p) ∘ₗ (linear_map.proj p) = f :=
+calc ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
+    ∘ₗ (linear_map.single p) ∘ₗ (linear_map.proj p)
+  = (∑ r, (linear_map.single r) ∘ₗ (linear_map.proj r)) ∘ₗ f
+      ∘ₗ ∑ p, (linear_map.single p) ∘ₗ (linear_map.proj p) :
+  by simp_rw [linear_map.sum_comp, linear_map.comp_sum, linear_map.comp_assoc]
+  ... = linear_map.id ∘ₗ f ∘ₗ linear_map.id : by rw linear_map.sum_single_comp_proj
+  ... = f : by rw [linear_map.id_comp, linear_map.comp_id]
+
+@[simps] noncomputable def direct_sum.to_matrix (hψ : Π i, (ψ i).is_faithful_pos_map) :
+  ((Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ))
+    ≃ₐ[ℂ] _  :=
+linear_map.to_matrix_alg_equiv (direct_sum.basis hψ)
+
+lemma direct_sum.to_matrix_apply'
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (f : (Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] Π i, matrix (s i) (s i) ℂ)
+  (r l : Σ r, s r × s r) :
+  (direct_sum.to_matrix (λ i, (hψ i).elim)) f r l
+    = (f (include_block ((hψ l.1).elim.basis l.2)) r.1
+      ⬝ (hψ r.1).elim.matrix_is_pos_def.rpow (1 / 2)) r.2.1 r.2.2 :=
+begin
+  simp_rw [direct_sum.to_matrix_apply, linear_map.to_matrix_apply,
+    direct_sum.basis_repr_apply, linear_map.is_faithful_pos_map.basis_apply,
+    ← linear_map.is_faithful_pos_map.orthonormal_basis_apply, inner_coord,
+    direct_sum.basis_apply, linear_map.is_faithful_pos_map.orthonormal_basis_apply],
 end
 
 lemma direct_sum_star_alg_equiv_adjoint_eq [hψ : Π i, fact (ψ i).is_faithful_pos_map]
