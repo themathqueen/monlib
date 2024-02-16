@@ -9,6 +9,7 @@ import data.matrix.basis
 import preq.dite
 import linear_algebra.matrix.hermitian
 import linear_algebra.my_tensor_product
+import data.matrix.kronecker
 
 /-!
 
@@ -19,6 +20,12 @@ import linear_algebra.my_tensor_product
  The direct sum in these files are sort of misleading.
 
 -/
+
+open_locale big_operators
+lemma finset.sum_sigma_univ {β α : Type*} [add_comm_monoid β]
+  [fintype α] [decidable_eq α] {σ : α → Type*} [Π i, fintype (σ i)] (f : (Σ i, σ i) → β) :
+  ∑ (x : Σ (i : α), σ i), f x = ∑ (a : α), ∑ (s : σ a), f (⟨a, s⟩ : Σ i, σ i) :=
+finset.sum_sigma _ _ _
 
 namespace matrix
 
@@ -65,9 +72,9 @@ lemma block_diagonal'_ext {R : Type*} [semiring R]
 by simp only [function.funext_iff, sigma.forall]
 
 def is_block_diagonal
-  {o : Type*} {m' : o → Type*} {α : Type*}
-  [fintype o] [decidable_eq o] [Π i, fintype (m' i)] [Π i, decidable_eq (m' i)] [comm_semiring α]
-  (x : matrix (Σ i, m' i) (Σ i, m' i) α) : Prop :=
+  {o : Type*} {m' n' : o → Type*} {α : Type*}
+  [decidable_eq o] [has_zero α]
+  (x : matrix (Σ i, m' i) (Σ i, n' i) α) : Prop :=
 block_diagonal' (block_diag' x) = x
 
 def include_block {o : Type*} [fintype o] [decidable_eq o] {m' : o → Type*}
@@ -75,23 +82,36 @@ def include_block {o : Type*} [fintype o] [decidable_eq o] {m' : o → Type*}
   [Π i, fintype (m' i)] [Π i, decidable_eq (m' i)] [comm_semiring α]
   {i : o} :
   matrix (m' i) (m' i) α →ₗ[α] Π (j : o), matrix (m' j) (m' j) α :=
-{ to_fun := λ x j, dite (i = j) (λ h, eq.mp (by rw [h]) x) (λ _, 0),
-  map_add' := λ x y,
-    by { ext,
-    simp only [dite_apply, dite_eq_iff', pi.add_apply],
-    split,
-    { rintros rfl,
-      simp only [eq_self_iff_true, dif_pos], refl, },
-    { intros h,
-      simp only [h, pi.zero_apply, dif_neg, not_false_iff, add_zero], }, },
-  map_smul' := λ r x,
-    by { ext,
-    simp only [dite_apply, dite_eq_iff', pi.smul_apply],
-    split,
-    { rintros rfl,
-      simp only [eq_self_iff_true, dif_pos], refl, },
-    { intros h,
-      simp only [h, pi.zero_apply, dif_neg, not_false_iff, smul_zero], }, } }
+linear_map.single i
+-- { to_fun := λ x j, dite (i = j) (λ h, eq.mp (by rw [h]) x) (λ _, 0),
+--   map_add' := λ x y,
+--     by { ext,
+--     simp only [dite_apply, dite_eq_iff', pi.add_apply],
+--     split,
+--     { rintros rfl,
+--       simp only [eq_self_iff_true, dif_pos], refl, },
+--     { intros h,
+--       simp only [h, pi.zero_apply, dif_neg, not_false_iff, add_zero], }, },
+--   map_smul' := λ r x,
+--     by { ext,
+--     simp only [dite_apply, dite_eq_iff', pi.smul_apply],
+--     split,
+--     { rintros rfl,
+--       simp only [eq_self_iff_true, dif_pos], refl, },
+--     { intros h,
+--       simp only [h, pi.zero_apply, dif_neg, not_false_iff, smul_zero], }, } }
+
+lemma include_block_apply {o : Type*} [fintype o] [decidable_eq o] {m' : o → Type*}
+  {α : Type*}
+  [Π i, fintype (m' i)] [Π i, decidable_eq (m' i)] [comm_semiring α] {i : o} (x : matrix (m' i) (m' i) α) :
+  (include_block : matrix (m' i) (m' i) α →ₗ[α] Π j, matrix (m' j) (m' j) α) x
+    = λ (j : o), dite (i = j) (λ h, eq.mp (by rw [h]) x) (λ _, 0) :=
+begin
+  ext,
+  simp only [include_block, linear_map.coe_single, pi.single,
+    function.update, eq_comm, pi.zero_apply],
+  split_ifs; finish,
+end
 
 lemma include_block_mul_same {o : Type*} [fintype o] [decidable_eq o] {m' : o → Type*}
   {α : Type*}
@@ -100,7 +120,7 @@ lemma include_block_mul_same {o : Type*} [fintype o] [decidable_eq o] {m' : o �
   (include_block x) * (include_block y) = include_block (x * y) :=
 begin
   ext,
-  simp_rw [include_block, linear_map.coe_mk, pi.mul_apply, mul_dite, dite_mul, mul_zero,
+  simp_rw [include_block_apply, pi.mul_apply, mul_dite, dite_mul, mul_zero,
     zero_mul, dite_apply, pi.zero_apply],
   simp only [eq_mp_eq_cast, mul_eq_mul, dite_eq_ite, if_t_t],
   congr,
@@ -116,7 +136,7 @@ lemma include_block_mul_ne_same {o : Type*} [fintype o] [decidable_eq o] {m' : o
   (include_block x) * (include_block y) = 0 :=
 begin
   ext,
-  simp_rw [include_block, linear_map.coe_mk, pi.mul_apply, mul_dite, dite_mul, mul_zero,
+  simp_rw [include_block_apply, pi.mul_apply, mul_dite, dite_mul, mul_zero,
     zero_mul, dite_apply, pi.zero_apply],
   simp only [eq_mp_eq_cast, mul_eq_mul, dite_eq_ite, if_t_t],
   finish,
@@ -129,7 +149,7 @@ lemma include_block_mul {o : Type*} [fintype o] [decidable_eq o] {m' : o → Typ
   (include_block x) * y = include_block (x * (y i)) :=
 begin
   ext,
-  simp only [include_block, linear_map.coe_mk, pi.mul_apply, dite_mul, zero_mul,
+  simp only [include_block_apply, pi.mul_apply, dite_mul, zero_mul,
     dite_apply, pi.zero_apply],
   split_ifs; simp,
   finish,
@@ -142,7 +162,7 @@ lemma mul_include_block {o : Type*} [fintype o] [decidable_eq o] {m' : o → Typ
   x * (include_block y) = include_block ((x i) * y) :=
 begin
   ext,
-  simp only [include_block, linear_map.coe_mk, pi.mul_apply, dite_mul, zero_mul,
+  simp only [include_block_apply, pi.mul_apply, dite_mul, zero_mul,
     dite_apply, pi.zero_apply],
   split_ifs; simp,
   finish,
@@ -155,7 +175,7 @@ lemma sum_include_block {R k : Type*} [comm_semiring R] [fintype k]
   ∑ i, include_block (x i) = x :=
 begin
   ext,
-  simp only [finset.sum_apply, include_block, linear_map.coe_mk, dite_apply, pi.zero_apply,
+  simp only [finset.sum_apply, include_block_apply, dite_apply, pi.zero_apply,
     finset.sum_dite_eq', finset.mem_univ, if_true],
   refl,
 end
@@ -171,7 +191,7 @@ begin
   { simp_rw [matrix.trace, matrix.diag, block_diagonal'_apply, eq_self_iff_true, dif_pos,
     finset.sum_sigma'],
     refl, },
-  { simp only [include_block, linear_map.coe_mk, matrix.trace, matrix.diag,
+  { simp only [include_block_apply, matrix.trace, matrix.diag,
       finset.sum_dite_irrel, finset.sum_const_zero, dite_apply, finset.sum_dite_eq,
       finset.mem_univ, if_true, pi.zero_apply],
     refl, },
@@ -215,6 +235,7 @@ lemma is_block_diagonal.add {k : Type*} [fintype k] [decidable_eq k]
 begin
   simp only [matrix.is_block_diagonal, block_diag'_add, block_diagonal'_add, hx.eq, hy.eq],
 end
+
 lemma is_block_diagonal.zero {k : Type*} [fintype k] [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
   (0 : matrix (Σ i, s i) (Σ i, s i) R).is_block_diagonal :=
@@ -358,7 +379,7 @@ lemma include_block_conj_transpose {R k : Type*} [comm_semiring R] [star_ring R]
   star x.include_block = xᴴ.include_block :=
 begin
   ext,
-  simp only [pi.star_apply, matrix.include_block, linear_map.coe_mk, star_apply, dite_apply,
+  simp only [pi.star_apply, include_block_apply, star_apply, dite_apply,
     pi.zero_apply, star_dite, star_zero, conj_transpose_apply],
   split_ifs; finish,
 end
@@ -368,7 +389,7 @@ lemma include_block_inj {k : Type*} [fintype k] [decidable_eq k]
   {i : k} {x y : matrix (s i) (s i) R} :
   x.include_block = y.include_block ↔ x = y :=
 begin
-  simp only [include_block, linear_map.coe_mk],
+  simp only [include_block_apply],
   refine ⟨λ h, _, λ h, by rw h⟩,
   simp_rw [function.funext_iff, dite_apply, pi.zero_apply, dite_eq_iff'] at h,
   ext1 j k,
@@ -404,10 +425,6 @@ lemma matrix_eq_sum_include_block {R k : Type*} [comm_semiring R]
   x = ∑ i, include_block (x i) :=
 (sum_include_block _).symm
 
-lemma include_block_apply {R k : Type*} [comm_semiring R] [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] {i : k} (x : matrix (s i) (s i) R) (j : k) :
-  include_block x j = dite (i = j) (λ h, by { rw h at x, exact x }) (λ h, 0) :=
-rfl
 lemma include_block_apply_same {R k : Type*} [comm_semiring R]
   [fintype k] [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
@@ -450,9 +467,283 @@ lemma include_block_mul_include_block  {R k : Type*} [comm_semiring R] [fintype 
     dite (j = i) (λ h, include_block (x * (by { rw ← h, exact y, }))) (λ h, 0) :=
 begin
   ext1,
-  simp [include_block, dite_mul, mul_dite, mul_zero, zero_mul, dite_apply, pi.zero_apply],
+  simp [include_block_apply, dite_mul, mul_dite, mul_zero, zero_mul, dite_apply, pi.zero_apply],
   split_ifs; finish,
 end
+
+lemma is_block_diagonal.mul {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {x y : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal)
+  (hy : y.is_block_diagonal) :
+  (x ⬝ y).is_block_diagonal :=
+begin
+  simp only [matrix.is_block_diagonal],
+  rw [← hx.eq, ← hy.eq, ← block_diagonal'_mul, block_diag'_block_diagonal'],
+end
+
+@[instance] def is_block_diagonal.has_mul {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  has_mul {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
+{ mul := λ x y, ⟨↑x ⬝ ↑y, is_block_diagonal.mul x.2 y.2⟩ }
+
+lemma is_block_diagonal.coe_mul {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {x y : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal}} :
+  ((x * y : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal})
+    : matrix (Σ i, s i) (Σ i, s i) R) = x * y :=
+rfl
+
+lemma is_block_diagonal.one {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  (1 : matrix (Σ i, s i) (Σ i, s i) R).is_block_diagonal :=
+by simp only [matrix.is_block_diagonal, block_diag'_one, block_diagonal'_one]
+
+@[instance] def is_block_diagonal.has_one {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  has_one {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
+{ one := ⟨(1 : matrix (Σ i, s i) (Σ i, s i) R), is_block_diagonal.one⟩ }
+
+lemma is_block_diagonal.coe_one {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  ((1 : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal})
+    : matrix (Σ i, s i) (Σ i, s i) R) = 1 :=
+rfl
+
+lemma is_block_diagonal.nsmul {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] (n : ℕ)
+  {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal) :
+  (n • x).is_block_diagonal :=
+begin
+  simp only [is_block_diagonal, block_diag'_smul, block_diagonal'_smul, hx.eq],
+end
+
+@[instance] def is_block_diagonal.has_nsmul {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] (n : ℕ) :
+  has_smul ℕ {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
+{ smul := λ n x, ⟨n • (x : matrix (Σ i, s i) (Σ i, s i) R), is_block_diagonal.nsmul n x.2⟩ }
+
+lemma is_block_diagonal.coe_nsmul {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (n : ℕ) (x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal}) :
+  ((n • x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal})
+    : matrix (Σ i, s i) (Σ i, s i) R) = n • ↑x :=
+by { rw [nsmul_eq_smul_cast R n x, is_block_diagonal.coe_smul, ← nsmul_eq_smul_cast R], }
+
+lemma is_block_diagonal.npow {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (n : ℕ) {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal) :
+  (x ^ n).is_block_diagonal :=
+begin
+  induction n with d hd,
+  { simp only [pow_zero], exact is_block_diagonal.one, },
+  { simp only [pow_succ, is_block_diagonal.mul, hd],
+    exact is_block_diagonal.mul hx hd, },
+end
+
+@[instance] def is_block_diagonal.has_npow {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  has_pow {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} ℕ :=
+{ pow := λ x n, ⟨(x : matrix (Σ i, s i) (Σ i, s i) R) ^ n, is_block_diagonal.npow n x.2⟩ }
+
+lemma is_block_diagonal.coe_npow {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (n : ℕ) (x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal}) :
+  ((x ^ n : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal})
+    : matrix (Σ i, s i) (Σ i, s i) R) = x ^ n :=
+rfl
+
+@[instance] def is_block_diagonal.semiring {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  semiring {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
+{ add := (+),
+  add_assoc := add_assoc,
+  zero := 0,
+  zero_add := zero_add,
+  add_zero := add_zero,
+  nsmul := (•),
+  nsmul_zero' := λ x, by simp only [zero_nsmul]; refl,
+  nsmul_succ' := λ n x, by { ext,
+    simp only [is_block_diagonal.coe_nsmul, is_block_diagonal.coe_add,
+      nat.succ_eq_add_one, add_smul, one_smul, add_comm], },
+  add_comm := add_comm,
+  mul := (*),
+  left_distrib := λ x y z, by { ext, simp only [is_block_diagonal.coe_mul,
+    is_block_diagonal.coe_add, mul_add], },
+  right_distrib := λ x y z, by { ext, simp only [is_block_diagonal.coe_mul,
+    is_block_diagonal.coe_add, add_mul], },
+  zero_mul := λ x, by { ext, simp only [is_block_diagonal.coe_mul,
+    is_block_diagonal.coe_zero, zero_mul], },
+  mul_zero := λ x, by { ext, simp only [is_block_diagonal.coe_mul,
+    is_block_diagonal.coe_zero, mul_zero], },
+  mul_assoc := λ x y z, by { ext, simp only [is_block_diagonal.coe_mul, mul_assoc], },
+  one := 1,
+  one_mul := λ x, by { ext, simp only [is_block_diagonal.coe_mul,
+    is_block_diagonal.coe_one, one_mul], },
+  mul_one := λ x, by { ext, simp only [is_block_diagonal.coe_mul,
+    is_block_diagonal.coe_one, mul_one], },
+  nat_cast := λ n, n • 1,
+  nat_cast_zero := by { ext, simp only [is_block_diagonal.coe_nsmul,
+    is_block_diagonal.coe_zero, zero_smul], },
+  nat_cast_succ := λ a, by { ext, simp only [is_block_diagonal.coe_nsmul,
+    is_block_diagonal.coe_one, is_block_diagonal.coe_add,
+    nat.succ_eq_add_one, add_smul, one_smul, add_comm], },
+  npow := λ n x, is_block_diagonal.has_npow.pow x n,
+  npow_zero' := λ x, by { ext, simp only [is_block_diagonal.coe_npow,
+    is_block_diagonal.coe_one, pow_zero], },
+  npow_succ' := λ n x, by { ext, simp_rw [is_block_diagonal.coe_npow,
+    nat.succ_eq_one_add, pow_add, is_block_diagonal.coe_mul, pow_one,
+    is_block_diagonal.coe_npow], } }
+
+@[instance] def is_block_diagonal.algebra {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  algebra R {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
+{ to_fun := λ r, r • 1,
+  map_one' := by { ext, simp only [is_block_diagonal.coe_nsmul,
+    is_block_diagonal.coe_one, one_smul], },
+  map_zero' := by { ext, simp only [is_block_diagonal.coe_nsmul,
+    is_block_diagonal.coe_zero, zero_smul], },
+  map_add' := λ x y, by { ext, simp only [is_block_diagonal.coe_nsmul, is_block_diagonal.coe_add,
+    add_smul, add_comm], },
+  map_mul' := λ x y, by { ext, simp only [is_block_diagonal.coe_smul,
+      is_block_diagonal.coe_mul, smul_mul_assoc],
+    simp only [pi.smul_apply, algebra.id.smul_eq_mul, mul_eq_mul, mul_smul,
+      is_block_diagonal.coe_one, matrix.one_mul, mul_assoc], },
+  commutes' := λ r x, by { ext, simp only [is_block_diagonal.coe_smul, is_block_diagonal.coe_mul,
+    smul_eq_mul, mul_smul_comm, smul_mul_assoc, is_block_diagonal.coe_one,
+    one_mul, mul_one], },
+  smul_def' := λ r x, by { ext, simp only [is_block_diagonal.coe_smul,
+    is_block_diagonal.coe_mul, is_block_diagonal.coe_one, smul_mul_assoc, one_mul], } }
+
+lemma is_block_diagonal.coe_block_diagonal'_block_diag' {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal}) :
+  block_diagonal' (block_diag' (x : matrix (Σ i, s i) (Σ i, s i) R)) = x :=
+x.2
+
+@[simps] def is_block_diagonal_pi_alg_equiv {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  { x : matrix (Σ i, s i) (Σ i, s i) R  // x.is_block_diagonal } ≃ₐ[R] Π i, matrix (s i) (s i) R :=
+{ to_fun := λ x, block_diag' (x : matrix (Σ i, s i) (Σ i, s i) R),
+  inv_fun := λ x, ⟨block_diagonal' x, matrix.is_block_diagonal.block_diagonal' x⟩,
+  left_inv := λ x, by { ext, simp only [is_block_diagonal.coe_block_diagonal'_block_diag',
+    block_diag'_block_diagonal', subtype.coe_mk], },
+  right_inv := λ x, by { ext, simp only [is_block_diagonal.coe_block_diagonal'_block_diag',
+    block_diag'_block_diagonal', subtype.coe_mk], },
+  map_add' := λ x y, by { ext, simp only [is_block_diagonal.coe_add, pi.add_apply,
+    block_diag'_add], },
+  commutes' := λ r, by { simp only [algebra.algebra_map_eq_smul_one, pi.smul_apply,
+      is_block_diagonal.coe_smul, is_block_diagonal.coe_one, block_diag'_smul,
+      block_diag'_one], },
+  map_mul' := λ x y, by { rw [← block_diagonal'_inj],
+    simp_rw [pi.mul_def, mul_eq_mul, block_diagonal'_mul,
+      is_block_diagonal.coe_block_diagonal'_block_diag' x,
+      is_block_diagonal.coe_block_diagonal'_block_diag' y,
+      is_block_diagonal.coe_block_diagonal'_block_diag' (x * y),
+      is_block_diagonal.coe_mul, mul_eq_mul], }, }
+
+lemma is_block_diagonal.star {R : Type*} [comm_semiring R] [star_add_monoid R] {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal) :
+  (xᴴ).is_block_diagonal :=
+begin
+  rw [is_block_diagonal],
+  nth_rewrite 1 [← hx.eq],
+  simp_rw [block_diagonal'_conj_transpose, ← block_diag'_conj_transpose],
+end
+
+@[instance] def is_block_diagonal.has_star {R : Type*} [comm_semiring R]
+  [star_add_monoid R] {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  has_star {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
+{ star := λ x, ⟨x.1ᴴ, is_block_diagonal.star x.2⟩ }
+
+lemma is_block_diagonal.coe_star {R : Type*} [comm_semiring R]
+  [star_add_monoid R] {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal}) :
+  ((star x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal})
+    : matrix (Σ i, s i) (Σ i, s i) R) = xᴴ :=
+rfl
+
+lemma is_block_diagonal_pi_alg_equiv.map_star {R : Type*} [comm_semiring R]
+  [star_add_monoid R] {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal}) :
+  is_block_diagonal_pi_alg_equiv (star x) = star (is_block_diagonal_pi_alg_equiv x) :=
+begin
+  ext1,
+  simp_rw [pi.star_apply, is_block_diagonal_pi_alg_equiv_apply, is_block_diagonal.coe_star,
+    block_diag'_conj_transpose],
+  refl,
+end
+
+lemma is_block_diagonal_pi_alg_equiv.symm_map_star {R : Type*} [comm_semiring R]
+  [star_add_monoid R] {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (x : Π i, matrix (s i) (s i) R) :
+  is_block_diagonal_pi_alg_equiv.symm (star x) = star (is_block_diagonal_pi_alg_equiv.symm x) :=
+begin
+  ext1,
+  simp_rw [is_block_diagonal.coe_star, is_block_diagonal_pi_alg_equiv_symm_apply_coe,
+    block_diagonal'_conj_transpose],
+  refl,
+end
+
+@[simps] def equiv.sigma_prod_distrib' {ι : Type*}
+  (β : Type*) (α : ι → Type*) :
+  β × (Σ (i : ι), α i) ≃ Σ (i : ι), β × α i :=
+begin
+  let : (Σ (i : ι), β × α i) ≃ Σ (i : ι), α i × β :=
+  by { apply equiv.sigma_congr_right,
+    intros i,
+    exact equiv.prod_comm _ _, },
+  exact ((equiv.prod_comm _ _).trans (equiv.sigma_prod_distrib _ _)).trans this.symm,
+end
+
+@[simps] def sigma_prod_sigma {α β : Type*}
+  {ζ : α → Type*} {℘ : β → Type*} :
+  (Σ i, ζ i) × (Σ i, ℘ i) ≃ Σ i j, ζ i × ℘ j :=
+{ to_fun := λ x, by {
+  refine ⟨(equiv.sigma_prod_distrib _ _ x).1, (equiv.sigma_prod_distrib' _ _ x).1, (x.1.2, x.2.2)⟩, },
+  inv_fun := λ x, by {
+    exact (⟨x.1, x.2.2.1⟩, ⟨x.2.1, x.2.2.2⟩) },
+  left_inv := λ x, by { ext;
+    simp only [equiv.sigma_prod_distrib'_apply_fst,
+      equiv.sigma_prod_distrib'_apply_snd,
+      equiv.sigma_prod_distrib, equiv.coe_fn_mk],
+    refl, },
+  right_inv := λ x, by { ext;
+    simp only [equiv.sigma_prod_distrib'_apply_fst, equiv.sigma_prod_distrib'_apply_snd,
+      equiv.coe_fn_mk, equiv.sigma_prod_distrib, equiv.coe_fn_mk],
+    simp only [prod.mk.eta, heq_iff_eq],
+    ext; simp only [equiv.sigma_prod_distrib'_apply_fst,
+      equiv.sigma_prod_distrib, equiv.coe_fn_mk],
+    refl, }, }
+
+open_locale kronecker
+def kronecker_mul_sigma_prod_sigma {R : Type*} [comm_semiring R] {k : Type*}
+  [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (x y : matrix (Σ i, s i) (Σ i, s i) R) :
+  matrix (Σ i j, s i × s j) (Σ i j, s i × s j) R :=
+λ i j, (x ⊗ₖ y) (sigma_prod_sigma.symm i)
+  (sigma_prod_sigma.symm j)
+
+lemma is_block_diagonal.apply_of_ne {R : Type*} [comm_semiring R] {k : Type*}
+  [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal)
+  (i j : Σ i, s i) (h : i.1 ≠ j.1) :
+  x i j = 0 :=
+begin
+  rw [← hx.eq],
+  simp_rw [block_diagonal'_apply, block_diag'_apply, dif_neg h],
+end
+
+lemma is_block_diagonal.apply_of_ne_coe {R : Type*} [comm_semiring R] {k : Type*}
+  [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (x : {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal})
+  (i j : Σ i, s i) (h : i.fst ≠ j.fst) :
+  (x : matrix (Σ i, s i) (Σ i, s i) R) i j = 0 :=
+is_block_diagonal.apply_of_ne x.2 i j h
 
 end matrix
 

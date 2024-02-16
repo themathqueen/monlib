@@ -18,9 +18,10 @@ import linear_algebra.pi_direct_sum
 
 /-!
 
-# Some results on the Hilbert space on C*-algebras
+# Some results on the Hilbert space on finite-dimensional C*-algebras
 
-This file contains some results on the Hilbert space on C*-algebras.
+This file contains some results on the Hilbert space on finite-dimensional C*-algebras
+  (so just a direct sum of matrix algebras over ℂ).
 
 -/
 
@@ -804,11 +805,6 @@ begin
   refl,
 end
 
-lemma finset.sum_sigma_univ {β α : Type*} [add_comm_monoid β]
-  [fintype α] [decidable_eq α] {σ : α → Type*} [Π i, fintype (σ i)] (f : (Σ i, σ i) → β) :
-  ∑ (x : Σ (i : α), σ i), f x = ∑ (a : α), ∑ (s : σ a), f (⟨a, s⟩ : Σ i, σ i) :=
-finset.sum_sigma _ _ _
-
 lemma linear_map.is_faithful_pos_map.basis_apply'
   [hφ : fact (linear_map.is_faithful_pos_map φ)]
   (i j : n) :
@@ -851,5 +847,81 @@ begin
   simp only [finset.sum_smul, finset.sum_sigma_univ],
   simp only [finset.sum_product_univ, smul_smul],
 end
+
+lemma tensor_product.of_basis_eq_span
+  {𝕜 : Type u_1} {E : Type u_2} {F : Type u_3}
+  [is_R_or_C 𝕜] [add_comm_group E] [module 𝕜 E] [add_comm_group F] [module 𝕜 F]
+  [finite_dimensional 𝕜 E] [finite_dimensional 𝕜 F]
+  (x : tensor_product 𝕜 E F)
+  {ι₁ ι₂ : Type*} [fintype ι₁] [fintype ι₂]
+  (b₁ : basis ι₁ 𝕜 E) (b₂ : basis ι₂ 𝕜 F) :
+  x = ∑ (i : ι₁) (j : ι₂), (b₁.tensor_product b₂).repr x (i,j) •
+    (b₁ i ⊗ₜ[𝕜] b₂ j) :=
+begin
+  apply x.induction_on,
+  { simp only [map_zero, finsupp.zero_apply, zero_smul, finset.sum_const_zero], },
+  { intros α₁ α₂,
+    simp_rw [basis.tensor_product_repr_tmul_apply, ← tensor_product.smul_tmul_smul,
+      ← tensor_product.tmul_sum, ← tensor_product.sum_tmul, basis.sum_repr], },
+  { intros a b ha hb,
+    simp only [map_add, finsupp.add_apply, add_smul, finset.sum_add_distrib],
+    rw [← ha, ← hb], },
+end
+
+-- example (hψ : Π i, (ψ i).is_faithful_pos_map) :
+--   matrix (Σ i, s i × s i) (Σ i, s i × s i) ℂ ≃ₐ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂ :=
+-- begin
+--   letI : ∀ (i : k), smul_comm_class ℂ ℂ ((λ (i : k), matrix (s i) (s i) ℂ) i) :=
+--   λ i, by apply_instance,
+--   let h₂ := @direct_sum_tensor ℂ _ k k _ _ _ _ (λ i, ℍ_ i) (λ i, ℍ_ i) _ _
+--     (λ i, matrix.module) (λ i, matrix.module),
+--   exact
+--   { to_fun := λ f,
+--     by {
+--       let f' :=
+--       apply h₂.symm.to_fun,
+--       intros i,
+--       apply kronecker_to_tensor.to_fun,
+--       intros a b,
+--       exact f ⟨i.1, (a.1, b.1)⟩ ⟨i.2, (a.2, b.2)⟩,
+--      }
+--     -- ∑ a i j b c d,
+--       -- ((hψ a).basis.tensor_product (hψ b).basis).repr
+--       ,
+--     inv_fun := _,
+--     left_inv := λ x, _,
+--     right_inv := λ x, _,
+--     map_mul' := λ x y, _,
+--     map_add' := λ x y, _,
+--     commutes' := λ r, _ }
+
+-- end
+
+-- noncomputable def linear_map.is_faithful_pos_map.direct_sum.to_matrix'
+--   (hψ : ∀ (i : k), (ψ i).is_faithful_pos_map) :
+--   l(ℍ₂) ≃ₐ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂ :=
+-- begin
+--   let M := linear_map.is_faithful_pos_map.direct_sum.to_matrix hψ,
+--   exact
+--   { to_fun := λ f, by { let f' := M f, },
+--     inv_fun := _,
+--     left_inv := λ x, _,
+--     right_inv := λ x, _,
+--     map_mul' := λ x y, _,
+--     map_add' := λ x y, _,
+--     commutes' := λ r, _ }
+-- end
+
+
+-- def linear_map.is_faithful_pos_map.direct_sum.Psi
+--   (hψ : Π i, fact (ψ i).is_faithful_pos_map) (t r : ℝ) :
+--   l(ℍ₂) ≃ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂ᵐᵒᵖ) :=
+-- begin
+--   letI : ∀ (i : k), smul_comm_class ℂ ℂ ((λ (i : k), matrix (s i) (s i) ℂ) i) :=
+--   λ i, by apply_instance,
+--   let h₁ := (linear_map.lrsum ℂ (λ i, ℍ_ i) (λ i, ℍ_ i) ℂ).symm,
+--   let h₂ := @direct_sum_tensor ℂ _ k k _ _ _ _ (λ i, ℍ_ i) (λ i, ℍ_ i) _ _
+--     (λ i, matrix.module) (λ i, matrix.module),
+-- end
 
 end direct_sum

@@ -88,7 +88,7 @@ begin
     simp only [include_block_mul], }
   ... = ∑ x_1, ((φ x_1).matrix * x x_1).trace :
   by {
-    simp only [include_block, linear_map.coe_mk, trace_iff,
+    simp only [include_block_apply, trace_iff,
       block_diagonal'_apply, dite_apply, eq_self_iff_true, dif_pos,
       pi.zero_apply, eq_mp_eq_cast, cast_eq],
     rw finset.sum_comm,
@@ -135,7 +135,7 @@ lemma linear_map.direct_sum_apply_single_block {k : Type*} [fintype k] [decidabl
   (i : k) :
   (linear_map.direct_sum φ) (include_block (x i)) = φ i (x i) :=
 begin
-  simp_rw [linear_map.direct_sum.linear_functional_eq, include_block, linear_map.coe_mk,
+  simp_rw [linear_map.direct_sum.linear_functional_eq, include_block_apply,
     ←mul_eq_mul, mul_dite, mul_zero, trace_iff, dite_apply, pi.zero_apply,
     finset.sum_dite_irrel, finset.sum_const_zero, finset.sum_dite_eq,
     finset.mem_univ, if_true, linear_map.linear_functional_eq', trace_iff],

@@ -8,6 +8,7 @@ import linear_algebra.my_matrix.pos_def_rpow
 import linear_algebra.mul''
 import linear_algebra.my_ips.basic
 import linear_algebra.pi_direct_sum
+import linear_algebra.to_matrix_of_equiv
 
 /-!
 
@@ -60,8 +61,7 @@ rfl
 lemma linear_map.direct_sum_matrix_block_apply {i : k} :
   linear_map.direct_sum_matrix_block ψ i = (ψ i).matrix :=
 begin
-  simp only [linear_map.direct_sum_matrix_block, finset.sum_apply, include_block,
-    linear_map.coe_mk, finset.sum_dite_eq', finset.mem_univ, if_true],
+  simp only [linear_map.direct_sum_matrix_block, finset.sum_apply, include_block_apply, finset.sum_dite_eq', finset.mem_univ, if_true],
   refl,
 end
 
@@ -624,7 +624,7 @@ lemma direct_sum.basis_apply (hψ : Π i, (ψ i).is_faithful_pos_map)
 begin
   simp only [direct_sum.basis, pi.basis_apply, function.funext_iff],
   intros i j k,
-  simp only [linear_map.std_basis_apply, pi.mul_apply, include_block, linear_map.coe_mk,
+  simp only [linear_map.std_basis_apply, pi.mul_apply, include_block_apply,
     mul_eq_mul, mul_apply, dite_apply, mul_dite, mul_zero, pi.zero_apply,
     function.update],
   rw [dite_eq_iff'],
@@ -666,8 +666,7 @@ lemma include_block_inner_same' [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   {i j : k} {x : matrix (s i) (s i) ℂ} {y : matrix (s j) (s j) ℂ} (h : i = j) :
   ⟪include_block x, include_block y⟫_ℂ = ⟪x, (by { rw h, exact y, })⟫_ℂ :=
 begin
-  simp only [include_block_left_inner, h, include_block_apply, eq_self_iff_true,
-    dif_pos],
+  simp_rw [include_block_left_inner, include_block_apply, h, eq_self_iff_true, dif_pos],
   refl,
 end
 
@@ -828,6 +827,18 @@ calc ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
   ((Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ))
     ≃ₐ[ℂ] _  :=
 linear_map.to_matrix_alg_equiv (direct_sum.basis hψ)
+
+@[simps] def direct_sum.to_matrix_aux (hψ : Π i, (ψ i).is_faithful_pos_map) :
+  ((Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ))
+    ≃ₐ[ℂ]
+  { x : matrix (Σ i, s i) (Σ i, s i) ℂ // x.is_block_diagonal }
+    →ₗ[ℂ] { x : matrix (Σ i, s i) (Σ i, s i) ℂ // x.is_block_diagonal } :=
+linear_map.linear_equiv.inner_conj is_block_diagonal_pi_alg_equiv.symm.to_linear_equiv
+
+@[simps] noncomputable def is_block_diagonal_basis (hψ : Π i, (ψ i).is_faithful_pos_map) :
+  basis (Σ i, s i × s i) ℂ { x : matrix (Σ i, s i) (Σ i, s i) ℂ // x.is_block_diagonal } :=
+{ repr := is_block_diagonal_pi_alg_equiv.to_linear_equiv.trans (direct_sum.basis hψ).repr }
+
 
 lemma direct_sum.to_matrix_apply'
   [hψ : Π i, fact (ψ i).is_faithful_pos_map]
