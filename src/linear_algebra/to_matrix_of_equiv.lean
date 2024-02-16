@@ -195,6 +195,16 @@ begin
     nth_rewrite_lhs 0 ← prod.eq_iff_fst_eq_snd_eq, },
 end
 
+def linear_equiv.inner_conj {R E F : Type*} [comm_semiring R] [add_comm_monoid E]
+  [add_comm_monoid F] [module R E] [module R F] (ϱ : E ≃ₗ[R] F) :
+  (E →ₗ[R] E) ≃ₐ[R] (F →ₗ[R] F) :=
+begin
+  apply alg_equiv.of_linear_equiv ϱ.conj (linear_equiv.conj_mul _),
+  intros r,
+  simp only [algebra.algebra_map_eq_smul_one, smul_hom_class.map_smul,
+    linear_equiv.conj_apply_one],
+end
+
 namespace linear_map
 
 open_locale matrix complex_conjugate big_operators
@@ -216,16 +226,6 @@ lemma to_lin_std_basis_std_basis {I J K L : Type*} [fintype I] [fintype J]
     = (reshape : matrix K L R ≃ₗ[R] _).symm.to_linear_map ∘ₗ x.to_lin'
       ∘ₗ (reshape : matrix I J R ≃ₗ[R] _).to_linear_map :=
 rfl
-
-def linear_equiv.inner_conj {R E F : Type*} [comm_semiring R] [add_comm_monoid E]
-  [add_comm_monoid F] [module R E] [module R F] (ϱ : E ≃ₗ[R] F) :
-  (E →ₗ[R] E) ≃ₐ[R] (F →ₗ[R] F) :=
-begin
-  apply alg_equiv.of_linear_equiv ϱ.conj (linear_equiv.conj_mul _),
-  intros r,
-  simp only [algebra.algebra_map_eq_smul_one, smul_hom_class.map_smul,
-    linear_equiv.conj_apply_one],
-end
 
 def to_matrix_of_alg_equiv :
   (matrix I J R →ₗ[R] matrix I J R) ≃ₐ[R] matrix (I × J) (I × J) R :=
@@ -293,7 +293,6 @@ end
 lemma to_lin_of_alg_equiv_to_matrix_of_alg_equiv (x : matrix (I × J) (I × J) R) :
   x.to_lin_of_alg_equiv.to_matrix_of_alg_equiv = x :=
 by rw [to_lin_of_alg_equiv, alg_equiv.apply_symm_apply]
-
 
 end matrix
 

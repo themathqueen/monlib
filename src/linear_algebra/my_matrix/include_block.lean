@@ -10,6 +10,7 @@ import preq.dite
 import linear_algebra.matrix.hermitian
 import linear_algebra.my_tensor_product
 import data.matrix.kronecker
+import linear_algebra.to_matrix_of_equiv
 
 /-!
 
@@ -720,14 +721,6 @@ end
       equiv.sigma_prod_distrib, equiv.coe_fn_mk],
     refl, }, }
 
-open_locale kronecker
-def kronecker_mul_sigma_prod_sigma {R : Type*} [comm_semiring R] {k : Type*}
-  [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  (x y : matrix (Σ i, s i) (Σ i, s i) R) :
-  matrix (Σ i j, s i × s j) (Σ i j, s i × s j) R :=
-λ i j, (x ⊗ₖ y) (sigma_prod_sigma.symm i)
-  (sigma_prod_sigma.symm j)
-
 lemma is_block_diagonal.apply_of_ne {R : Type*} [comm_semiring R] {k : Type*}
   [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
   {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal)
@@ -744,6 +737,34 @@ lemma is_block_diagonal.apply_of_ne_coe {R : Type*} [comm_semiring R] {k : Type*
   (i j : Σ i, s i) (h : i.fst ≠ j.fst) :
   (x : matrix (Σ i, s i) (Σ i, s i) R) i j = 0 :=
 is_block_diagonal.apply_of_ne x.2 i j h
+
+open_locale kronecker
+lemma is_block_diagonal.kronecker_mul {R : Type*} [comm_semiring R] {k : Type*}
+  [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {x y : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal) (hy : y.is_block_diagonal) :
+  is_block_diagonal (λ i j, (x ⊗ₖ y) (sigma_prod_sigma.symm i) (sigma_prod_sigma.symm j)) :=
+begin
+  rw [matrix.is_block_diagonal, block_diagonal'_ext],
+  intros a b c d,
+  simp only [block_diagonal'_apply', block_diag'_apply, kronecker_map_apply,
+    sigma_prod_sigma_symm_apply, dite_mul,
+    zero_mul, mul_dite, mul_zero],
+  split_ifs,
+  { dsimp [h],
+    congr; simp [h], },
+  { dsimp only,
+    rw [hx.apply_of_ne, zero_mul],
+    exact h, },
+end
+
+@[simps] def direct_sum_linear_map_alg_equiv_is_block_diagonal_linear_map
+  {R : Type*} [comm_semiring R] {k : Type*} [fintype k] [decidable_eq k] {s : k → Type*}
+  [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+  ((Π i, matrix (s i) (s i) R) →ₗ[R] (Π i, matrix (s i) (s i) R))
+    ≃ₐ[R]
+  { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal }
+    →ₗ[R] { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal } :=
+is_block_diagonal_pi_alg_equiv.symm.to_linear_equiv.inner_conj
 
 end matrix
 

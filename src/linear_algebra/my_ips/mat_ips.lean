@@ -828,17 +828,9 @@ calc ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
     ≃ₐ[ℂ] _  :=
 linear_map.to_matrix_alg_equiv (direct_sum.basis hψ)
 
-@[simps] def direct_sum.to_matrix_aux (hψ : Π i, (ψ i).is_faithful_pos_map) :
-  ((Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ))
-    ≃ₐ[ℂ]
-  { x : matrix (Σ i, s i) (Σ i, s i) ℂ // x.is_block_diagonal }
-    →ₗ[ℂ] { x : matrix (Σ i, s i) (Σ i, s i) ℂ // x.is_block_diagonal } :=
-linear_map.linear_equiv.inner_conj is_block_diagonal_pi_alg_equiv.symm.to_linear_equiv
-
 @[simps] noncomputable def is_block_diagonal_basis (hψ : Π i, (ψ i).is_faithful_pos_map) :
   basis (Σ i, s i × s i) ℂ { x : matrix (Σ i, s i) (Σ i, s i) ℂ // x.is_block_diagonal } :=
 { repr := is_block_diagonal_pi_alg_equiv.to_linear_equiv.trans (direct_sum.basis hψ).repr }
-
 
 lemma direct_sum.to_matrix_apply'
   [hψ : Π i, fact (ψ i).is_faithful_pos_map]
