@@ -140,3 +140,8 @@ begin
   rw [linear_map.adjoint_eq_to_clm_adjoint, smul_hom_class.map_smul, this],
   refl,
 end
+
+lemma linear_map.adjoint_one {K E : Type*} [is_R_or_C K]
+  [normed_add_comm_group E] [inner_product_space K E] [finite_dimensional K E] :
+  (1 : E →ₗ[K] E).adjoint = 1 :=
+star_one _

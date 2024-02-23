@@ -439,6 +439,38 @@ begin
   refl,
 end
 
+lemma nontracial.inner_symm (x y : ℍ) :
+  ⟪x, y⟫_ℂ = ⟪hφ.elim.sig (-1) yᴴ, xᴴ⟫_ℂ :=
+begin
+  nth_rewrite_rhs 0 [← inner_conj_symm],
+  simp_rw [linear_map.is_faithful_pos_map.sig_apply, neg_neg, pos_def.rpow_one_eq_self,
+    pos_def.rpow_neg_one_eq_inv_self, matrix.inner_conj_Q,
+    conj_transpose_conj_transpose],
+  nth_rewrite_lhs 0 [matrix.inner_star_right],
+  rw inner_conj_symm,
+end
+
+lemma linear_map.is_faithful_pos_map.sig_adjoint {t : ℝ} :
+  (hφ.elim.sig t : ℍ ≃ₐ[ℂ] ℍ).to_linear_map.adjoint = (hφ.elim.sig t).to_linear_map :=
+begin
+  rw [linear_map.ext_iff_inner_map],
+  intros x,
+  simp_rw [linear_map.adjoint_inner_left, linear_map.is_faithful_pos_map.inner_eq',
+    alg_equiv.to_linear_map_apply, linear_map.is_faithful_pos_map.sig_conj_transpose,
+    linear_map.is_faithful_pos_map.sig_apply, neg_neg],
+  let hQ := hφ.elim.matrix_is_pos_def,
+  let Q := φ.matrix,
+  calc (Q ⬝ xᴴ ⬝ (hQ.rpow (-t) ⬝ x ⬝ hQ.rpow t)).trace
+    = (hQ.rpow t ⬝ Q ⬝ xᴴ ⬝ hQ.rpow (-t) ⬝ x).trace : _
+    ... = (hQ.rpow t ⬝ hQ.rpow 1 ⬝ xᴴ ⬝ hQ.rpow (-t) ⬝ x).trace : by rw [pos_def.rpow_one_eq_self]
+    ... = (hQ.rpow 1 ⬝ hQ.rpow t ⬝ xᴴ ⬝ hQ.rpow (-t) ⬝ x).trace : _
+    ... = (Q ⬝ (hQ.rpow t ⬝ xᴴ ⬝ hQ.rpow (-t)) ⬝ x).trace :
+  by simp_rw [pos_def.rpow_one_eq_self, matrix.mul_assoc],
+  { rw [← matrix.mul_assoc, trace_mul_cycle],
+    simp_rw [matrix.mul_assoc], },
+  { simp_rw [pos_def.rpow_mul_rpow, add_comm], },
+end
+
 end single_block
 
 section direct_sum
@@ -923,5 +955,29 @@ end
 --   let h₂ := @direct_sum_tensor ℂ _ k k _ _ _ _ (λ i, ℍ_ i) (λ i, ℍ_ i) _ _
 --     (λ i, matrix.module) (λ i, matrix.module),
 -- end
+
+lemma direct_sum.inner_symm [hψ : Π i, fact (ψ i).is_faithful_pos_map] (x y : ℍ₂) :
+  ⟪x, y⟫_ℂ = ⟪(linear_map.is_faithful_pos_map.direct_sum.sig hψ (-1) (star y)), star x⟫_ℂ :=
+begin
+  simp_rw [linear_map.is_faithful_pos_map.direct_sum_inner_eq',
+    ← linear_map.is_faithful_pos_map.inner_eq', nontracial.inner_symm (x _)],
+  refl,
+end
+
+
+lemma linear_map.is_faithful_pos_map.direct_sum.sig_adjoint
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] {t : ℝ} :
+  (linear_map.is_faithful_pos_map.direct_sum.sig hψ t : ℍ₂ ≃ₐ[ℂ] ℍ₂).to_linear_map.adjoint
+  = (linear_map.is_faithful_pos_map.direct_sum.sig hψ t).to_linear_map :=
+begin
+  rw [linear_map.ext_iff_inner_map],
+  intro x,
+  simp_rw [linear_map.adjoint_inner_left, alg_equiv.to_linear_map_apply,
+    linear_map.is_faithful_pos_map.direct_sum_inner_eq',
+    ← linear_map.is_faithful_pos_map.inner_eq',
+    linear_map.is_faithful_pos_map.direct_sum.sig_eq_direct_sum_blocks,
+    ← alg_equiv.to_linear_map_apply, ← linear_map.adjoint_inner_left,
+    linear_map.is_faithful_pos_map.sig_adjoint],
+end
 
 end direct_sum

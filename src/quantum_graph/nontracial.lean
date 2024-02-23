@@ -11,6 +11,7 @@ import linear_algebra.my_ips.frob
 import linear_algebra.tensor_finite
 import linear_algebra.my_ips.op_unop
 import linear_algebra.lmul_rmul
+import quantum_graph.symm
 
 /-!
  # Quantum graphs: quantum adjacency matrices
@@ -153,22 +154,6 @@ begin
       linear_map.comp_smul, linear_map.smul_comp, ring_hom.id_apply], },  },
 end
 
-lemma linear_map.adjoint_one {K E : Type*} [is_R_or_C K]
-  [normed_add_comm_group E] [inner_product_space K E] [finite_dimensional K E] :
-  (1 : E →ₗ[K] E).adjoint = 1 :=
-star_one _
-
-lemma nontracial.inner_symm (x y : ℍ) :
-  ⟪x, y⟫_ℂ = ⟪hφ.elim.sig (-1) yᴴ, xᴴ⟫_ℂ :=
-begin
-  nth_rewrite_rhs 0 [← inner_conj_symm],
-  simp_rw [linear_map.is_faithful_pos_map.sig_apply, neg_neg, pos_def.rpow_one_eq_self,
-    pos_def.rpow_neg_one_eq_inv_self, inner_conj_Q,
-    conj_transpose_conj_transpose],
-  nth_rewrite_lhs 0 [inner_star_right],
-  rw inner_conj_symm,
-end
-
 lemma qam.rank_one.symmetric'_eq (a b : ℍ) :
   qam.symm' hφ.elim (|a⟩⟨b|) = |bᴴ⟩⟨hφ.elim.sig (-1) aᴴ| :=
 begin
@@ -199,27 +184,6 @@ begin
   by { rw [nontracial.inner_symm, conj_transpose_conj_transpose], }
   ... = inner (inner (hφ.elim.sig (-1) aᴴ) x • bᴴ) x :
   by { rw [inner_smul_left], },
-end
-
-lemma linear_map.is_faithful_pos_map.sig_adjoint {t : ℝ} :
-  (hφ.elim.sig t : ℍ ≃ₐ[ℂ] ℍ).to_linear_map.adjoint = (hφ.elim.sig t).to_linear_map :=
-begin
-  rw [linear_map.ext_iff_inner_map],
-  intros x,
-  simp_rw [linear_map.adjoint_inner_left, linear_map.is_faithful_pos_map.inner_eq',
-    alg_equiv.to_linear_map_apply, linear_map.is_faithful_pos_map.sig_conj_transpose,
-    linear_map.is_faithful_pos_map.sig_apply, neg_neg],
-  let hQ := hφ.elim.matrix_is_pos_def,
-  let Q := φ.matrix,
-  calc (Q ⬝ xᴴ ⬝ (hQ.rpow (-t) ⬝ x ⬝ hQ.rpow t)).trace
-    = (hQ.rpow t ⬝ Q ⬝ xᴴ ⬝ hQ.rpow (-t) ⬝ x).trace : _
-    ... = (hQ.rpow t ⬝ hQ.rpow 1 ⬝ xᴴ ⬝ hQ.rpow (-t) ⬝ x).trace : by rw [pos_def.rpow_one_eq_self]
-    ... = (hQ.rpow 1 ⬝ hQ.rpow t ⬝ xᴴ ⬝ hQ.rpow (-t) ⬝ x).trace : _
-    ... = (Q ⬝ (hQ.rpow t ⬝ xᴴ ⬝ hQ.rpow (-t)) ⬝ x).trace :
-  by simp_rw [pos_def.rpow_one_eq_self, matrix.mul_assoc],
-  { rw [← matrix.mul_assoc, trace_mul_cycle],
-    simp_rw [matrix.mul_assoc], },
-  { simp_rw [pos_def.rpow_mul_rpow, add_comm], },
 end
 
 lemma rank_one_lm_eq_rank_one {𝕜 E : Type*} [is_R_or_C 𝕜]
