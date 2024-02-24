@@ -35,7 +35,7 @@ lemma linear_functional_left_mul {R A : Type*} [comm_semiring R] [semiring A]
 by rw [star_semigroup.star_mul, star_star, mul_assoc]
 
 variables {k : Type*} [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)]
-  [Π i, decidable_eq (s i)] {ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ}
+  [Π i, decidable_eq (s i)] {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
   [hψ : Π i, fact (ψ i).is_faithful_pos_map]
 
 open matrix
@@ -43,30 +43,30 @@ open matrix
 open_locale matrix big_operators
 
 /-- A function that returns the direct sum of matrices for each index of type 'i'. -/
-def linear_map.direct_sum_matrix_block (ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ) :
+def module.dual.pi.matrix_block (ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)) :
   Π i, matrix (s i) (s i) ℂ :=
 ∑ i, (ψ i).matrix.include_block
 
 /-- A function that returns a direct sum matrix. -/
-def linear_map.direct_sum_matrix (ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ) :
+def module.dual.pi.matrix (ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ) :
   matrix (Σ i, s i) (Σ i, s i) ℂ :=
-block_diagonal' (linear_map.direct_sum_matrix_block ψ)
+block_diagonal' (module.dual.pi.matrix_block ψ)
 
 /-- A lemma that states the inner product of two direct sum matrices is the sum of the inner products of their components. -/
-lemma inner_direct_sum_eq_sum [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma inner_pi_eq_sum [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (x y : Π i, matrix (s i) (s i) ℂ) :
   ⟪x, y⟫_ℂ = ∑ i, ⟪x i, y i⟫_ℂ :=
 rfl
 
-lemma linear_map.direct_sum_matrix_block_apply {i : k} :
-  linear_map.direct_sum_matrix_block ψ i = (ψ i).matrix :=
+lemma module.dual.pi.matrix_block_apply {i : k} :
+  module.dual.pi.matrix_block ψ i = (ψ i).matrix :=
 begin
-  simp only [linear_map.direct_sum_matrix_block, finset.sum_apply, include_block_apply, finset.sum_dite_eq', finset.mem_univ, if_true],
+  simp only [module.dual.pi.matrix_block, finset.sum_apply, include_block_apply, finset.sum_dite_eq', finset.mem_univ, if_true],
   refl,
 end
 
 /-- A function that returns a star algebra equivalence for each index of type 'i'. -/
-def star_alg_equiv.direct_sum {𝕜 : Type*} [is_R_or_C 𝕜]
+def star_alg_equiv.pi {𝕜 : Type*} [is_R_or_C 𝕜]
   {k : Type u_1}  [fintype k]  [decidable_eq k] {s : k → Type*}
   [Π (i : k), fintype (s i)] [Π (i : k), decidable_eq (s i)]
   (f : Π i, matrix (s i) (s i) 𝕜 ≃⋆ₐ[𝕜] matrix (s i) (s i) 𝕜) :
@@ -90,41 +90,41 @@ def star_alg_equiv.direct_sum {𝕜 : Type*} [is_R_or_C 𝕜]
     simp only [pi.star_apply, map_star],
     refl, } }
 
-lemma star_alg_equiv.direct_sum_apply {𝕜 : Type*} [is_R_or_C 𝕜]
+lemma star_alg_equiv.pi_apply {𝕜 : Type*} [is_R_or_C 𝕜]
   {k : Type u_1}  [fintype k]  [decidable_eq k] {s : k → Type*}
   [Π (i : k), fintype (s i)] [Π (i : k), decidable_eq (s i)]
   (f : Π i, matrix (s i) (s i) 𝕜 ≃⋆ₐ[𝕜] matrix (s i) (s i) 𝕜)
   (x : Π i, matrix (s i) (s i) 𝕜) (i : k) :
-  star_alg_equiv.direct_sum f x i = f i (x i) :=
+  star_alg_equiv.pi f x i = f i (x i) :=
 rfl
 
 /-- the unitary element from the star algebraic equivalence -/
-noncomputable def star_alg_equiv.direct_sum.unitary {𝕜 : Type*} [is_R_or_C 𝕜]
+noncomputable def star_alg_equiv.pi.unitary {𝕜 : Type*} [is_R_or_C 𝕜]
   {k : Type u_1}  [fintype k]  [decidable_eq k] {s : k → Type*}
   [Π (i : k), fintype (s i)] [Π (i : k), decidable_eq (s i)]
   (f : Π i, matrix (s i) (s i) 𝕜 ≃⋆ₐ[𝕜] matrix (s i) (s i) 𝕜) :
   Π i, unitary_group (s i) 𝕜 :=
 λ i, (f i).unitary
 
-lemma star_alg_equiv.direct_sum.unitary_apply {𝕜 : Type*} [is_R_or_C 𝕜]
+lemma star_alg_equiv.pi.unitary_apply {𝕜 : Type*} [is_R_or_C 𝕜]
   {k : Type u_1}  [fintype k]  [decidable_eq k] {s : k → Type*}
   [Π (i : k), fintype (s i)] [Π (i : k), decidable_eq (s i)]
   (f : Π i, matrix (s i) (s i) 𝕜 ≃⋆ₐ[𝕜] matrix (s i) (s i) 𝕜) (a : k) :
-  (star_alg_equiv.direct_sum.unitary f) a = (f a).unitary :=
+  (star_alg_equiv.pi.unitary f) a = (f a).unitary :=
 rfl
 
 /-- any $^*$-isomorphism on $\bigoplus_i M_{n_i}$ is an inner automorphism -/
-lemma star_alg_equiv.of_direct_sum_matrix_is_inner {𝕜 : Type*} [is_R_or_C 𝕜]
+lemma star_alg_equiv.of_pi_is_inner {𝕜 : Type*} [is_R_or_C 𝕜]
   {k : Type u_1}  [fintype k]  [decidable_eq k] {s : k → Type*}
   [Π (i : k), fintype (s i)] [Π (i : k), decidable_eq (s i)]
   (f : Π i, matrix (s i) (s i) 𝕜 ≃⋆ₐ[𝕜] matrix (s i) (s i) 𝕜) :
   unitary.inner_aut_star_alg 𝕜
-    (unitary.pi (star_alg_equiv.direct_sum.unitary f))
-    = star_alg_equiv.direct_sum f :=
+    (unitary.pi (star_alg_equiv.pi.unitary f))
+    = star_alg_equiv.pi f :=
 begin
   simp_rw [star_alg_equiv.ext_iff, unitary.inner_aut_star_alg_apply, function.funext_iff,
     pi.mul_apply, unitary.pi_apply, unitary.coe_star, pi.star_apply, unitary.pi_apply,
-    star_alg_equiv.direct_sum_apply, star_alg_equiv.direct_sum.unitary_apply],
+    star_alg_equiv.pi_apply, star_alg_equiv.pi.unitary_apply],
   intros,
   rw [← unitary.coe_star, ← @unitary.inner_aut_star_alg_apply 𝕜 _ _ _ _ _
     ((f a_1).unitary) (a a_1)],
@@ -152,50 +152,50 @@ begin
     refl, },
 end
 
-lemma linear_map.direct_sum.linear_functional_eq'' (ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ)
+lemma module.dual.pi.apply'' (ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ)
   (x : Π i, matrix (s i) (s i) ℂ) :
-  linear_map.direct_sum ψ x
-    = (block_diagonal' (linear_map.direct_sum_matrix_block ψ) * block_diagonal' x).trace :=
+  module.dual.pi ψ x
+    = (block_diagonal' (module.dual.pi.matrix_block ψ) * block_diagonal' x).trace :=
 begin
-  simp_rw [linear_map.direct_sum.linear_functional_eq', linear_map.direct_sum_matrix_block,
+  simp_rw [module.dual.pi.apply', module.dual.pi.matrix_block,
     ← block_diagonal'_alg_hom_apply, map_sum, finset.sum_mul, trace_sum, mul_eq_mul],
 end
 
-lemma star_alg_equiv.direct_sum_is_trace_preserving
+lemma star_alg_equiv.pi_is_trace_preserving
   (f : Π i, matrix (s i) (s i) ℂ ≃⋆ₐ[ℂ] matrix (s i) (s i) ℂ) (x : Π i, matrix (s i) (s i) ℂ) :
-  (block_diagonal'_alg_hom ((star_alg_equiv.direct_sum f) x)).trace
+  (block_diagonal'_alg_hom ((star_alg_equiv.pi f) x)).trace
     = (block_diagonal'_alg_hom x).trace :=
 begin
-  rw matrix_eq_sum_include_block ((star_alg_equiv.direct_sum f) x),
+  rw matrix_eq_sum_include_block ((star_alg_equiv.pi f) x),
   nth_rewrite_rhs 0 matrix_eq_sum_include_block x,
   simp only [map_sum, trace_sum],
   simp only [block_diagonal'_alg_hom_apply, block_diagonal'_include_block_trace,
-    star_alg_equiv.direct_sum_apply, star_alg_equiv.trace_preserving],
+    star_alg_equiv.pi_apply, star_alg_equiv.trace_preserving],
 end
 
-lemma star_alg_equiv.direct_sum_symm_apply_apply
+lemma star_alg_equiv.pi_symm_apply_apply
   (f : Π i, matrix (s i) (s i) ℂ ≃⋆ₐ[ℂ] matrix (s i) (s i) ℂ)
   (x : Π i, matrix (s i) (s i) ℂ) :
-  (star_alg_equiv.direct_sum (λ i, (f i).symm))
-    ((star_alg_equiv.direct_sum f) x) = x :=
+  (star_alg_equiv.pi (λ i, (f i).symm))
+    ((star_alg_equiv.pi f) x) = x :=
 begin
   ext1,
-  simp only [star_alg_equiv.direct_sum_apply, star_alg_equiv.symm_apply_apply],
+  simp only [star_alg_equiv.pi_apply, star_alg_equiv.symm_apply_apply],
 end
 
-lemma linear_map.linear_functional_direct_sum_eq_of (ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ)
+lemma module.dual.pi.apply_eq_of (ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ))
   (x : Π i, matrix (s i) (s i) ℂ)
-  (h : ∀ a, linear_map.direct_sum ψ a = (block_diagonal' x * block_diagonal' a).trace) :
-  x = linear_map.direct_sum_matrix_block ψ :=
+  (h : ∀ a, module.dual.pi ψ a = (block_diagonal' x * block_diagonal' a).trace) :
+  x = module.dual.pi.matrix_block ψ :=
 begin
   ext1,
-  simp only [linear_map.direct_sum_matrix_block_apply],
-  apply linear_map.linear_functional_eq_of,
+  simp only [module.dual.pi.matrix_block_apply],
+  apply module.dual.apply_eq_of,
   intros a,
   let a' := include_block a,
   have ha' : a = a' x_1 := by simp only [a', include_block_apply_same],
   specialize h a',
-  simp_rw [ha', ← linear_map.direct_sum_apply_single_block,
+  simp_rw [ha', ← module.dual.pi.apply_single_block,
     ← mul_eq_mul, ← pi.mul_apply, ← block_diagonal'_include_block_trace,
     ← ha', pi.mul_apply, ← ha'],
   simp only [← block_diagonal'_alg_hom_apply, ← _root_.map_mul, a',
@@ -203,19 +203,24 @@ begin
   exact h,
 end
 
-lemma star_alg_equiv.direct_sum_symm_apply_eq
+lemma star_alg_equiv.pi_symm_apply_eq
   (f : Π i, matrix (s i) (s i) ℂ ≃⋆ₐ[ℂ] matrix (s i) (s i) ℂ)
   (x y : Π i, matrix (s i) (s i) ℂ) :
-  star_alg_equiv.direct_sum (λ i, (f i).symm) x = y
-    ↔ x = star_alg_equiv.direct_sum f y :=
+  star_alg_equiv.pi (λ i, (f i).symm) x = y
+    ↔ x = star_alg_equiv.pi f y :=
 begin
-  split,
-  { rintros rfl,
-    ext1,
-    simp only [star_alg_equiv.direct_sum_apply, star_alg_equiv.apply_symm_apply], },
-  { rintros rfl,
-    ext1,
-    simp only [star_alg_equiv.direct_sum_apply, star_alg_equiv.symm_apply_apply], },
+  split; rintros rfl; ext1; simp only [star_alg_equiv.pi_apply],
+  { rw star_alg_equiv.apply_symm_apply, },
+  { rw star_alg_equiv.symm_apply_apply, },
+end
+
+lemma unitary.inj_mul {A : Type*} [monoid A]
+  [star_semigroup A] (U : unitary A) (x y : A) :
+  x = y ↔ x * U = y * U :=
+begin
+  rw [is_unit.mul_left_inj],
+  { rw [← unitary.coe_to_units_apply],
+    exact (unitary.to_units U).is_unit, },
 end
 
 section single_block
@@ -224,9 +229,9 @@ section single_block
 -/
 
 variables {n : Type*} [decidable_eq n] [fintype n]
-  {φ : matrix n n ℂ →ₗ[ℂ] ℂ} [hφ : fact φ.is_faithful_pos_map]
+  {φ : module.dual ℂ (matrix n n ℂ)} [hφ : fact φ.is_faithful_pos_map]
 
-namespace linear_map.is_faithful_pos_map
+namespace module.dual.is_faithful_pos_map
 
 lemma inner_eq [hφ : fact φ.is_faithful_pos_map]
   (x y : matrix n n ℂ) :
@@ -236,18 +241,18 @@ rfl
 lemma inner_eq' [hφ : fact φ.is_faithful_pos_map]
   (x y : matrix n n ℂ) :
   ⟪x, y⟫_ℂ = (φ.matrix ⬝ xᴴ ⬝ y).trace :=
-by rw [inner_eq, φ.linear_functional_eq', matrix.mul_assoc]
+by rw [inner_eq, φ.apply, matrix.mul_assoc]
 
 def matrix_is_pos_def (hφ : φ.is_faithful_pos_map) :
   φ.matrix.pos_def :=
 φ.is_faithful_pos_map_iff_of_matrix.mp hφ
 
-lemma linear_functional_mul_right (hφ : φ.is_faithful_pos_map)
+lemma mul_right (hφ : φ.is_faithful_pos_map)
   (x y z : matrix n n ℂ) :
   φ (xᴴ ⬝ (y ⬝ z)) = φ ((x ⬝ (φ.matrix ⬝ zᴴ ⬝ φ.matrix⁻¹))ᴴ ⬝ y) :=
 begin
   haveI := hφ.matrix_is_pos_def.invertible,
-  simp_rw [φ.linear_functional_eq', matrix.conj_transpose_mul,
+  simp_rw [φ.apply, matrix.conj_transpose_mul,
     matrix.conj_transpose_conj_transpose, hφ.matrix_is_pos_def.1.eq, hφ.matrix_is_pos_def.inv.1.eq,
     ← matrix.mul_assoc, matrix.mul_assoc, matrix.mul_inv_cancel_left_of_invertible],
   rw [matrix.trace_mul_cycle', matrix.mul_assoc, ← matrix.trace_mul_cycle', matrix.mul_assoc],
@@ -266,9 +271,9 @@ linear_functional_left_mul _ _ _
 lemma inner_left_conj [hφ : fact φ.is_faithful_pos_map]
   (x y z : matrix n n ℂ) :
   ⟪x, y ⬝ z⟫_ℂ = ⟪x ⬝ (φ.matrix ⬝ zᴴ ⬝ φ.matrix⁻¹), y⟫_ℂ :=
-hφ.elim.linear_functional_mul_right _ _ _
+hφ.elim.mul_right _ _ _
 
-lemma linear_functional_mul_left (hφ : φ.is_faithful_pos_map) (x y z : matrix n n ℂ) :
+lemma mul_left (hφ : φ.is_faithful_pos_map) (x y z : matrix n n ℂ) :
   φ ((x ⬝ y)ᴴ ⬝ z) = φ (xᴴ ⬝ (z ⬝ (φ.matrix ⬝ yᴴ ⬝ φ.matrix⁻¹))) :=
 begin
   letI := fact.mk hφ,
@@ -279,7 +284,7 @@ end
 
 lemma inner_right_conj [hφ : fact φ.is_faithful_pos_map] (x y z : matrix n n ℂ) :
   ⟪x ⬝ y, z⟫_ℂ = ⟪x, z ⬝ (φ.matrix ⬝ yᴴ ⬝ φ.matrix⁻¹)⟫_ℂ :=
-hφ.elim.linear_functional_mul_left _ _ _
+hφ.elim.mul_left _ _ _
 
 lemma adjoint_eq [hφ : fact φ.is_faithful_pos_map] :
   φ.adjoint = (algebra.linear_map ℂ (matrix n n ℂ) : ℂ →ₗ[ℂ] matrix n n ℂ) :=
@@ -319,20 +324,34 @@ begin
     mul_inv_of_invertible, matrix.mul_one],
 end
 
-/-- Let $f$ be a  star-algebraic equivalence on matrix algebras. Then tfae:
+lemma star_alg_equiv_unitary_commute_iff [hφ : fact φ.is_faithful_pos_map]
+  (f : matrix n n ℂ ≃⋆ₐ[ℂ] matrix n n ℂ) :
+  commute φ.matrix f.unitary ↔ f φ.matrix = φ.matrix :=
+begin
+  rw [commute, semiconj_by],
+  nth_rewrite 2 [← star_alg_equiv.eq_inner_aut f],
+  rw [inner_aut_star_alg_apply, ← unitary_group.star_coe_eq_coe_star],
+  nth_rewrite 1 [unitary_group.injective_mul f.unitary],
+  simp_rw [matrix.mul_assoc, unitary_group.star_mul_self, matrix.mul_one, mul_eq_mul, eq_comm],
+end
 
-  - $f(Q)=Q$ where $Q$ is `hφ.matrix`,
-  - $f^* = f⁻¹$,
-  - $\phi \circ f = \phi$,
-  - $\langle f(x)|f(y) \rangle = \langle x | y \rangle$ for all $x,y \in M_n$,
-  - $‖f x‖ = ‖x‖$ for all $x$. -/
+/-- Let `f` be a  star-algebraic equivalence on matrix algebras. Then tfae:
+
+* `f φ.matrix = φ.matrix`,
+* `f.adjoint = f⁻¹`,
+* `φ ∘ f = φ`,
+* `∀ x y, ⟪f x, f y⟫_ℂ = ⟪x, y⟫_ℂ`,
+* `∀ x, ‖f x‖ = ‖x‖`,
+* `φ.matrix` commutes with `f.unitary`.
+-/
 lemma star_alg_equiv_is_isometry_tfae [hφ : fact φ.is_faithful_pos_map]
   [nontrivial n] (f : matrix n n ℂ ≃⋆ₐ[ℂ] matrix n n ℂ) :
   tfae [f φ.matrix = φ.matrix,
-      ((f : matrix n n ℂ ≃⋆ₐ[ℂ] matrix n n ℂ).to_alg_equiv.to_linear_map : matrix n n ℂ →ₗ[ℂ] matrix n n ℂ).adjoint = f.symm.to_alg_equiv.to_linear_map,
+    ((f : matrix n n ℂ ≃⋆ₐ[ℂ] matrix n n ℂ).to_alg_equiv.to_linear_map : matrix n n ℂ →ₗ[ℂ] matrix n n ℂ).adjoint = f.symm.to_alg_equiv.to_linear_map,
     φ ∘ₗ f.to_alg_equiv.to_linear_map = φ,
     ∀ x y, ⟪f x, f y⟫_ℂ = ⟪x, y⟫_ℂ,
-    ∀ x : matrix n n ℂ, ‖f x‖ = ‖x‖] :=
+    ∀ x : matrix n n ℂ, ‖f x‖ = ‖x‖,
+    commute φ.matrix f.unitary] :=
 begin
   tfae_have : 5 ↔ 2,
   { simp_rw [inner_product_space.core.norm_eq_sqrt_inner,
@@ -359,7 +378,7 @@ begin
   haveI := hφ.elim.matrix_is_pos_def.invertible,
   simp_rw [linear_map.ext_iff, star_alg_equiv_adjoint_eq f, linear_map.comp_apply,
     alg_equiv.to_linear_map_apply, star_alg_equiv.coe_to_alg_equiv,
-    mul_inv_eq_iff_eq_mul_of_invertible, φ.linear_functional_eq',
+    mul_inv_eq_iff_eq_mul_of_invertible, φ.apply,
     star_alg_equiv.symm_apply_eq, ← mul_eq_mul, _root_.map_mul, star_alg_equiv.apply_symm_apply,
     ← forall_left_mul φ.matrix, @eq_comm _ φ.matrix],
   tfae_have : 1 ↔ 2,
@@ -371,14 +390,15 @@ begin
   tfae_have : 3 → 1,
   { intros i,
     simp_rw [← f.symm.trace_preserving (φ.matrix * (f _)), _root_.map_mul,
-      star_alg_equiv.symm_apply_apply, mul_eq_mul, ← φ.linear_functional_eq',
+      star_alg_equiv.symm_apply_apply, mul_eq_mul, ← φ.apply,
       @eq_comm _ _ (φ _)] at i,
-    obtain ⟨Q, hQ, h⟩ := φ.linear_functional_eq,
+    obtain ⟨Q, hQ, h⟩ := module.dual.eq_trace_unique φ,
     have := h _ i,
     rw star_alg_equiv.symm_apply_eq at this,
     nth_rewrite_rhs 0 this,
     congr',
-    exact h _ φ.linear_functional_eq', },
+    exact h _ φ.apply, },
+  rw [star_alg_equiv_unitary_commute_iff],
   tfae_finish,
 end
 
@@ -442,7 +462,7 @@ lemma basis_is_orthonormal [hφ : fact φ.is_faithful_pos_map] :
   orthonormal ℂ hφ.elim.basis :=
 begin
   rw orthonormal_iff_ite,
-  simp_rw [linear_map.is_faithful_pos_map.basis_apply],
+  simp_rw [module.dual.is_faithful_pos_map.basis_apply],
   simp_rw [inner_eq', conj_transpose_mul, (pos_def.rpow.is_hermitian _ _).eq,
     std_basis_matrix.star_one, matrix.mul_assoc, ← matrix.mul_assoc _ (std_basis_matrix _ _ _),
     std_basis_matrix_mul, one_mul, matrix.smul_mul, matrix.mul_smul,
@@ -531,15 +551,15 @@ begin
   simp_rw [smul_smul, prod.mk.eta],
 end
 
-end linear_map.is_faithful_pos_map
+end module.dual.is_faithful_pos_map
 
 local notation `|` x `⟩⟨` y `|` := @rank_one ℂ _ _ _ _ x y
-lemma linear_map.eq_rank_one_of_faithful_pos_map
+lemma module.dual.eq_rank_one_of_faithful_pos_map
   [hφ : fact φ.is_faithful_pos_map]
   (x : matrix n n ℂ →ₗ[ℂ] matrix n n ℂ) :
   x = ∑ i j k l : n, hφ.elim.to_matrix x (i,j) (k,l)
     • (|hφ.elim.basis (i, j)⟩⟨hφ.elim.basis (k, l)|) :=
-by rw [← linear_map.is_faithful_pos_map.to_matrix_symm_apply, alg_equiv.symm_apply_apply]
+by rw [← module.dual.is_faithful_pos_map.to_matrix_symm_apply, alg_equiv.symm_apply_apply]
 
 end single_block
 
@@ -549,56 +569,81 @@ section direct_sum
 
 /-! # Section direct_sum -/
 
-namespace linear_map.is_faithful_pos_map
+lemma linear_map.sum_single_comp_proj {R : Type*} {ι : Type*} [fintype ι] [decidable_eq ι] [semiring R] {φ : ι → Type*}
+  [Π (i : ι), add_comm_monoid (φ i)] [Π (i : ι), module R (φ i)] :
+  ∑ i : ι, linear_map.single i ∘ₗ linear_map.proj i
+    = (linear_map.id : (Π i, φ i) →ₗ[R] (Π i, φ i)) :=
+begin
+  simp_rw [linear_map.ext_iff, linear_map.sum_apply, linear_map.id_apply,
+    linear_map.comp_apply, linear_map.proj_apply,
+    linear_map.coe_single, pi.single, function.funext_iff,
+    finset.sum_apply, function.update, pi.zero_apply,
+    finset.sum_dite_eq, finset.mem_univ, if_true],
+  intros x y, trivial,
+end
 
-lemma direct_sum_inner_eq [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma linear_map.lrsum_eq_single_proj_lrcomp (f : (Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ)) :
+  ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
+    ∘ₗ (linear_map.single p) ∘ₗ (linear_map.proj p) = f :=
+calc ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
+    ∘ₗ (linear_map.single p) ∘ₗ (linear_map.proj p)
+  = (∑ r, (linear_map.single r) ∘ₗ (linear_map.proj r)) ∘ₗ f
+      ∘ₗ ∑ p, (linear_map.single p) ∘ₗ (linear_map.proj p) :
+  by simp_rw [linear_map.sum_comp, linear_map.comp_sum, linear_map.comp_assoc]
+  ... = linear_map.id ∘ₗ f ∘ₗ linear_map.id : by rw linear_map.sum_single_comp_proj
+  ... = f : by rw [linear_map.id_comp, linear_map.comp_id]
+
+namespace module.dual.pi.is_faithful_pos_map
+
+lemma inner_eq [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (x y : Π i, matrix (s i) (s i) ℂ) :
-  ⟪x, y⟫_ℂ = linear_map.direct_sum ψ (star x * y) :=
+  ⟪x, y⟫_ℂ = module.dual.pi ψ (star x * y) :=
 rfl
 
-lemma direct_sum_inner_eq' [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma inner_eq' [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (x y : Π i, matrix (s i) (s i) ℂ) :
   ⟪x, y⟫_ℂ = ∑ i, ((ψ i).matrix ⬝ (x i)ᴴ ⬝ y i).trace :=
 begin
-  simp only [direct_sum_inner_eq, linear_map.direct_sum.linear_functional_eq, pi.mul_apply,
+  simp only [inner_eq, module.dual.pi.apply, pi.mul_apply,
     matrix.mul_eq_mul, matrix.star_eq_conj_transpose, pi.star_apply, matrix.mul_assoc],
 end
 
-lemma direct_sum_inner_left_mul [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma inner_left_mul [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (x y z : Π i, matrix (s i) (s i) ℂ) :
   ⟪x * y, z⟫_ℂ = ⟪y, star x * z⟫_ℂ :=
-@linear_functional_right_mul _ _ _ _ _ _ (linear_map.direct_sum ψ) _ _ _
+@linear_functional_right_mul _ _ _ _ _ _ (module.dual.pi ψ) _ _ _
 
-lemma direct_sum_linear_functional_mul_right (hψ : Π i, (ψ i).is_faithful_pos_map)
+lemma mul_right (hψ : Π i, (ψ i).is_faithful_pos_map)
   (x y z : Π i, matrix (s i) (s i) ℂ) :
-  linear_map.direct_sum ψ (star x * (y * z))
-    = linear_map.direct_sum ψ
+  module.dual.pi ψ (star x * (y * z))
+    = module.dual.pi ψ
       (star (x *
-        ((linear_map.direct_sum_matrix_block ψ) * (star z)
-          * (linear_map.direct_sum_matrix_block ψ)⁻¹)) * y) :=
+        ((module.dual.pi.matrix_block ψ) * (star z)
+          * (module.dual.pi.matrix_block ψ)⁻¹)) * y) :=
 begin
   letI := λ i, fact.mk (hψ i),
-  rw [← direct_sum_inner_eq],
-  simp only [direct_sum_inner_eq'],
-  simp_rw [← inner_eq', pi.mul_apply, matrix.mul_eq_mul,
-    inner_left_conj, ← direct_sum_inner_eq, inner_direct_sum_eq_sum,
+  rw [← inner_eq],
+  simp only [inner_eq'],
+  simp_rw [← module.dual.is_faithful_pos_map.inner_eq', pi.mul_apply, matrix.mul_eq_mul,
+    module.dual.is_faithful_pos_map.inner_left_conj,
+    ← inner_eq, inner_pi_eq_sum,
     pi.mul_apply, pi.inv_apply, pi.star_apply, matrix.mul_eq_mul,
-    matrix.star_eq_conj_transpose, linear_map.direct_sum_matrix_block_apply],
+    matrix.star_eq_conj_transpose, module.dual.pi.matrix_block_apply],
 end
 
-lemma direct_sum_inner_left_conj [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma inner_left_conj [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (x y z : Π i, matrix (s i) (s i) ℂ) :
-  ⟪x, y * z⟫_ℂ = ⟪x * ((linear_map.direct_sum_matrix_block ψ) * (star z)
-          * (linear_map.direct_sum_matrix_block ψ)⁻¹), y⟫_ℂ :=
-direct_sum_linear_functional_mul_right (λ i, (hψ i).elim) _ _ _
+  ⟪x, y * z⟫_ℂ = ⟪x * ((module.dual.pi.matrix_block ψ) * (star z)
+          * (module.dual.pi.matrix_block ψ)⁻¹), y⟫_ℂ :=
+mul_right (λ i, (hψ i).elim) _ _ _
 
-lemma direct_sum_inner_right_mul [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma inner_right_mul [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (x y z : Π i, matrix (s i) (s i) ℂ) :
   ⟪x, y * z⟫_ℂ = ⟪star y * x, z⟫_ℂ :=
-@linear_functional_left_mul _ _ _ _ _ _ (linear_map.direct_sum ψ) _ _ _
+@linear_functional_left_mul _ _ _ _ _ _ (module.dual.pi ψ) _ _ _
 
-lemma direct_sum_adjoint_eq [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  (linear_map.direct_sum ψ).adjoint
+lemma adjoint_eq [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
+  (module.dual.pi ψ).adjoint
     = algebra.linear_map ℂ (Π i, matrix (s i) (s i) ℂ) :=
 begin
   rw linear_map.ext_iff,
@@ -606,23 +651,23 @@ begin
   apply @ext_inner_right ℂ,
   intros y,
   rw [linear_map.adjoint_inner_left, algebra.linear_map_apply],
-  simp_rw [inner_direct_sum_eq_sum, pi.algebra_map_apply, algebra_map_eq_smul,
-    inner_product_space.core.inner_smul_left, inner_eq, conj_transpose_one, matrix.one_mul,
-    ← finset.mul_sum],
+  simp_rw [inner_pi_eq_sum, pi.algebra_map_apply, algebra_map_eq_smul,
+    inner_product_space.core.inner_smul_left, module.dual.is_faithful_pos_map.inner_eq,
+    conj_transpose_one, matrix.one_mul, ← finset.mul_sum],
   refl,
 end
 
-protected noncomputable def direct_sum.basis (hψ : Π i, (ψ i).is_faithful_pos_map) :
+protected noncomputable def basis (hψ : Π i, (ψ i).is_faithful_pos_map) :
   basis (Σ i, s i × s i) ℂ (Π i, matrix (s i) (s i) ℂ) :=
 pi.basis (λ i, (hψ i).basis)
 
-lemma direct_sum.basis_apply (hψ : Π i, (ψ i).is_faithful_pos_map)
+protected lemma basis_apply (hψ : Π i, (ψ i).is_faithful_pos_map)
   (ijk : Σ i, s i × s i) :
-  direct_sum.basis hψ ijk =
-    include_block (std_basis_matrix ijk.2.1 ijk.2.2 1
+  module.dual.pi.is_faithful_pos_map.basis hψ ijk
+    = include_block (std_basis_matrix ijk.2.1 ijk.2.2 1
       ⬝ (hψ ijk.1).matrix_is_pos_def.rpow (-(1/2 : ℝ))) :=
 begin
-  simp only [direct_sum.basis, pi.basis_apply, function.funext_iff],
+  simp only [module.dual.pi.is_faithful_pos_map.basis, pi.basis_apply, function.funext_iff],
   intros i j k,
   simp only [linear_map.std_basis_apply, pi.mul_apply, include_block_apply,
     mul_eq_mul, mul_apply, dite_apply, mul_dite, mul_zero, pi.zero_apply,
@@ -630,27 +675,27 @@ begin
   rw [dite_eq_iff'],
   split,
   { intros h,
-    simp only [h, eq_self_iff_true, dif_pos, linear_map.is_faithful_pos_map.basis_apply],
+    simp only [h, eq_self_iff_true, dif_pos, module.dual.is_faithful_pos_map.basis_apply],
     finish, },
   { intros h,
     rw eq_comm at h,
     simp only [h, not_false_iff, dif_neg], },
 end
 
-lemma direct_sum.basis_apply' (hψ : Π i, (ψ i).is_faithful_pos_map)
+protected lemma basis_apply' (hψ : Π i, (ψ i).is_faithful_pos_map)
   (i : k) (j l : s i) :
-  direct_sum.basis hψ ⟨i, (j,l)⟩ =
+  module.dual.pi.is_faithful_pos_map.basis hψ ⟨i, (j,l)⟩ =
     include_block (std_basis_matrix j l 1
       ⬝ (hψ i).matrix_is_pos_def.rpow (-(1/2 : ℝ))) :=
-direct_sum.basis_apply hψ _
+module.dual.pi.is_faithful_pos_map.basis_apply hψ _
 
 lemma include_block_left_inner [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   {i : k} (x : matrix (s i) (s i) ℂ)
   (y : Π j, matrix (s j) (s j) ℂ) :
   ⟪include_block x, y⟫_ℂ = ⟪x, y i⟫_ℂ :=
 begin
-  simp only [inner_direct_sum_eq_sum, include_block_apply,
-    linear_map.is_faithful_pos_map.inner_eq', ← mul_eq_mul,
+  simp only [inner_pi_eq_sum, include_block_apply,
+    module.dual.is_faithful_pos_map.inner_eq', ← mul_eq_mul,
     ← star_eq_conj_transpose, star_dite, star_zero, mul_dite, mul_zero, dite_mul, zero_mul],
   simp_rw [trace_iff, dite_apply, pi.zero_apply, finset.sum_dite_irrel,
     finset.sum_const_zero, finset.sum_dite_eq, finset.mem_univ, if_true],
@@ -678,7 +723,7 @@ begin
   simp only [include_block_left_inner, include_block_apply_ne_same _ h.symm, inner_zero_right],
 end
 
-lemma basis.apply_cast_eq_mpr (hψ : Π i, (ψ i).is_faithful_pos_map)
+protected lemma basis.apply_cast_eq_mpr (hψ : Π i, (ψ i).is_faithful_pos_map)
   {i j : k} {a : s j × s j} (h : i = j) :
   (hψ i).basis (by { rw h, exact a, }) =
   by { rw h, exact (hψ j).basis a } :=
@@ -687,16 +732,17 @@ begin
   finish,
 end
 
-lemma direct_sum.basis_is_orthonormal [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  orthonormal ℂ (direct_sum.basis (λ i, (hψ i).elim)) :=
+protected lemma basis_is_orthonormal [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
+  orthonormal ℂ
+    (module.dual.pi.is_faithful_pos_map.basis (λ i, (hψ i).elim)) :=
 begin
   rw orthonormal_iff_ite,
   intros i j,
   rw [eq_comm, ite_eq_iff'],
   split,
   { rintros rfl,
-    simp only [direct_sum.basis_apply, include_block_inner_same', cast_eq, eq_mpr_eq_cast,
-      ← linear_map.is_faithful_pos_map.basis_apply, orthonormal_iff_ite.mp basis_is_orthonormal i.snd,
+    simp only [module.dual.pi.is_faithful_pos_map.basis_apply, include_block_inner_same', cast_eq, eq_mpr_eq_cast,
+      ← module.dual.is_faithful_pos_map.basis_apply, orthonormal_iff_ite.mp (module.dual.is_faithful_pos_map.basis_is_orthonormal) i.snd,
       eq_self_iff_true, if_true], },
   { intros h,
     by_cases h' : i.fst = j.fst,
@@ -704,212 +750,209 @@ begin
       cases h with h1 h2,
       { contradiction, },
       { rw [← sigma.eta i, ← sigma.eta j],
-        simp only [direct_sum.basis_apply, include_block_inner_same' h',
-          ← linear_map.is_faithful_pos_map.basis_apply, ← basis.apply_cast_eq_mpr (λ i, (hψ i).elim),
-          sigma.eta, orthonormal_iff_ite.mp basis_is_orthonormal i.snd],
+        simp only [module.dual.pi.is_faithful_pos_map.basis_apply, include_block_inner_same' h',
+          ← module.dual.is_faithful_pos_map.basis_apply, ← basis.apply_cast_eq_mpr (λ i, (hψ i).elim),
+          sigma.eta, orthonormal_iff_ite.mp module.dual.is_faithful_pos_map.basis_is_orthonormal i.snd],
         rw [eq_comm, ite_eq_right_iff],
         intros hh,
         rw hh at h2,
         simp only [eq_mpr_eq_cast, cast_heq, not_true] at h2,
         contradiction, }, },
-    { simp only [direct_sum.basis_apply, include_block_inner_ne_same h'], }, },
+    { simp only [module.dual.pi.is_faithful_pos_map.basis_apply,
+    include_block_inner_ne_same h'], }, },
 end
 
-protected noncomputable def direct_sum.orthonormal_basis
+protected noncomputable def orthonormal_basis
   [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
   orthonormal_basis (Σ i, (s i) × (s i)) ℂ (Π i, matrix (s i) (s i) ℂ) :=
-basis.to_orthonormal_basis (direct_sum.basis (λ i, (hψ i).elim)) direct_sum.basis_is_orthonormal
+basis.to_orthonormal_basis (module.dual.pi.is_faithful_pos_map.basis (λ i, (hψ i).elim))
+  module.dual.pi.is_faithful_pos_map.basis_is_orthonormal
 
-lemma direct_sum.orthonormal_basis_apply [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+protected lemma orthonormal_basis_apply [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   {ijk : Σ i, s i × s i} :
-  (direct_sum.orthonormal_basis : orthonormal_basis _ _ _) ijk
+  (module.dual.pi.is_faithful_pos_map.orthonormal_basis : orthonormal_basis _ _ _) ijk
     = include_block (std_basis_matrix ijk.2.1 ijk.2.2 1
       ⬝ (hψ ijk.1).elim.matrix_is_pos_def.rpow (-(1/2 : ℝ))) :=
 begin
-  rw [← direct_sum.basis_apply _],
-  simp only [direct_sum.orthonormal_basis, basis.coe_to_orthonormal_basis],
+  rw [← module.dual.pi.is_faithful_pos_map.basis_apply _],
+  simp only [module.dual.pi.is_faithful_pos_map.orthonormal_basis,
+    basis.coe_to_orthonormal_basis],
 end
 
-lemma direct_sum.orthonormal_basis_apply' [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+protected lemma orthonormal_basis_apply' [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   {i : k} {j l : s i} :
-  (direct_sum.orthonormal_basis : orthonormal_basis _ _ _) ⟨i, (j,l)⟩
+  (module.dual.pi.is_faithful_pos_map.orthonormal_basis : orthonormal_basis _ _ _) ⟨i, (j,l)⟩
     = include_block (std_basis_matrix j l 1
       ⬝ (hψ i).elim.matrix_is_pos_def.rpow (-(1/2 : ℝ))) :=
-direct_sum.orthonormal_basis_apply
+module.dual.pi.is_faithful_pos_map.orthonormal_basis_apply
 
-lemma direct_sum.inner_coord [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+protected lemma inner_coord [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (ijk : Σ i, s i × s i) (y : Π i, matrix (s i) (s i) ℂ) :
-  ⟪direct_sum.basis (λ i, (hψ i).elim) ijk, y⟫_ℂ
+  ⟪module.dual.pi.is_faithful_pos_map.basis (λ i, (hψ i).elim) ijk, y⟫_ℂ
     = ((y ijk.1) ⬝ ((hψ ijk.1).elim.matrix_is_pos_def.rpow (1 / 2))) ijk.2.1 ijk.2.2 :=
 begin
   let Q := (ψ ijk.1).matrix,
   let hQ := (hψ ijk.1).elim.matrix_is_pos_def,
-  simp_rw [direct_sum.basis_apply, include_block_left_inner,
-    ← linear_map.is_faithful_pos_map.orthonormal_basis_apply, inner_coord],
+  simp_rw [module.dual.pi.is_faithful_pos_map.basis_apply, include_block_left_inner,
+    ← module.dual.is_faithful_pos_map.orthonormal_basis_apply,
+    module.dual.is_faithful_pos_map.inner_coord],
 end
 
-lemma direct_sum.basis_repr_apply [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+protected lemma basis_repr_apply [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (x : Π i, matrix (s i) (s i) ℂ)
   (ijk : Σ i, s i × s i) :
-  (direct_sum.basis (λ i, (hψ i).elim)).repr x ijk
+  (module.dual.pi.is_faithful_pos_map.basis (λ i, (hψ i).elim)).repr x ijk
     = ⟪(hψ ijk.1).elim.basis ijk.2, x ijk.1⟫_ℂ :=
 begin
-  rw [linear_map.is_faithful_pos_map.basis_apply,
-    ← linear_map.is_faithful_pos_map.orthonormal_basis_apply,
+  rw [module.dual.is_faithful_pos_map.basis_apply,
+    ← module.dual.is_faithful_pos_map.orthonormal_basis_apply,
     ← orthonormal_basis.repr_apply_apply],
   refl,
 end
 
-lemma direct_sum_matrix_block.is_self_adjoint [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  _root_.is_self_adjoint (linear_map.direct_sum_matrix_block ψ) :=
+lemma matrix_block.is_self_adjoint [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
+  _root_.is_self_adjoint (module.dual.pi.matrix_block ψ) :=
 begin
   ext1,
-  simp only [pi.star_apply, linear_map.direct_sum_matrix_block_apply,
+  simp only [pi.star_apply, module.dual.pi.matrix_block_apply,
     star_eq_conj_transpose, (hψ x).elim.matrix_is_pos_def.1.eq],
 end
 
-noncomputable def direct_sum_matrix_block_invertible [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  invertible (linear_map.direct_sum_matrix_block ψ) :=
+noncomputable def matrix_block_invertible [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
+  invertible (module.dual.pi.matrix_block ψ) :=
 begin
   haveI := λ i, (hψ i).elim.matrix_is_pos_def.invertible,
-  apply invertible.mk (linear_map.direct_sum_matrix_block ψ)⁻¹,
+  apply invertible.mk (module.dual.pi.matrix_block ψ)⁻¹,
   all_goals { ext1,
-    simp_rw [pi.mul_apply, pi.inv_apply, linear_map.direct_sum_matrix_block_apply,
+    simp_rw [pi.mul_apply, pi.inv_apply, module.dual.pi.matrix_block_apply,
       mul_eq_mul, pi.one_apply], },
   work_on_goal 1 { rw [inv_mul_of_invertible], },
   rw [mul_inv_of_invertible],
 end
 
-lemma direct_sum_matrix_block_inv_mul_self [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  (linear_map.direct_sum_matrix_block ψ)⁻¹
-    * (linear_map.direct_sum_matrix_block ψ) = 1 :=
+lemma matrix_block_inv_mul_self [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
+  (module.dual.pi.matrix_block ψ)⁻¹
+    * (module.dual.pi.matrix_block ψ) = 1 :=
 begin
   haveI := λ i, (hψ i).elim.matrix_is_pos_def.invertible,
   ext1,
-  simp_rw [pi.mul_apply, pi.inv_apply, linear_map.direct_sum_matrix_block_apply,
+  simp_rw [pi.mul_apply, pi.inv_apply, module.dual.pi.matrix_block_apply,
     mul_eq_mul, pi.one_apply, inv_mul_of_invertible],
 end
-lemma direct_sum_matrix_block_self_mul_inv [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  (linear_map.direct_sum_matrix_block ψ)
-    * (linear_map.direct_sum_matrix_block ψ)⁻¹ = 1 :=
+lemma matrix_block_self_mul_inv [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
+  (module.dual.pi.matrix_block ψ)
+    * (module.dual.pi.matrix_block ψ)⁻¹ = 1 :=
 begin
   haveI := λ i, (hψ i).elim.matrix_is_pos_def.invertible,
   ext1,
-  simp_rw [pi.mul_apply, pi.inv_apply, linear_map.direct_sum_matrix_block_apply,
+  simp_rw [pi.mul_apply, pi.inv_apply, module.dual.pi.matrix_block_apply,
     mul_eq_mul, pi.one_apply, mul_inv_of_invertible],
 end
 
-lemma linear_map.sum_single_comp_proj {R : Type*} {ι : Type*} [fintype ι] [decidable_eq ι] [semiring R] {φ : ι → Type*}
-  [Π (i : ι), add_comm_monoid (φ i)] [Π (i : ι), module R (φ i)] :
-  ∑ i : ι, linear_map.single i ∘ₗ linear_map.proj i
-    = (linear_map.id : (Π i, φ i) →ₗ[R] (Π i, φ i)) :=
-begin
-  simp_rw [linear_map.ext_iff, linear_map.sum_apply, linear_map.id_apply,
-    linear_map.comp_apply, linear_map.proj_apply,
-    linear_map.coe_single, pi.single, function.funext_iff,
-    finset.sum_apply, function.update, pi.zero_apply,
-    finset.sum_dite_eq, finset.mem_univ, if_true],
-  intros x y, trivial,
-end
-
-lemma linear_map.lrsum_eq_single_proj_lrcomp (f : (Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ)) :
-  ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
-    ∘ₗ (linear_map.single p) ∘ₗ (linear_map.proj p) = f :=
-calc ∑ r p, (linear_map.single r) ∘ₗ (linear_map.proj r) ∘ₗ f
-    ∘ₗ (linear_map.single p) ∘ₗ (linear_map.proj p)
-  = (∑ r, (linear_map.single r) ∘ₗ (linear_map.proj r)) ∘ₗ f
-      ∘ₗ ∑ p, (linear_map.single p) ∘ₗ (linear_map.proj p) :
-  by simp_rw [linear_map.sum_comp, linear_map.comp_sum, linear_map.comp_assoc]
-  ... = linear_map.id ∘ₗ f ∘ₗ linear_map.id : by rw linear_map.sum_single_comp_proj
-  ... = f : by rw [linear_map.id_comp, linear_map.comp_id]
-
-@[simps] noncomputable def direct_sum.to_matrix (hψ : Π i, (ψ i).is_faithful_pos_map) :
+noncomputable def to_matrix (hψ : Π i, (ψ i).is_faithful_pos_map) :
   ((Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] (Π i, matrix (s i) (s i) ℂ))
-    ≃ₐ[ℂ] _  :=
-linear_map.to_matrix_alg_equiv (direct_sum.basis hψ)
+    ≃ₐ[ℂ] matrix (Σ i, s i × s i) (Σ i, s i × s i) ℂ :=
+linear_map.to_matrix_alg_equiv
+  (module.dual.pi.is_faithful_pos_map.basis hψ)
 
 @[simps] noncomputable def is_block_diagonal_basis (hψ : Π i, (ψ i).is_faithful_pos_map) :
   basis (Σ i, s i × s i) ℂ { x : matrix (Σ i, s i) (Σ i, s i) ℂ // x.is_block_diagonal } :=
-{ repr := is_block_diagonal_pi_alg_equiv.to_linear_equiv.trans (direct_sum.basis hψ).repr }
+{ repr := is_block_diagonal_pi_alg_equiv.to_linear_equiv.trans (module.dual.pi.is_faithful_pos_map.basis hψ).repr }
 
-lemma direct_sum.to_matrix_apply'
+lemma to_matrix_apply'
   [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (f : (Π i, matrix (s i) (s i) ℂ) →ₗ[ℂ] Π i, matrix (s i) (s i) ℂ)
   (r l : Σ r, s r × s r) :
-  (direct_sum.to_matrix (λ i, (hψ i).elim)) f r l
+  (to_matrix (λ i, (hψ i).elim)) f r l
     = (f (include_block ((hψ l.1).elim.basis l.2)) r.1
       ⬝ (hψ r.1).elim.matrix_is_pos_def.rpow (1 / 2)) r.2.1 r.2.2 :=
 begin
-  simp_rw [direct_sum.to_matrix_apply, linear_map.to_matrix_apply,
-    direct_sum.basis_repr_apply, linear_map.is_faithful_pos_map.basis_apply,
-    ← linear_map.is_faithful_pos_map.orthonormal_basis_apply, inner_coord,
-    direct_sum.basis_apply, linear_map.is_faithful_pos_map.orthonormal_basis_apply],
+  simp_rw [to_matrix, linear_map.to_matrix_alg_equiv_apply,
+    is_faithful_pos_map.basis_repr_apply,
+    ← module.dual.is_faithful_pos_map.inner_coord,
+    is_faithful_pos_map.basis_apply,
+    module.dual.is_faithful_pos_map.orthonormal_basis_apply,
+    ← module.dual.is_faithful_pos_map.basis_apply],
 end
 
-lemma direct_sum_star_alg_equiv_adjoint_eq [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma star_alg_equiv_adjoint_eq [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (f : Π i, matrix (s i) (s i) ℂ ≃⋆ₐ[ℂ] matrix (s i) (s i) ℂ) (x : Π i, matrix (s i) (s i) ℂ) :
-  (star_alg_equiv.direct_sum f).to_alg_equiv.to_linear_map.adjoint x
-    = ((star_alg_equiv.direct_sum f).symm
-      (x * linear_map.direct_sum_matrix_block ψ))
-        * (linear_map.direct_sum_matrix_block ψ)⁻¹ :=
+  (star_alg_equiv.pi f).to_alg_equiv.to_linear_map.adjoint x
+    = ((star_alg_equiv.pi f).symm
+      (x * module.dual.pi.matrix_block ψ))
+        * (module.dual.pi.matrix_block ψ)⁻¹ :=
 begin
-  letI := @direct_sum_matrix_block_invertible _ _ _ _ _ _ ψ _,
+  letI := @matrix_block_invertible _ _ _ _ _ _ ψ _,
   letI := λ i, (hψ i).elim.matrix_is_pos_def.invertible,
   apply @ext_inner_left ℂ,
   intros a,
   simp_rw [linear_map.adjoint_inner_right, alg_equiv.to_linear_map_apply,
     star_alg_equiv.coe_to_alg_equiv],
-  rw [← star_alg_equiv.of_direct_sum_matrix_is_inner],
+  rw [← star_alg_equiv.of_pi_is_inner],
   simp_rw [unitary.inner_aut_star_alg_apply, unitary.inner_aut_star_alg_symm_apply, mul_assoc],
-  nth_rewrite_rhs 0 ← mul_assoc (linear_map.direct_sum_matrix_block ψ),
+  nth_rewrite_rhs 0 ← mul_assoc (module.dual.pi.matrix_block ψ),
   nth_rewrite_rhs 0 ← mul_assoc,
-  rw [direct_sum_inner_left_conj, direct_sum_inner_right_mul],
-  simp_rw [star_semigroup.star_mul, is_self_adjoint.star_eq direct_sum_matrix_block.is_self_adjoint, mul_assoc],
-  have t1 : linear_map.direct_sum_matrix_block ψ * (linear_map.direct_sum_matrix_block ψ)⁻¹ = 1 :=
+  rw [inner_left_conj, inner_right_mul],
+  simp_rw [star_semigroup.star_mul, is_self_adjoint.star_eq
+    matrix_block.is_self_adjoint, mul_assoc],
+  have t1 : module.dual.pi.matrix_block ψ * (module.dual.pi.matrix_block ψ)⁻¹ = 1 :=
   begin
     ext1,
     simp only [pi.mul_apply, pi.inv_apply, mul_eq_mul,
-      linear_map.direct_sum_matrix_block_apply, mul_inv_of_invertible, pi.one_apply],
+      module.dual.pi.matrix_block_apply, mul_inv_of_invertible, pi.one_apply],
   end,
-  have t2 := calc linear_map.direct_sum_matrix_block ψ * star (linear_map.direct_sum_matrix_block ψ)⁻¹
-    = linear_map.direct_sum_matrix_block ψ
-      * (linear_map.direct_sum_matrix_block ψ)⁻¹ :
+  have t2 := calc module.dual.pi.matrix_block ψ * star (module.dual.pi.matrix_block ψ)⁻¹
+    = module.dual.pi.matrix_block ψ
+      * (module.dual.pi.matrix_block ψ)⁻¹ :
   by { congr,
-    simp only [pi.inv_def, pi.star_def, linear_map.direct_sum_matrix_block_apply,
+    simp only [pi.inv_def, pi.star_def, module.dual.pi.matrix_block_apply,
       star_eq_conj_transpose, (hψ _).elim.matrix_is_pos_def.1.eq,
       (hψ _).elim.matrix_is_pos_def.inv.1.eq], }
   ... = 1 : t1,
-  simp_rw [t1, ← mul_assoc (linear_map.direct_sum_matrix_block ψ), t2, mul_one, one_mul,
+  simp_rw [t1, ← mul_assoc (module.dual.pi.matrix_block ψ), t2, mul_one, one_mul,
     unitary.coe_star, star_star],
 end
 
 private lemma mul_inv_eq_iff_eq_mul_aux [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   (b c : Π i, matrix (s i) (s i) ℂ) :
-  b * (linear_map.direct_sum_matrix_block ψ)⁻¹ = c ↔ b = c * (linear_map.direct_sum_matrix_block ψ) :=
+  b * (module.dual.pi.matrix_block ψ)⁻¹ = c ↔ b = c * (module.dual.pi.matrix_block ψ) :=
 begin
-  split,
-  { intros h,
-    rw [← h, mul_assoc, direct_sum_matrix_block_inv_mul_self, mul_one], },
-  { intros h,
-    rw [h, mul_assoc, direct_sum_matrix_block_self_mul_inv, mul_one], },
+  split; rintros rfl; rw [mul_assoc],
+  { rw [matrix_block_inv_mul_self, mul_one], },
+  { rw [matrix_block_self_mul_inv, mul_one], },
 end
 
-lemma star_alg_equiv_direct_sum_is_isometry_tfae [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+lemma star_alg_equiv_commute_iff [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (f : Π i, matrix (s i) (s i) ℂ ≃⋆ₐ[ℂ] matrix (s i) (s i) ℂ) :
+  commute (module.dual.pi.matrix_block ψ) (λ i, (star_alg_equiv.pi.unitary f i))
+    ↔ star_alg_equiv.pi f (module.dual.pi.matrix_block ψ) = module.dual.pi.matrix_block ψ :=
+begin
+  nth_rewrite_rhs 0 [← star_alg_equiv.of_pi_is_inner],
+  rw [unitary.inner_aut_star_alg_apply,
+    unitary.coe_star],
+  rw [unitary.inj_mul (unitary.pi (star_alg_equiv.pi.unitary f))],
+  simp_rw [mul_assoc, unitary.coe_star_mul_self, mul_one],
+  rw [eq_comm, commute, semiconj_by],
+  refl,
+end
+
+lemma star_alg_equiv_is_isometry_tfae [hψ : Π i, fact (ψ i).is_faithful_pos_map]
   [Π i, nontrivial (s i)] (f : Π i, matrix (s i) (s i) ℂ ≃⋆ₐ[ℂ] matrix (s i) (s i) ℂ) :
-  tfae [(star_alg_equiv.direct_sum f) (linear_map.direct_sum_matrix_block ψ)
-    = linear_map.direct_sum_matrix_block ψ,
-      (star_alg_equiv.direct_sum f).to_alg_equiv.to_linear_map.adjoint = (star_alg_equiv.direct_sum f).symm.to_alg_equiv.to_linear_map,
-    (linear_map.direct_sum ψ) ∘ₗ (star_alg_equiv.direct_sum f).to_alg_equiv.to_linear_map = linear_map.direct_sum ψ,
-    ∀ x y, ⟪(star_alg_equiv.direct_sum f) x, (star_alg_equiv.direct_sum f) y⟫_ℂ = ⟪x, y⟫_ℂ,
-    ∀ x : Π i, matrix (s i) (s i) ℂ, ‖(star_alg_equiv.direct_sum f) x‖ = ‖x‖] :=
+  tfae [(star_alg_equiv.pi f) (module.dual.pi.matrix_block ψ)
+    = module.dual.pi.matrix_block ψ,
+      (star_alg_equiv.pi f).to_alg_equiv.to_linear_map.adjoint = (star_alg_equiv.pi f).symm.to_alg_equiv.to_linear_map,
+    (module.dual.pi ψ) ∘ₗ (star_alg_equiv.pi f).to_alg_equiv.to_linear_map = module.dual.pi ψ,
+    ∀ x y, ⟪(star_alg_equiv.pi f) x, (star_alg_equiv.pi f) y⟫_ℂ = ⟪x, y⟫_ℂ,
+    ∀ x : Π i, matrix (s i) (s i) ℂ, ‖(star_alg_equiv.pi f) x‖ = ‖x‖,
+    commute (module.dual.pi.matrix_block ψ) (λ i, (star_alg_equiv.pi.unitary f i))] :=
 begin
   tfae_have : 5 ↔ 2,
   { simp_rw [inner_product_space.core.norm_eq_sqrt_inner,
     real.sqrt_inj inner_product_space.core.inner_self_nonneg
       inner_product_space.core.inner_self_nonneg, ← complex.of_real_inj,
     inner_self_re, ← @sub_eq_zero _ _ _ ⟪_, _⟫_ℂ],
-    have : ∀ x y, ⟪(star_alg_equiv.direct_sum f) x, (star_alg_equiv.direct_sum f) y⟫_ℂ - ⟪x, y⟫_ℂ
-      = ⟪((star_alg_equiv.direct_sum f).to_alg_equiv.to_linear_map.adjoint ∘ₗ (star_alg_equiv.direct_sum f).to_alg_equiv.to_linear_map - 1) x, y⟫_ℂ,
+    have : ∀ x y, ⟪(star_alg_equiv.pi f) x, (star_alg_equiv.pi f) y⟫_ℂ - ⟪x, y⟫_ℂ
+      = ⟪((star_alg_equiv.pi f).to_alg_equiv.to_linear_map.adjoint ∘ₗ (star_alg_equiv.pi f).to_alg_equiv.to_linear_map - 1) x, y⟫_ℂ,
     { intros x y,
       simp only [linear_map.sub_apply, linear_map.one_apply, inner_sub_left,
         linear_map.comp_apply, linear_map.adjoint_inner_left, star_alg_equiv.coe_to_alg_equiv,
@@ -918,40 +961,43 @@ begin
       linear_map.one_comp], },
   rw tfae_5_iff_2,
   tfae_have : 4 ↔ 3,
-  { simp_rw [direct_sum_inner_eq, ← map_star (star_alg_equiv.direct_sum f),
-      ← _root_.map_mul (star_alg_equiv.direct_sum f), linear_map.ext_iff, linear_map.comp_apply, alg_equiv.to_linear_map_apply,
+  { simp_rw [inner_eq, ← map_star (star_alg_equiv.pi f),
+      ← _root_.map_mul (star_alg_equiv.pi f), linear_map.ext_iff, linear_map.comp_apply, alg_equiv.to_linear_map_apply,
       star_alg_equiv.coe_to_alg_equiv],
     refine ⟨λ h x, _, λ h x y, h _⟩,
     rw [← one_mul x, ← star_one],
     exact h _ _, },
   rw tfae_4_iff_3,
-  letI := @direct_sum_matrix_block_invertible _ _ _ _ _ _ ψ _,
-  simp_rw [linear_map.ext_iff, direct_sum_star_alg_equiv_adjoint_eq f, linear_map.comp_apply,
+  letI := @matrix_block_invertible _ _ _ _ _ _ ψ _,
+  simp_rw [linear_map.ext_iff, star_alg_equiv_adjoint_eq f, linear_map.comp_apply,
     alg_equiv.to_linear_map_apply, star_alg_equiv.coe_to_alg_equiv,
-    mul_inv_eq_iff_eq_mul_aux, linear_map.direct_sum.linear_functional_eq'',
+    mul_inv_eq_iff_eq_mul_aux,
+    module.dual.pi.apply'',
     star_alg_equiv.symm_apply_eq, _root_.map_mul,
     star_alg_equiv.apply_symm_apply,
-    pi.forall_left_mul, @eq_comm _ (linear_map.direct_sum_matrix_block ψ),
+    pi.forall_left_mul, @eq_comm _ (module.dual.pi.matrix_block ψ),
     ← block_diagonal'_alg_hom_apply, ← _root_.map_mul],
   tfae_have : 1 ↔ 2,
   { rw iff_self, trivial, },
   tfae_have : 1 → 3,
   { intros i x,
     nth_rewrite 0 ← i,
-    simp_rw [← _root_.map_mul, star_alg_equiv.direct_sum_is_trace_preserving], },
+    simp_rw [← _root_.map_mul, star_alg_equiv.pi_is_trace_preserving], },
   tfae_have : 3 → 1,
   { intros i,
-    simp_rw [← star_alg_equiv.direct_sum_is_trace_preserving
-      (λ i, (f i).symm) (linear_map.direct_sum_matrix_block ψ * ((star_alg_equiv.direct_sum f) _)),
-      _root_.map_mul, star_alg_equiv.direct_sum_symm_apply_apply, block_diagonal'_alg_hom_apply,
-      ← linear_map.direct_sum.linear_functional_eq'',
-      @eq_comm _ _ (linear_map.direct_sum ψ _)] at i,
-    have := linear_map.linear_functional_direct_sum_eq_of ψ _ i,
-    rw [star_alg_equiv.direct_sum_symm_apply_eq] at this,
+    simp_rw [← star_alg_equiv.pi_is_trace_preserving
+      (λ i, (f i).symm) (module.dual.pi.matrix_block ψ * ((star_alg_equiv.pi f) _)),
+      _root_.map_mul, star_alg_equiv.pi_symm_apply_apply, block_diagonal'_alg_hom_apply,
+      ← module.dual.pi.apply'',
+      @eq_comm _ _ (module.dual.pi ψ _)] at i,
+    have := module.dual.pi.apply_eq_of ψ _ i,
+    rw [star_alg_equiv.pi_symm_apply_eq] at this,
     exact this.symm, },
+  tfae_have : 5 ↔ 6,
+  { rw [star_alg_equiv_commute_iff], },
   tfae_finish,
 end
 
-end linear_map.is_faithful_pos_map
+end module.dual.pi.is_faithful_pos_map
 
 end direct_sum

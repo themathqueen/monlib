@@ -11,7 +11,7 @@ import linear_algebra.my_ips.frob
 import linear_algebra.tensor_finite
 import linear_algebra.my_ips.op_unop
 import linear_algebra.lmul_rmul
-import quantum_graph.symm
+import quantum_graph.schur_idempotent
 
 /-!
  # Quantum graphs: quantum adjacency matrices
@@ -30,8 +30,8 @@ local notation `L(`x`)` := x →L[ℂ] x
 
 local notation `e_{` i `,` j `}` := matrix.std_basis_matrix i j (1 : ℂ)
 
-variables {φ : ℍ →ₗ[ℂ] ℂ} [hφ : fact φ.is_faithful_pos_map]
-  {ψ : matrix p p ℂ →ₗ[ℂ] ℂ} (hψ : ψ.is_faithful_pos_map)
+variables {φ : module.dual ℂ ℍ} [hφ : fact φ.is_faithful_pos_map]
+  {ψ : module.dual ℂ (matrix p p ℂ)} (hψ : ψ.is_faithful_pos_map)
 
 open_locale matrix
 open matrix
@@ -203,22 +203,11 @@ end
 private lemma commute.adjoint_adjoint {K E : Type*} [is_R_or_C K] [normed_add_comm_group E]
   [inner_product_space K E] [complete_space E] {f g : E →L[K] E} :
   commute f.adjoint g.adjoint ↔ commute f g :=
-begin
-  simp_rw [← continuous_linear_map.star_eq_adjoint],
-  exact commute_star_star,
-end
+commute_star_star
 private lemma commute.adjoint_adjoint_lm {K E : Type*} [is_R_or_C K] [normed_add_comm_group E]
   [inner_product_space K E] [finite_dimensional K E] {f g : E →ₗ[K] E} :
   commute f.adjoint g.adjoint ↔ commute f g :=
-begin
-  have := @commute.adjoint_adjoint K E _ _ _ (finite_dimensional.complete K E)
-    f.to_continuous_linear_map g.to_continuous_linear_map,
-  simp_rw [linear_map.adjoint_eq_to_clm_adjoint],
-  simp_rw [commute, semiconj_by, continuous_linear_map.ext_iff, linear_map.ext_iff,
-    linear_map.mul_apply, continuous_linear_map.mul_apply, continuous_linear_map.coe_coe] at *,
-  simp_rw [this, linear_map.to_continuous_linear_map, linear_equiv.coe_mk,
-    continuous_linear_map.coe_mk'],
-end
+commute_star_star
 
 lemma linear_map.adjoint_real_eq (f : ℍ →ₗ[ℂ] ℍ) :
   f.adjoint.real = (hφ.elim.sig 1).to_linear_map ∘ₗ f.real.adjoint ∘ₗ (hφ.elim.sig (-1)).to_linear_map :=

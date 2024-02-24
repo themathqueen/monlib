@@ -15,11 +15,11 @@ import linear_algebra.pi_direct_sum
 -/
 
 variables {n p : Type*} [fintype n] [fintype p] [decidable_eq n] [decidable_eq p]
-  {φ : matrix n n ℂ →ₗ[ℂ] ℂ} (hφ : φ.is_faithful_pos_map)
-  {ψ : matrix p p ℂ →ₗ[ℂ] ℂ} (hψ : ψ.is_faithful_pos_map)
+  {φ : module.dual ℂ (matrix n n ℂ)} (hφ : φ.is_faithful_pos_map)
+  {ψ : module.dual ℂ (matrix p p ℂ)} (hψ : ψ.is_faithful_pos_map)
   {k : Type*} [fintype k] [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  {θ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ}
+  {θ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
   [hθ : Π i, fact (θ i).is_faithful_pos_map]
 
 open_locale matrix kronecker tensor_product big_operators functional
@@ -28,24 +28,25 @@ open matrix
 -- def linear_map.is_faithful_pos_map.tensor_pow (x : ℕ) :
 --   ⨂[ℂ]^x (matrix n n ℂ) →ₗ[ℂ] ℂ :=
 -- { to_fun := λ a, by { simp only [tensor_algebra] } }
-noncomputable def linear_map.tensor_mul (φ₁ : matrix n n ℂ →ₗ[ℂ] ℂ) (φ₂ : matrix p p ℂ →ₗ[ℂ] ℂ) :
-  (matrix n n ℂ ⊗[ℂ] matrix p p ℂ) →ₗ[ℂ] ℂ :=
+noncomputable def module.dual.tensor_mul (φ₁ : module.dual ℂ (matrix n n ℂ))
+  (φ₂ : module.dual ℂ (matrix p p ℂ)) :
+  module.dual ℂ (matrix n n ℂ ⊗[ℂ] matrix p p ℂ) :=
 ((tensor_product.lid ℂ ℂ) : ℂ ⊗[ℂ] ℂ →ₗ[ℂ] ℂ) ∘ₗ (tensor_product.map φ₁ φ₂)
 
-lemma linear_map.tensor_mul_apply (φ₁ : matrix n n ℂ →ₗ[ℂ] ℂ)
-  (φ₂ : matrix p p ℂ →ₗ[ℂ] ℂ) (x : matrix n n ℂ) (y : matrix p p ℂ) :
+lemma module.dual.tensor_mul_apply (φ₁ : module.dual ℂ (matrix n n ℂ))
+  (φ₂ : module.dual ℂ (matrix p p ℂ)) (x : matrix n n ℂ) (y : matrix p p ℂ) :
   (φ₁.tensor_mul φ₂) (x ⊗ₜ[ℂ] y) = φ₁ x * φ₂ y :=
 rfl
-lemma linear_map.tensor_mul_apply' (φ₁ : matrix n n ℂ →ₗ[ℂ] ℂ) (φ₂ : matrix p p ℂ →ₗ[ℂ] ℂ)
+lemma module.dual.tensor_mul_apply' (φ₁ : module.dual ℂ (matrix n n ℂ)) (φ₂ : module.dual ℂ (matrix p p ℂ))
   (x : matrix n n ℂ ⊗[ℂ] matrix p p ℂ) :
   φ₁.tensor_mul φ₂ x = ∑ i j k l, (x.to_kronecker (i,k) (j,l))
     * (φ₁ (std_basis_matrix i j (1 : ℂ)) * φ₂ (std_basis_matrix k l (1 : ℂ))) :=
 begin
-  simp_rw [← linear_map.tensor_mul_apply, ← smul_eq_mul, ← smul_hom_class.map_smul, ← map_sum],
+  simp_rw [← module.dual.tensor_mul_apply, ← smul_eq_mul, ← smul_hom_class.map_smul, ← map_sum],
   rw ← x.matrix_eq_sum_std_basis,
 end
 
-lemma linear_map.tensor_mul_apply'' (φ₁ : matrix n n ℂ →ₗ[ℂ] ℂ) (φ₂ : matrix p p ℂ →ₗ[ℂ] ℂ)
+lemma module.dual.tensor_mul_apply'' (φ₁ : module.dual ℂ (matrix n n ℂ)) (φ₂ : module.dual ℂ (matrix p p ℂ))
   (a : matrix (n × p) (n × p) ℂ) :
   ((φ₁.tensor_mul φ₂).comp kronecker_to_tensor_product) a
     = (φ₁.matrix ⊗ₖ φ₂.matrix ⬝ a).trace :=
@@ -59,28 +60,28 @@ begin
   rw [← linear_map.ext_iff, kronecker_product.ext_iff],
   intros x y,
   simp_rw [linear_map.comp_apply, kronecker_to_tensor_product_apply,
-    linear_map.tensor_mul_apply, linear_map.mul_left_apply, trace_linear_map_apply,
-    mul_eq_mul, ← mul_kronecker_mul, trace_kronecker, linear_map.linear_functional_eq'],
+    module.dual.tensor_mul_apply, linear_map.mul_left_apply, trace_linear_map_apply,
+    mul_eq_mul, ← mul_kronecker_mul, trace_kronecker, module.dual.apply],
 end
 
-lemma linear_map.tensor_mul_matrix (φ₁ : matrix n n ℂ →ₗ[ℂ] ℂ) (φ₂ : matrix p p ℂ →ₗ[ℂ] ℂ) :
-  ((φ₁.tensor_mul φ₂).comp kronecker_to_tensor_product).matrix = φ₁.matrix ⊗ₖ φ₂.matrix :=
+lemma module.dual.tensor_mul_matrix (φ₁ : module.dual ℂ (matrix n n ℂ)) (φ₂ : module.dual ℂ (matrix p p ℂ)) :
+  module.dual.matrix ((φ₁.tensor_mul φ₂).comp kronecker_to_tensor_product) = φ₁.matrix ⊗ₖ φ₂.matrix :=
 begin
   symmetry,
-  apply linear_map.linear_functional_eq_of,
-  simp_rw [← linear_map.tensor_mul_apply'' φ₁ φ₂],
+  apply module.dual.apply_eq_of,
+  simp_rw [← module.dual.tensor_mul_apply'' φ₁ φ₂],
   intros,
   refl,
 end
 
-@[instance] def linear_map.is_faithful_pos_map.tensor_mul
-  {φ₁ : matrix n n ℂ →ₗ[ℂ] ℂ}
-  {φ₂ : matrix p p ℂ →ₗ[ℂ] ℂ} [hφ₁ : fact φ₁.is_faithful_pos_map]
+@[instance] def modul.dual.is_faithful_pos_map.tensor_mul
+  {φ₁ : module.dual ℂ (matrix n n ℂ)}
+  {φ₂ : module.dual ℂ (matrix p p ℂ)} [hφ₁ : fact φ₁.is_faithful_pos_map]
   [hφ₂ : fact φ₂.is_faithful_pos_map] :
-  fact ((φ₁.tensor_mul φ₂).comp kronecker_to_tensor_product).is_faithful_pos_map :=
+  fact (module.dual.is_faithful_pos_map ((φ₁.tensor_mul φ₂).comp kronecker_to_tensor_product)) :=
 begin
   apply fact.mk,
-  rw [linear_map.is_faithful_pos_map_iff_of_matrix, linear_map.tensor_mul_matrix],
+  rw [module.dual.is_faithful_pos_map_iff_of_matrix, module.dual.tensor_mul_matrix],
   exact pos_def.kronecker hφ₁.elim.matrix_is_pos_def hφ₂.elim.matrix_is_pos_def,
 end
 
@@ -114,10 +115,10 @@ begin
   by rw tensor_product.inner_tmul
   ... = (star_ring_end ℂ) (a (x_1, x_3) (x_2, x_4)) *
     inner (std_basis_matrix x_1 x_2 1 ⊗ₖ std_basis_matrix x_3 x_4 1) (x ⊗ₖ y) :
-  by rw [linear_map.is_faithful_pos_map.inner_eq' (_ ⊗ₖ _),
-    linear_map.tensor_mul_matrix, kronecker_conj_transpose, ← mul_kronecker_mul,
-      ← mul_kronecker_mul, trace_kronecker, linear_map.is_faithful_pos_map.inner_eq',
-      linear_map.is_faithful_pos_map.inner_eq']; refl,
+  by rw [module.dual.is_faithful_pos_map.inner_eq' (_ ⊗ₖ _),
+    module.dual.tensor_mul_matrix, kronecker_conj_transpose, ← mul_kronecker_mul,
+      ← mul_kronecker_mul, trace_kronecker, module.dual.is_faithful_pos_map.inner_eq',
+      module.dual.is_faithful_pos_map.inner_eq']; refl,
 end
 lemma tensor_product.to_kronecker_adjoint [hφ : fact φ.is_faithful_pos_map] [hψ : fact ψ.is_faithful_pos_map] :
   (kronecker_to_tensor_product
@@ -195,7 +196,7 @@ noncomputable def matrix_direct_sum_from_to (i j : k) :
   (ℍ_ i) →ₗ[ℂ] (ℍ_ j) :=
 @direct_sum_from_to ℂ _ k _ (λ a, ℍ_ a) _ (λ a, matrix.module) i j
 
-lemma linear_map.mul'_direct_sum_apply_include_block' {i j : k} :
+lemma linear_map.pi_mul'_apply_include_block' {i j : k} :
   (linear_map.mul' ℂ ℍ₂) ∘ₗ
     (tensor_product.map (include_block : (ℍ_ i) →ₗ[ℂ] ℍ₂) (include_block : (ℍ_ j) →ₗ[ℂ] ℍ₂))
     = if (i = j) then ((include_block : (ℍ_ j) →ₗ[ℂ] ℍ₂)
@@ -268,12 +269,12 @@ begin
         (x j ⊗ₜ[ℂ] y j)) else 0 : _,
   { simp only [this, @frobenius_equation (s j)], },
   { simp only [linear_map.comp_apply, linear_equiv.coe_coe, tensor_product.map_tmul,
-      linear_map.one_apply, linear_map.mul'_adjoint_single_block], },
+      linear_map.one_apply, linear_map.pi_mul'_adjoint_single_block], },
   { congr,
     simp_rw [← linear_equiv.coe_coe, ← linear_map.comp_apply,
       tensor_product.assoc_include_block], },
   { simp_rw [← linear_map.comp_apply, ← tensor_product.map_comp,
-      linear_map.mul'_direct_sum_apply_include_block', linear_map.comp_apply,
+      linear_map.pi_mul'_apply_include_block', linear_map.comp_apply,
       tensor_product.ite_map, ite_apply_lm, tensor_product.zero_map, linear_map.zero_apply,
       tensor_product.map_tmul, linear_equiv.coe_coe, linear_map.one_apply],
     obtain ⟨α,β,hαβ⟩ := tensor_product.eq_span ((linear_map.mul' ℂ (ℍ_ j)).adjoint (y j)),
@@ -288,27 +289,28 @@ begin
     { refl, }, },
 end
 
--- lemma frobenius_equation_direct_sum {i j : k} (x y : ℍ₂) :
---   ((M ⊗ₘ (1 : l(ℍ₂)))
+-- lemma pi_frobenius_equation [hθ : Π i, fact (θ i).is_faithful_pos_map]
+--   {i j : k} (x y : ℍ₂) :
+--   ((linear_map.mul' ℂ ℍ₂  ⊗ₘ (1 : l(ℍ₂)))
 --     ∘ₗ ↑(tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm
---       ∘ₗ ((1 : l(ℍ₂)) ⊗ₘ (M⋆ : ℍ₂ →ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂))))
+--       ∘ₗ ((1 : l(ℍ₂)) ⊗ₘ ((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂))))
 --         (include_block (x i) ⊗ₜ[ℂ] include_block (y j))
---     = ((M⋆ : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂) ∘ₗ (M : ℍ₂ ⊗[ℂ] ℍ₂ →ₗ[ℂ] ℍ₂))
+--     = (((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂) ∘ₗ (linear_map.mul' ℂ ℍ₂ : ℍ₂ ⊗[ℂ] ℍ₂ →ₗ[ℂ] ℍ₂))
 --       (include_block (x i) ⊗ₜ[ℂ] include_block (y j)) :=
 -- begin
---   letI := λ a, (hθ a).normed_add_comm_group,
---   letI := λ a, (hθ a).inner_product_space,
+--   -- letI := λ a, (hθ a).normed_add_comm_group,
+--   -- letI := λ a, (hθ a).inner_product_space,
 --   have := calc
---   ((M ⊗ₘ (1 : l(ℍ₂)))
---     ∘ₗ ↑(tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm
---       ∘ₗ ((1 : l(ℍ₂)) ⊗ₘ (M⋆ : ℍ₂ →ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂))))
+--   ((linear_map.mul' ℂ ℍ₂ ⊗ₘ (1 : l(ℍ₂)))
+--     ∘ₗ (tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm.to_linear_map
+--       ∘ₗ ((1 : l(ℍ₂)) ⊗ₘ ((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂))))
 --         (include_block (x i) ⊗ₜ[ℂ] include_block (y j))
 --     =
---     (M ⊗ₘ (1 : l(ℍ₂)))
+--     (linear_map.mul' ℂ ℍ₂ ⊗ₘ (1 : l(ℍ₂)))
 --       ((tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm
 --       ((include_block ⊗ₘ (include_block ⊗ₘ include_block))
 --       (x i ⊗ₜ[ℂ] (linear_map.mul' ℂ (ℍ_ j)).adjoint (y j)))) : _
---   ... = (M ⊗ₘ (1 : l(ℍ₂)))
+--   ... = (linear_map.mul' ℂ ℍ₂ ⊗ₘ (1 : l(ℍ₂)))
 --       (((include_block ⊗ₘ include_block) ⊗ₘ include_block)
 --       ((tensor_product.assoc ℂ (ℍ_ i) (ℍ_ j) (ℍ_ j)).symm
 --       (x i ⊗ₜ[ℂ] (linear_map.mul' ℂ (ℍ_ j)).adjoint (y j)))) : _
@@ -325,9 +327,8 @@ end
 --   --     (include_block ⊗ₘ include_block)
 --   --     ((linear_map.mul' ℂ (ℍ_ j)).adjoint
 --   --     ((linear_map.mul' ℂ (ℍ_ j)) (x j ⊗ₜ[ℂ] y j)))) else 0 : _,
---   { rw this,
---     simp_rw [frobenius_equation (hθ j)],
---    }
+--   { rw [linear_equiv.to_linear_map_eq_coe] at this,
+--     simp_rw [frobenius_equation], }
 --   -- ... = (M ⊗ₘ (1 : l(ℍ₂)))
 --   --     (((include_block ⊗ₘ include_block) ⊗ₘ include_block)
 --   --     ((tensor_product.assoc ℂ (ℍ_ i) (ℍ_ j) (ℍ_ j)).symm

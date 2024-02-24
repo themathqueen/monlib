@@ -15,11 +15,11 @@ import linear_algebra.my_matrix.include_block
 This file contains results for linear functionals on the set of $n \times n$ matrices $M_n$ over $\mathbb{C}$.
 
 ## Main results
-- `linear_map.linear_functional_eq`
-- `linear_map.is_pos_map_iff`
-- `linear_map.is_faithful_pos_map_iff`
-- `linear_map.is_tracial_faithful_pos_map_iff`
-- `linear_map.is_faithful_pos_map_iff_is_inner`
+- `module.dual.apply`
+- `module.dual.is_pos_map_iff`
+- `module.dual.is_faithful_pos_map_iff`
+- `module.dual.is_tracial_faithful_pos_map_iff`
+- `module.dual.is_faithful_pos_map_iff_is_inner`
 
 -/
 
@@ -30,14 +30,14 @@ open matrix
 
 /-- the matrix of a linear map `φ : M_n →ₗ[R] R` is given by
   `∑ i j, std_basis_matrix j i (φ (std_basis_matrix i j 1))`. -/
-def linear_map.matrix (φ : matrix n n R →ₗ[R] R) :=
+def module.dual.matrix (φ : module.dual R (matrix n n R)) :=
 ∑ i j : n, matrix.std_basis_matrix j i (φ (matrix.std_basis_matrix i j 1))
 
 /-- given any linear functional `φ : M_n →ₗ[R] R`, we get `φ a = (φ.matrix ⬝ a).trace`. -/
-lemma linear_map.linear_functional_eq' (φ : matrix n n R →ₗ[R] R) (a : matrix n n R) :
+lemma module.dual.apply (φ : module.dual R (matrix n n R)) (a : matrix n n R) :
   φ a = (φ.matrix ⬝ a).trace :=
 begin
-  simp_rw [linear_map.matrix, smul_std_basis_matrix' _ _ (φ _)],
+  simp_rw [module.dual.matrix, smul_std_basis_matrix' _ _ (φ _)],
   simp_rw [matrix.sum_mul, matrix.smul_mul, trace_sum, trace_smul, matrix.trace, matrix.diag,
     mul_apply, std_basis_matrix, boole_mul, ite_and, finset.sum_ite_irrel,
     finset.sum_const_zero, finset.sum_ite_eq, finset.mem_univ, if_true, ← ite_and,
@@ -50,30 +50,30 @@ begin
 end
 
 /-- we linear maps `φ_i : M_[n_i] →ₗ[R] R`, we define its direct sum as the linear map `(Π i, M_[n_i]) →ₗ[R] R`. -/
-def linear_map.direct_sum {k : Type*} [fintype k] [decidable_eq k]
+@[simps] def module.dual.pi {k : Type*} [fintype k] [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  (φ : Π i, matrix (s i) (s i) R →ₗ[R] R) :
-  (Π i, matrix (s i) (s i) R) →ₗ[R] R :=
+  (φ : Π i, module.dual R (matrix (s i) (s i) R)):
+  module.dual R (Π i, matrix (s i) (s i) R) :=
 { to_fun := λ a, ∑ i : k, φ i (a i),
   map_add' := λ x y, by simp only [map_add, pi.add_apply, finset.sum_add_distrib],
   map_smul' := λ r x, by simp only [smul_hom_class.map_smul, pi.smul_apply,
     finset.smul_sum, ring_hom.id_apply], }
 
 /-- for direct sums, we get `φ x = ∑ i, ((φ i).matrix ⬝ x i).trace` -/
-lemma linear_map.direct_sum.linear_functional_eq {k : Type*} [fintype k] [decidable_eq k]
+lemma module.dual.pi.apply {k : Type*} [fintype k] [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  (φ : Π i, matrix (s i) (s i) R →ₗ[R] R)
+  (φ : Π i, module.dual R (matrix (s i) (s i) R))
   (x : Π i, matrix (s i) (s i) R) :
-  linear_map.direct_sum φ x = ∑ i, ((φ i).matrix ⬝ x i).trace :=
+  module.dual.pi φ x = ∑ i, ((φ i).matrix ⬝ x i).trace :=
 begin
-  simp_rw [linear_map.direct_sum, linear_map.coe_mk, linear_map.linear_functional_eq'],
+  simp_rw [module.dual.pi_apply, module.dual.apply],
 end
 
-lemma linear_map.direct_sum.linear_functional_eq' {k : Type*} [fintype k]
+lemma module.dual.pi.apply' {k : Type*} [fintype k]
   [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  (φ : Π i, matrix (s i) (s i) R →ₗ[R] R) (x : Π i, matrix (s i) (s i) R) :
-  linear_map.direct_sum φ x = ∑ i, (block_diagonal' (φ i).matrix.include_block ⬝ block_diagonal' x).trace :=
+  (φ : Π i, module.dual R (matrix (s i) (s i) R)) (x : Π i, matrix (s i) (s i) R) :
+  module.dual.pi φ x = ∑ i, (block_diagonal' (φ i).matrix.include_block ⬝ block_diagonal' x).trace :=
 begin
   symmetry,
   simp_rw [← block_diagonal'_mul, ← mul_eq_mul],
@@ -95,107 +95,93 @@ begin
     simp only [finset.sum_dite_eq', finset.mem_univ, if_true],
     simp_rw [finset.sum_sigma'],
     refl, }
-  ... = linear_map.direct_sum φ x : (linear_map.direct_sum.linear_functional_eq _ _).symm,
+  ... = module.dual.pi φ x : (module.dual.pi.apply _ _).symm,
 end
 
-/-- Any linear functional $f$ on $M_n$ is given by a unique matrix $Q \in M_n$ such that $f(x)=\operatorname{Tr}(Qx)$ for any $x \in M_n$. -/
-lemma linear_map.linear_functional_eq (φ : matrix n n R →ₗ[R] R) :
-  ∃! Q : matrix n n R, ∀ a : matrix n n R, φ a = (Q ⬝ a).trace :=
-begin
-  use φ.matrix,
-  simp_rw [← linear_map.linear_functional_eq', eq_self_iff_true, forall_true_iff, true_and,
-    linear_map.linear_functional_eq', ← matrix.ext_iff_trace, eq_comm,
-    imp_self, forall_true_iff],
-end
-
-lemma linear_map.linear_functional_eq_of (φ : matrix n n R →ₗ[R] R) (x : matrix n n R)
+lemma module.dual.apply_eq_of
+  (φ : module.dual R (matrix n n R)) (x : matrix n n R)
   (h : ∀ a, φ a = (x ⬝ a).trace) :
   x = φ.matrix :=
 begin
-  simp_rw [linear_map.linear_functional_eq', ← matrix.ext_iff_trace] at h,
+  simp_rw [module.dual.apply, ← matrix.ext_iff_trace] at h,
   exact h.symm,
 end
 
-def linear_map.direct_sum' {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  (φ : Π i, matrix (s i) (s i) R →ₗ[R] R) :
-  { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal } →ₗ[R] R :=
+/-- Any linear functional $f$ on $M_n$ is given by a unique matrix $Q \in M_n$ such that $f(x)=\operatorname{Tr}(Qx)$ for any $x \in M_n$. -/
+lemma module.dual.eq_trace_unique (φ : module.dual R (matrix n n R)) :
+  ∃! Q : matrix n n R, ∀ a : matrix n n R, φ a = (Q ⬝ a).trace :=
 begin
-  let φ' := (linear_map.direct_sum φ) ∘ₗ matrix.block_diag'_linear_map,
-  exact { to_fun := λ x, φ' ↑x,
-    map_add' := λ x y, by { simp only [matrix.is_block_diagonal.coe_add, map_add], },
-    map_smul' := λ x y, by { simp only [matrix.is_block_diagonal.coe_smul,
-      smul_hom_class.map_smul, ring_hom.id_apply], } },
+  use φ.matrix,
+  simp_rw [module.dual.apply, eq_self_iff_true, forall_true_iff, true_and, ← matrix.ext_iff_trace, eq_comm,
+    imp_self, forall_true_iff],
 end
 
+def module.dual.pi' {k : Type*} [fintype k] [decidable_eq k]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  (φ : Π i, module.dual R (matrix (s i) (s i) R)) :
+  module.dual R { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal } :=
+(module.dual.pi φ) ∘ₗ is_block_diagonal_pi_alg_equiv.to_linear_map
+
 /-- `⨁_i φ_i ι_i (x_i) = φ_i (x_i)` -/
-lemma linear_map.direct_sum_apply_single_block {k : Type*} [fintype k] [decidable_eq k]
+lemma module.dual.pi.apply_single_block {k : Type*} [fintype k] [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
   (φ : Π i, matrix (s i) (s i) R →ₗ[R] R) (x : Π i, matrix (s i) (s i) R)
   (i : k) :
-  (linear_map.direct_sum φ) (include_block (x i)) = φ i (x i) :=
+  (module.dual.pi φ) (include_block (x i)) = φ i (x i) :=
 begin
-  simp_rw [linear_map.direct_sum.linear_functional_eq, include_block_apply,
-    ←mul_eq_mul, mul_dite, mul_zero, trace_iff, dite_apply, pi.zero_apply,
+  simp_rw [module.dual.pi_apply, module.dual.apply,
+    include_block_apply, ←mul_eq_mul, mul_dite,
+    mul_zero, trace_iff, dite_apply, pi.zero_apply,
     finset.sum_dite_irrel, finset.sum_const_zero, finset.sum_dite_eq,
-    finset.mem_univ, if_true, linear_map.linear_functional_eq', trace_iff],
+    finset.mem_univ, if_true],
   refl,
 end
 
 open_locale complex_order
 open_locale direct_sum
 /-- A linear functional $φ$ on $M_n$ is positive if $0 ≤ φ (x^*x)$ for all $x \in M_n$. -/
-def linear_map.is_pos_map {A : Type*} [non_unital_semiring A] [star_ring A]
-  [module 𝕜 A] (φ : A →ₗ[𝕜] 𝕜) : Prop :=
+def module.dual.is_pos_map {A : Type*} [non_unital_semiring A] [star_ring A]
+  [module 𝕜 A] (φ : module.dual 𝕜 A) : Prop :=
 ∀ a : A, 0 ≤ φ (star a * a)
 
 /-- A linear functional $φ$ on $M_n$ is unital if $φ(1) = 1$. -/
-def linear_map.is_unital {A : Type*} [add_comm_monoid A] [module R A] [has_one A]
-  (φ : A →ₗ[R] R) : Prop :=
+def module.dual.is_unital {A : Type*} [add_comm_monoid A] [module R A] [has_one A]
+  (φ : module.dual R A) : Prop :=
 φ (1 : A) = 1
 
 /-- A linear functional is called a state if it is positive and unital -/
-def linear_map.is_state {A : Type*} [semiring A] [star_ring A] [module 𝕜 A] (φ : A →ₗ[𝕜] 𝕜) :
+def module.dual.is_state {A : Type*} [semiring A] [star_ring A] [module 𝕜 A] (φ : module.dual 𝕜 A) :
   Prop :=
 φ.is_pos_map ∧ φ.is_unital
 
-lemma linear_map.is_pos_map_of_matrix (φ : matrix n n 𝕜 →ₗ[𝕜] 𝕜) :
+lemma module.dual.is_pos_map_of_matrix (φ : module.dual 𝕜 (matrix n n 𝕜)) :
   φ.is_pos_map ↔ (∀ a : matrix n n 𝕜, a.pos_semidef → 0 ≤ φ a) :=
 begin
-  simp_rw [pos_semidef_iff, exists_imp_distrib],
-  refine ⟨λ h, _, λ h, _⟩,
-  { rintros a x rfl,
-    exact h _, },
-  { intros x,
-    exact h _ _ rfl, },
+  simp_rw [pos_semidef_iff, exists_imp_distrib, module.dual.is_pos_map,
+    mul_eq_mul, forall_eq_apply_imp_iff', star_eq_conj_transpose],
 end
 
 /-- A linear functional $f$ on $M_n$ is said to be faithful if $f(x^*x)=0$ if and only if $x=0$ for any $x \in M_n$. -/
-def linear_map.is_faithful {A : Type*} [non_unital_semiring A] [star_ring A]
-  [module 𝕜 A] (φ : A →ₗ[𝕜] 𝕜) : Prop :=
+def module.dual.is_faithful {A : Type*} [non_unital_semiring A] [star_ring A]
+  [module 𝕜 A] (φ : module.dual 𝕜 A) : Prop :=
 ∀ a : A, φ (star a * a) = 0 ↔ a = 0
 
-lemma linear_map.is_faithful_of_matrix (φ : matrix n n 𝕜 →ₗ[𝕜] 𝕜) :
+lemma module.dual.is_faithful_of_matrix (φ : module.dual 𝕜 (matrix n n 𝕜)) :
   φ.is_faithful ↔ (∀ a : matrix n n 𝕜, a.pos_semidef → (φ a = 0 ↔ a = 0)) :=
 begin
-  simp_rw [pos_semidef_iff, exists_imp_distrib],
-  split,
-  { rintros h' a x rfl,
-    rw matrix.conj_transpose_mul_self_eq_zero,
-    exact h' _, },
-  { intros h' x,
-    rw ← x.conj_transpose_mul_self_eq_zero,
-    exact h' _ _ rfl, },
+  simp_rw [pos_semidef_iff, exists_imp_distrib,
+    module.dual.is_faithful, mul_eq_mul, forall_eq_apply_imp_iff',
+    conj_transpose_mul_self_eq_zero, star_eq_conj_transpose],
 end
 
 /-- A linear functional $f$ is positive if and only if there exists a unique positive semi-definite matrix $Q\in M_n$ such $f(x)=\operatorname{Tr}(Qx)$ for all $x\in M_n$.  -/
-lemma linear_map.is_pos_map_iff_of_matrix (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_pos_map_iff_of_matrix (φ : module.dual ℂ (matrix n n ℂ)) :
   φ.is_pos_map ↔ φ.matrix.pos_semidef :=
 begin
   split,
   { intros hs,
-    rw [linear_map.is_pos_map_of_matrix] at hs,
-    simp only [linear_map.linear_functional_eq'] at hs,
+    rw [module.dual.is_pos_map_of_matrix] at hs,
+    simp only [module.dual.apply] at hs,
     have thiseq : ∀ y, star y ⬝ᵥ φ.matrix.mul_vec y = (φ.matrix ⬝ vec_mul_vec y (star y)).trace,
     { intros y,
       rw [vec_mul_vec_eq, trace_mul_cycle', ← col_mul_vec],
@@ -207,32 +193,29 @@ begin
       refine hs _ _,
       exact vec_mul_vec.pos_semidef _, },
   { intros hy y,
-    rw [φ.linear_functional_eq', mul_eq_mul, ← matrix.mul_assoc, is_R_or_C.nonneg_def'],
+    rw [φ.apply, mul_eq_mul, ← matrix.mul_assoc, is_R_or_C.nonneg_def'],
     exact hy.trace_conj_transpose_mul_self_nonneg _, },
 end
 
 /-- A linear functional $f$ is a state if and only if there exists a unique positive semi-definite matrix $Q\in M_n$ such that its trace equals $1$ and $f(x)=\operatorname{Tr}(Qx)$ for all $x\in M_n$. -/
-lemma linear_map.is_state_iff_of_matrix (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_state_iff_of_matrix
+  (φ : module.dual ℂ (matrix n n ℂ)) :
   φ.is_state ↔ φ.matrix.pos_semidef ∧ φ.matrix.trace = 1 :=
 begin
-  rw [linear_map.is_state, linear_map.is_pos_map_iff_of_matrix],
-  refine ⟨λ h, ⟨h.1, _⟩, λ h, ⟨h.1, _⟩⟩,
-  { rw [linear_map.is_unital, linear_map.linear_functional_eq', matrix.mul_one] at h,
-    exact h.2, },
-  { rw [linear_map.is_unital, linear_map.linear_functional_eq', matrix.mul_one],
-    exact h.2, },
+  rw [module.dual.is_state, module.dual.is_pos_map_iff_of_matrix, module.dual.is_unital,
+    module.dual.apply, matrix.mul_one],
 end
 
 /-- A positive linear functional $f$ is faithful if and only if there exists a positive definite matrix such that $f(x)=\operatorname{Tr}(Qx)$ for all $x\in M_n$. -/
-lemma linear_map.is_pos_map.is_faithful_iff_of_matrix
-  {φ : matrix n n ℂ →ₗ[ℂ] ℂ} (hs : φ.is_pos_map) :
+lemma module.dual.is_pos_map.is_faithful_iff_of_matrix
+  {φ : module.dual ℂ (matrix n n ℂ)} (hs : φ.is_pos_map) :
   φ.is_faithful ↔ φ.matrix.pos_def :=
 begin
   have hs' := hs,
-  rw [linear_map.is_pos_map_of_matrix] at hs',
-  rw linear_map.is_faithful_of_matrix,
+  rw [module.dual.is_pos_map_of_matrix] at hs',
+  rw module.dual.is_faithful_of_matrix,
   split,
-  { rw linear_map.is_pos_map_iff_of_matrix at hs,
+  { rw module.dual.is_pos_map_iff_of_matrix at hs,
     intros HHH,
     { refine ⟨hs.1, _⟩,
       intros x hx,
@@ -247,69 +230,69 @@ begin
       rcases this3 with (this3 | this32),
       { rw [eq_comm, this3, this2, vec_mul_vec_eq_zero_iff] at this3,
         contradiction, },
-      { rw ← linear_map.linear_functional_eq',
+      { rw ← module.dual.apply,
         exact (is_R_or_C.pos_def.mp this32).1, }, }, },
   { intros hQ a ha,
     refine ⟨λ h, _, λ h, by rw [h, map_zero]⟩,
     obtain ⟨b, rfl⟩ := (pos_semidef_iff _).mp ha,
-    rw [linear_map.linear_functional_eq', ← matrix.mul_assoc,
+    rw [module.dual.apply, ← matrix.mul_assoc,
       nontracial.trace_conj_transpose_mul_self_eq_zero hQ] at h,
     rw [h, matrix.mul_zero], },
 end
 
-def linear_map.is_faithful_pos_map {A : Type*} [non_unital_semiring A] [star_ring A]
-  [module 𝕜 A] (φ : A →ₗ[𝕜] 𝕜) : Prop :=
+def module.dual.is_faithful_pos_map {A : Type*} [non_unital_semiring A] [star_ring A]
+  [module 𝕜 A] (φ : module.dual 𝕜 A) : Prop :=
 φ.is_pos_map ∧ φ.is_faithful
 
 /-- A linear functional $φ$ is a faithful and positive if and only if there exists a unique positive definite matrix $Q$ such that $φ(x)=\operatorname{Tr}(Qx)$ for all $x\in M_n$. -/
-lemma linear_map.is_faithful_pos_map_iff_of_matrix (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_faithful_pos_map_iff_of_matrix (φ : module.dual ℂ (matrix n n ℂ)) :
   φ.is_faithful_pos_map ↔ φ.matrix.pos_def :=
 begin
   refine ⟨λ h, h.1.is_faithful_iff_of_matrix.mp h.2, _⟩,
   intros hQ,
-  simp_rw [linear_map.is_faithful_pos_map, linear_map.is_faithful,
-    linear_map.is_pos_map_iff_of_matrix, hQ.pos_semidef, true_and,
-    linear_map.linear_functional_eq', mul_eq_mul, star_eq_conj_transpose, ← matrix.mul_assoc,
+  simp_rw [module.dual.is_faithful_pos_map, module.dual.is_faithful,
+    module.dual.is_pos_map_iff_of_matrix, hQ.pos_semidef, true_and,
+    module.dual.apply, mul_eq_mul, star_eq_conj_transpose, ← matrix.mul_assoc,
     nontracial.trace_conj_transpose_mul_self_eq_zero hQ, iff_self, forall_const],
 end
 
 /-- A state is faithful $f$ if and only if there exists a unique positive definite matrix $Q\in M_n$ with trace equal to $1$ and $f(x)=\operatorname{Tr}(Qx)$ for all $x \in M_n$. -/
-lemma linear_map.is_state.is_faithful_iff_of_matrix {φ : matrix n n ℂ →ₗ[ℂ] ℂ}
+lemma  module.dual.is_state.is_faithful_iff_of_matrix {φ : module.dual ℂ (matrix n n ℂ)}
   (hs : φ.is_state) :
   φ.is_faithful ↔ φ.matrix.pos_def ∧ φ.matrix.trace = 1 :=
 begin
   rw hs.1.is_faithful_iff_of_matrix,
   refine ⟨λ hQ, ⟨hQ,_⟩, λ hQ, hQ.1⟩,
-  { rw [linear_map.is_state_iff_of_matrix] at hs,
+  { rw [module.dual.is_state_iff_of_matrix] at hs,
     exact hs.2, },
 end
 
-lemma linear_map.is_faithful_state_iff_of_matrix (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_faithful_state_iff_of_matrix (φ : module.dual ℂ (matrix n n ℂ)) :
   (φ.is_state ∧ φ.is_faithful)
     ↔ φ.matrix.pos_def ∧ φ.matrix.trace = 1 :=
 begin
   refine ⟨λ h, h.1.is_faithful_iff_of_matrix.mp h.2, _⟩,
   intros hQ,
-  simp_rw [linear_map.is_faithful, linear_map.is_state_iff_of_matrix, hQ.2, hQ.1.pos_semidef,
+  simp_rw [module.dual.is_faithful, module.dual.is_state_iff_of_matrix, hQ.2, hQ.1.pos_semidef,
     eq_self_iff_true, true_and],
-  rw ← linear_map.is_faithful_pos_map_iff_of_matrix at hQ,
+  rw ← module.dual.is_faithful_pos_map_iff_of_matrix at hQ,
   exact hQ.1.2,
 end
 
 /-- A linear functional $f$ is tracial if and only if $f(xy)=f(yx)$ for all $x,y$. -/
-def linear_map.is_tracial  {A : Type*} [non_unital_semiring A] [star_ring A]
-  [module 𝕜 A] (φ : A →ₗ[𝕜] 𝕜) :
+def module.dual.is_tracial  {A : Type*} [non_unital_semiring A] [star_ring A]
+  [module 𝕜 A] (φ : module.dual 𝕜 A) :
   Prop :=
 ∀ x y : A, φ (x * y) = φ (y * x)
 
 /-- A linear functional is tracial and positive if and only if there exists a non-negative real $α$ such that $f\colon x \mapsto \alpha \operatorname{Tr}(x)$. -/
-lemma linear_map.is_tracial_pos_map_iff_of_matrix (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_tracial_pos_map_iff_of_matrix (φ : module.dual ℂ (matrix n n ℂ)) :
   (φ.is_pos_map ∧ φ.is_tracial) ↔ ∃ α : nnreal, φ.matrix = ((α : ℝ) : ℂ) • 1 :=
 begin
   split,
-  { simp_rw [linear_map.is_pos_map_iff_of_matrix],
+  { simp_rw [module.dual.is_pos_map_iff_of_matrix],
     rintros ⟨hQ, h2⟩,
-    simp_rw [linear_map.is_tracial, linear_map.linear_functional_eq',
+    simp_rw [module.dual.is_tracial, module.dual.apply,
       matrix.trace, matrix.diag, mul_eq_mul, mul_apply] at h2,
     let Q := φ.matrix,
     have : ∀ p q r : n, Q p q = ite (p = q) (Q r r) 0 :=
@@ -351,7 +334,7 @@ begin
       rw ← this',
       exact HH, }, },
   { rintros ⟨α, hα1⟩,
-    simp_rw [linear_map.is_pos_map, linear_map.is_tracial, linear_map.linear_functional_eq',
+    simp_rw [module.dual.is_pos_map, module.dual.is_tracial, module.dual.apply,
       hα1, is_R_or_C.nonneg_def', ← is_R_or_C.conj_eq_iff_re, star_ring_end_apply, matrix.smul_mul, matrix.one_mul, trace_star, conj_transpose_smul,
       mul_eq_mul, star_eq_conj_transpose, conj_transpose_mul,
       conj_transpose_conj_transpose, is_R_or_C.star_def, is_R_or_C.conj_of_real,
@@ -362,13 +345,14 @@ end
 
 
 /-- A linear functional is tracial and positive if and only if there exists a unique non-negative real $α$ such that $f\colon x \mapsto \alpha \operatorname{Tr}(x)$. -/
-lemma linear_map.is_tracial_pos_map_iff'_of_matrix [nonempty n] (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_tracial_pos_map_iff'_of_matrix [nonempty n]
+  (φ : module.dual ℂ (matrix n n ℂ)) :
   (φ.is_pos_map ∧ φ.is_tracial) ↔ ∃! α : nnreal, φ.matrix = ((α : ℝ) : ℂ) • 1 :=
 begin
   split,
-  { simp_rw [linear_map.is_pos_map_iff_of_matrix],
+  { simp_rw [module.dual.is_pos_map_iff_of_matrix],
     rintros ⟨hQ, h2⟩,
-    simp_rw [linear_map.is_tracial, linear_map.linear_functional_eq',
+    simp_rw [module.dual.is_tracial, module.dual.apply,
       matrix.trace, matrix.diag, mul_eq_mul, mul_apply] at h2,
     let Q := φ.matrix,
     have : ∀ p q r : n, Q p q = ite (p = q) (Q r r) 0 :=
@@ -412,7 +396,7 @@ begin
       norm_cast at hy,
       simp_rw [α, Q, hy, subtype.coe_eta], }, },
   { rintros ⟨α, ⟨hα1, hα2⟩⟩,
-    simp_rw [linear_map.is_pos_map, linear_map.is_tracial, linear_map.linear_functional_eq',
+    simp_rw [module.dual.is_pos_map, module.dual.is_tracial, module.dual.apply,
       hα1, is_R_or_C.nonneg_def', ← is_R_or_C.conj_eq_iff_re, star_ring_end_apply, matrix.smul_mul, matrix.one_mul, trace_star, conj_transpose_smul,
       mul_eq_mul, star_eq_conj_transpose, conj_transpose_mul,
       conj_transpose_conj_transpose, is_R_or_C.star_def, is_R_or_C.conj_of_real,
@@ -422,21 +406,22 @@ begin
 end
 
 /-- A linear functional $f$ is tracial positive and faithful if and only if there exists a positive real number $\alpha$ such that $f\colon x\mapsto \alpha \operatorname{Tr}(x)$. -/
-lemma linear_map.is_tracial_faithful_pos_map_iff_of_matrix [nonempty n] (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_tracial_faithful_pos_map_iff_of_matrix [nonempty n]
+  (φ : module.dual ℂ (matrix n n ℂ)) :
   (φ.is_faithful_pos_map ∧ φ.is_tracial)
     ↔ ∃! α : {x : nnreal // 0 < x}, φ.matrix = (((α : nnreal) : ℝ) : ℂ) • 1 :=
 begin
-  rw [linear_map.is_faithful_pos_map, and_comm φ.is_pos_map _, and_assoc,
-    linear_map.is_tracial_pos_map_iff'_of_matrix],
+  rw [module.dual.is_faithful_pos_map, and_comm φ.is_pos_map _, and_assoc,
+    module.dual.is_tracial_pos_map_iff'_of_matrix],
   split,
   { rintros ⟨h1, ⟨α, hα, h⟩⟩,
     have : 0 < (α : ℝ) :=
     by { rw [nnreal.coe_pos, pos_iff_ne_zero],
       intros HH,
-      rw linear_map.is_faithful at h1,
+      rw module.dual.is_faithful at h1,
       specialize h1 ((1 : matrix n n ℂ)ᴴ ⬝ (1 : matrix n n ℂ)),
       simp only [matrix.conj_transpose_one, matrix.one_mul, matrix.mul_one,
-        linear_map.linear_functional_eq', mul_eq_mul, star_eq_conj_transpose] at h1,
+        module.dual.apply, mul_eq_mul, star_eq_conj_transpose] at h1,
       simp_rw [HH, nnreal.coe_zero, complex.of_real_zero, zero_smul] at hα,
       rw [hα, trace_zero, eq_self_iff_true, true_iff] at h1,
       simp only [one_ne_zero'] at h1,
@@ -450,7 +435,7 @@ begin
   { rintros ⟨α, ⟨h1, h2⟩⟩,
     have : 0 < (α : nnreal) := subtype.mem α,
     refine ⟨_, ⟨α, h1, λ y hy, _⟩⟩,
-    { simp_rw [linear_map.is_faithful, linear_map.linear_functional_eq', h1,
+    { simp_rw [module.dual.is_faithful, module.dual.apply, h1,
         matrix.smul_mul, matrix.one_mul, trace_smul, smul_eq_zero,
         is_R_or_C.of_real_eq_zero, nnreal.coe_eq_zero, ne_zero_of_lt this,
         false_or, star_eq_conj_transpose, mul_eq_mul, trace_conj_transpose_mul_self_eq_zero,
@@ -529,40 +514,57 @@ end
 --       rw [hα1, trace_mul_comm, ← hα1], }, },
 -- end
 
-lemma linear_map.is_pos_map.is_real {φ : matrix n n ℂ →ₗ[ℂ] ℂ}
+lemma matrix.ext_iff_trace' {R m n : Type*}
+  [semiring R] [star_ring R] [fintype n] [fintype m]
+  [decidable_eq n] [decidable_eq m]
+  (A B : matrix m n R) :
+  (∀ x, (xᴴ ⬝ A).trace = (xᴴ ⬝ B).trace) ↔ A = B :=
+begin
+  refine ⟨λ h, _, λ h x, by rw [h]⟩,
+  ext i j,
+  specialize h (std_basis_matrix i j (1 : R)),
+  simp_rw [std_basis_matrix_conj_transpose,
+    star_one, matrix.std_basis_matrix_mul_trace] at h,
+  exact h,
+end
+
+lemma module.dual.is_real_iff {φ : module.dual ℂ (matrix n n ℂ)} :
+  φ.is_real ↔ φ.matrix.is_hermitian :=
+begin
+  simp_rw [linear_map.is_real, module.dual.apply,
+    trace_star, conj_transpose_mul,
+    star_eq_conj_transpose, trace_mul_comm (φ.matrix),
+    matrix.ext_iff_trace', is_hermitian, eq_comm],
+end
+
+lemma module.dual.is_pos_map.is_real {φ : module.dual ℂ (matrix n n ℂ)}
   (hφ : φ.is_pos_map) :
   φ.is_real :=
 begin
-  intros x,
-  rw linear_map.is_pos_map_iff_of_matrix at hφ,
-  simp_rw [linear_map.linear_functional_eq', trace_star, conj_transpose_mul, hφ.1.eq],
-  rw [trace_mul_comm],
-  refl,
+  rw module.dual.is_pos_map_iff_of_matrix at hφ,
+  rw [module.dual.is_real_iff],
+  exact hφ.1,
 end
 
-lemma linear_map.is_pos_map.direct_sum.is_real {k : Type*} [fintype k] [decidable_eq k]
+lemma module.dual.pi.is_pos_map.is_real {k : Type*} [fintype k] [decidable_eq k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  {ψ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ} (hψ : Π i, (ψ i).is_pos_map) :
-  (linear_map.direct_sum ψ).is_real :=
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)} (hψ : Π i, (ψ i).is_pos_map) :
+  (module.dual.pi ψ).is_real :=
 begin
-  intros x,
-  rw [matrix_eq_sum_include_block x],
-  simp only [map_sum, star_sum],
-  apply finset.sum_congr rfl,
-  intros i hi,
-  simp only [← linear_map.is_pos_map.is_real (hψ i) (x i), include_block_conj_transpose,
-    linear_map.direct_sum_apply_single_block],
-  refl,
+  simp_rw [linear_map.is_real, module.dual.pi_apply, star_sum, pi.star_apply,
+    (hψ _).is_real _, eq_self_iff_true, forall_true_iff],
 end
 
 /-- A function $H \times H \to 𝕜$ defines an inner product if it satisfies the following. -/
 def is_inner {H : Type*} [add_comm_monoid H] [module 𝕜 H] (φ : H×H → 𝕜) : Prop :=
-(∀ x y : H, φ (x, y) = star (φ (y, x))) ∧ (∀ x : H, 0 ≤ is_R_or_C.re (φ (x, x))) ∧
-  (∀ x : H, φ (x, x) = 0 ↔ x = 0) ∧ (∀ x y z : H, φ (x+y, z) = φ (x, z) + φ (y, z)) ∧
-    (∀ (x y : H) (α : 𝕜), φ (α • x, y) = star_ring_end 𝕜 α * φ (x, y))
+(∀ x y : H, φ (x, y) = star (φ (y, x)))
+  ∧ (∀ x : H, 0 ≤ is_R_or_C.re (φ (x, x)))
+  ∧ (∀ x : H, φ (x, x) = 0 ↔ x = 0)
+  ∧ (∀ x y z : H, φ (x+y, z) = φ (x, z) + φ (y, z))
+  ∧ (∀ (x y : H) (α : 𝕜), φ (α • x, y) = star_ring_end 𝕜 α * φ (x, y))
 
 /-- A linear functional $f$ on $M_n$ is positive and faithful if and only if $(x,y)\mapsto f(x^*y)$ defines an inner product on $M_n$. -/
-lemma linear_map.is_faithful_pos_map_iff_is_inner_of_matrix (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+lemma module.dual.is_faithful_pos_map_iff_is_inner_of_matrix (φ : module.dual ℂ (matrix n n ℂ)) :
   φ.is_faithful_pos_map
     ↔ is_inner (λ xy : matrix n n ℂ × matrix n n ℂ, φ (xy.1ᴴ ⬝ xy.2)) :=
 begin
@@ -584,13 +586,13 @@ begin
     exact ⟨λ x y, rfl, ⟨λ x, (this x).2, h.2⟩⟩, },
   { intros h,
     refine ⟨_, h.2.2⟩,
-    simp_rw [linear_map.is_pos_map, star_eq_conj_transpose, mul_eq_mul, ← hip,
+    simp_rw [module.dual.is_pos_map, star_eq_conj_transpose, mul_eq_mul, ← hip,
       is_R_or_C.nonneg_def', is_R_or_C.re_eq_complex_re,
       ← complex.conj_eq_iff_re, star_ring_end_apply, ← h.1, eq_self_iff_true, true_and],
     exact h.2.1, },
 end
 
-theorem linear_map.is_faithful_pos_map_of_matrix_tfae (φ : matrix n n ℂ →ₗ[ℂ] ℂ) :
+theorem module.dual.is_faithful_pos_map_of_matrix_tfae (φ : module.dual ℂ (matrix n n ℂ)) :
   tfae [φ.is_faithful_pos_map,
     φ.matrix.pos_def,
     is_inner (λ xy : matrix n n ℂ × matrix n n ℂ, φ (xy.1ᴴ ⬝ xy.2))] :=
@@ -602,8 +604,8 @@ begin
   tfae_finish,
 end
 
-@[instance, reducible] noncomputable def linear_map.is_faithful_pos_map.normed_add_comm_group
-  {φ : matrix n n ℂ →ₗ[ℂ] ℂ} [hφ : fact φ.is_faithful_pos_map] :
+@[instance, reducible] noncomputable def module.dual.is_faithful_pos_map.normed_add_comm_group
+  {φ : module.dual ℂ (matrix n n ℂ)} [hφ : fact φ.is_faithful_pos_map] :
   normed_add_comm_group (matrix n n ℂ) :=
 begin
   have := φ.is_faithful_pos_map_iff_is_inner_of_matrix.mp hφ.elim,
@@ -616,15 +618,15 @@ begin
     smul_left := λ x y r, this.2.2.2.2 _ _ _ },
 end
 
-@[instance, reducible] noncomputable def linear_map.is_faithful_pos_map.inner_product_space
-  {φ : matrix n n ℂ →ₗ[ℂ] ℂ} [hφ : fact φ.is_faithful_pos_map] :
+@[instance, reducible] noncomputable def module.dual.is_faithful_pos_map.inner_product_space
+  {φ : module.dual ℂ (matrix n n ℂ)} [hφ : fact φ.is_faithful_pos_map] :
   inner_product_space ℂ (matrix n n ℂ) :=
 inner_product_space.of_core _
 
-@[instance, reducible] noncomputable def linear_map.direct_sum.normed_add_comm_group
+@[instance, reducible] noncomputable def module.dual.pi.normed_add_comm_group
   {k : Type*} [fintype k]
   [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  {φ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ} [hφ : (Π i, fact (φ i).is_faithful_pos_map)] :
+  {φ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)} [hφ : (Π i, fact (φ i).is_faithful_pos_map)] :
   normed_add_comm_group (Π i, matrix (s i) (s i) ℂ) :=
 begin
   exact @inner_product_space.core.to_normed_add_comm_group ℂ (Π i, matrix (s i) (s i) ℂ) _ _ _
@@ -647,15 +649,15 @@ begin
       finset.mul_sum], } },
 end
 
-@[instance, reducible] noncomputable def linear_map.direct_sum.inner_product_space
+@[instance, reducible] noncomputable def module.dual.pi.inner_product_space
   {k : Type*} [fintype k]
   [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
-  {φ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ} [hφ : Π i, fact (φ i).is_faithful_pos_map] :
+  {φ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)} [hφ : Π i, fact (φ i).is_faithful_pos_map] :
   inner_product_space ℂ (Π i, matrix (s i) (s i) ℂ) :=
 inner_product_space.of_core _
 
 
-localized "attribute [instance] linear_map.is_faithful_pos_map.normed_add_comm_group" in functional
-localized "attribute [instance] linear_map.is_faithful_pos_map.inner_product_space" in functional
-localized "attribute [instance] linear_map.direct_sum.normed_add_comm_group" in functional
-localized "attribute [instance] linear_map.direct_sum.inner_product_space" in functional
+localized "attribute [instance] module.dual.is_faithful_pos_map.normed_add_comm_group" in functional
+localized "attribute [instance] module.dual.is_faithful_pos_map.inner_product_space" in functional
+localized "attribute [instance] module.dual.pi.normed_add_comm_group" in functional
+localized "attribute [instance] module.dual.pi.inner_product_space" in functional
