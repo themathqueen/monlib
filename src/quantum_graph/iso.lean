@@ -19,8 +19,8 @@ local notation `ℍ` := matrix n n ℂ
 local notation `⊗K` := matrix (n × n) (n × n) ℂ
 local notation `l(` x `)` := x →ₗ[ℂ] x
 
-variables {φ : ℍ →ₗ[ℂ] ℂ} [hφ : fact φ.is_faithful_pos_map]
-  {ψ : matrix p p ℂ →ₗ[ℂ] ℂ} (hψ : ψ.is_faithful_pos_map)
+variables {φ : module.dual ℂ ℍ} [hφ : fact φ.is_faithful_pos_map]
+  {ψ : module.dual ℂ (matrix p p ℂ)} (hψ : ψ.is_faithful_pos_map)
 
 local notation `|` x `⟩⟨` y `|` := @rank_one ℂ _ _ _ _ x y
 local notation `m` := linear_map.mul' ℂ ℍ
@@ -53,7 +53,7 @@ begin
   simp_rw linear_map.comp_assoc,
 
   nth_rewrite_rhs 0 ← linear_map.adjoint_adjoint (((m).adjoint : ℍ →ₗ[ℂ] ℍ ⊗[ℂ] ℍ) ∘ₗ f.to_alg_equiv.to_linear_map),
-  have := (list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 0 1).mp hf,
+  have := (list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 0 1).mp hf,
   have this' : ∀ x y, f.symm.to_alg_equiv.to_linear_map (x * y)
     = f.symm.to_alg_equiv.to_linear_map x * f.symm.to_alg_equiv.to_linear_map y := λ x y,
   by simp_rw [alg_equiv.to_linear_map_apply, star_alg_equiv.coe_to_alg_equiv, _root_.map_mul],
@@ -77,7 +77,7 @@ begin
       unitary_group.inv_apply, star_star], },
   have hf' : inner_aut (star U) = (inner_aut_star_alg U).symm.to_alg_equiv.to_linear_map :=
   by rw [hh, hf],
-  rw [hf, hf', (list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ (inner_aut_star_alg U)) 1 0),
+  rw [hf, hf', (list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ (inner_aut_star_alg U)) 1 0),
     inner_aut_star_alg_apply, unitary_group.injective_mul U, matrix.mul_assoc,
     ← unitary_group.star_coe_eq_coe_star, unitary_group.star_mul_self, matrix.mul_one],
   exact ⟨λ h, h.symm, λ h, h.symm⟩,
@@ -146,16 +146,16 @@ lemma inner_aut.to_matrix [hφ : fact φ.is_faithful_pos_map] (U : unitary_group
     = U ⊗ₖ (hφ.elim.sig (-(1/2)) U)ᴴᵀ :=
 begin
   ext1,
-  simp only [linear_map.is_faithful_pos_map.to_matrix, linear_map.to_matrix_alg_equiv_apply,
+  simp only [module.dual.is_faithful_pos_map.to_matrix, linear_map.to_matrix_alg_equiv_apply,
     alg_equiv.to_linear_map_apply, star_alg_equiv.coe_to_alg_equiv,
-    linear_map.is_faithful_pos_map.inner_coord', linear_map.is_faithful_pos_map.basis_repr_apply,
-    linear_map.is_faithful_pos_map.inner_coord'],
+    module.dual.is_faithful_pos_map.inner_coord', module.dual.is_faithful_pos_map.basis_repr_apply,
+    module.dual.is_faithful_pos_map.inner_coord'],
   simp only [inner_aut_star_alg_apply, mul_apply, std_basis_matrix, mul_ite, ite_mul, mul_zero,
     zero_mul, mul_one, one_mul, finset.sum_ite_irrel, finset.sum_ite_eq, finset.sum_ite_eq',
     finset.sum_const_zero, finset.mem_univ, if_true, ite_and, kronecker_map, of_apply,
-    conj_apply, linear_map.is_faithful_pos_map.sig_apply, star_sum, star_mul',
+    conj_apply, module.dual.is_faithful_pos_map.sig_apply, star_sum, star_mul',
     neg_neg, finset.mul_sum, finset.sum_mul, mul_assoc, inner_aut_apply',
-    linear_map.is_faithful_pos_map.basis_apply],
+    module.dual.is_faithful_pos_map.basis_apply],
   simp_rw [← star_apply, star_eq_conj_transpose, (pos_def.rpow.is_hermitian _ _).eq],
   rw finset.sum_comm,
   repeat { apply finset.sum_congr rfl, intros, },
@@ -169,7 +169,7 @@ lemma unitary_commutes_with_hφ_matrix_iff_is_isometry
 begin
   rw [← inner_aut_adjoint_eq_iff, ← inner_aut_star_alg_equiv_to_linear_map,
     ← inner_aut_inv_eq_star, ← inner_aut_star_alg_equiv_symm_to_linear_map,
-    (list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ (inner_aut_star_alg U)) 1 4),
+    (list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ (inner_aut_star_alg U)) 1 4),
     star_alg_equiv.is_isometry],
 end
 
@@ -177,7 +177,7 @@ lemma qam.symm_apply_star_alg_equiv_conj [nontrivial n] {f : ℍ ≃⋆ₐ[ℂ] 
   qam.symm hφ.elim (f.to_alg_equiv.to_linear_map ∘ₗ A ∘ₗ f.symm.to_alg_equiv.to_linear_map)
     = f.to_alg_equiv.to_linear_map ∘ₗ (qam.symm hφ.elim A) ∘ₗ f.symm.to_alg_equiv.to_linear_map :=
 begin
-  rw [star_alg_equiv.is_isometry, list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
+  rw [star_alg_equiv.is_isometry, list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
   simp only [qam.symm_eq_real_adjoint, linear_map.adjoint_comp,
     ← alg_equiv.to_linear_equiv_to_linear_map,
     linear_map.real_star_alg_equiv_conj],
@@ -212,7 +212,7 @@ lemma star_alg_equiv.is_isometry.commutes_with_mul'_adjoint [nontrivial n] {f : 
     ∘ₗ (linear_map.mul' ℂ ℍ).adjoint
   = (linear_map.mul' ℂ ℍ).adjoint ∘ₗ f.to_alg_equiv.to_linear_map :=
 begin
-  rw [star_alg_equiv.is_isometry, list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
+  rw [star_alg_equiv.is_isometry, list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
   rw [← linear_map.adjoint_adjoint (f.to_alg_equiv.to_linear_map ⊗ₘ f.to_alg_equiv.to_linear_map),
     ← linear_map.adjoint_comp, tensor_product.map_adjoint, hf,
     f.symm.commutes_with_mul', linear_map.adjoint_comp, ← hf, linear_map.adjoint_adjoint],
@@ -231,8 +231,8 @@ begin
     ← linear_map.comp_assoc, f.commutes_with_mul'],
   have : f.symm.is_isometry,
   { simp_rw [star_alg_equiv.is_isometry] at hf ⊢,
-    rw [list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f.symm) 4 1] at ⊢,
-    rw [list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
+    rw [list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f.symm) 4 1] at ⊢,
+    rw [list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
     rw [star_alg_equiv.symm_symm, ← hf, linear_map.adjoint_adjoint], },
   simp only [linear_map.comp_assoc, this.commutes_with_mul'_adjoint],
 end
@@ -272,7 +272,7 @@ lemma qam_is_self_adjoint_star_alg_equiv_conj_iff [nontrivial n]
 begin
   simp only [linear_map.is_self_adjoint_iff', linear_map.adjoint_comp],
   rw [star_alg_equiv.is_isometry,
-    list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
+    list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
   simp_rw [hf, ← linear_map.comp_assoc, alg_equiv.inj_comp, ← hf, linear_map.adjoint_adjoint,
     alg_equiv.comp_inj],
 end
@@ -396,7 +396,7 @@ begin
     ext1,
     simp_rw [inner_aut_star_alg_symm_apply, inner_aut_star_alg_apply, unitary.star_eq_inv,
       unitary_group.inv_apply, star_star], },
-  have := λ U, list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _
+  have := λ U, list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _
     (inner_aut_star_alg U)) 1 0,
   simp_rw [hf, ← hh, this],
   split,

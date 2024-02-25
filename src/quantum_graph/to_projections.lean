@@ -26,8 +26,8 @@ local notation `L(`x`)` := x →L[ℂ] x
 
 local notation `e_{` i `,` j `}` := matrix.std_basis_matrix i j (1 : ℂ)
 
-variables {φ : ℍ →ₗ[ℂ] ℂ} [hφ : fact φ.is_faithful_pos_map]
-  {ψ : matrix p p ℂ →ₗ[ℂ] ℂ} (hψ : ψ.is_faithful_pos_map)
+variables {φ : module.dual ℂ ℍ} [hφ : fact φ.is_faithful_pos_map]
+  {ψ : module.dual ℂ (matrix p p ℂ)} (hψ : ψ.is_faithful_pos_map)
 
 open_locale matrix
 open matrix
@@ -59,16 +59,16 @@ lemma rank_one_Psi_transpose_to_lin (x y : ℍ) :
     ((hφ.elim.Psi 0 (1/2)) (|x⟩⟨y|))).to_kronecker
   = (linear_map.mul_left ℂ x) *  ((linear_map.mul_right ℂ y).adjoint : l(ℍ)) :=
 begin
-  let b := @linear_map.is_faithful_pos_map.orthonormal_basis n _ _ φ _,
+  let b := @module.dual.is_faithful_pos_map.orthonormal_basis n _ _ φ _,
   rw ← function.injective.eq_iff hφ.elim.to_matrix.injective,
   simp_rw [_root_.map_mul, linear_map.matrix.mul_right_adjoint, linear_map.mul_right_to_matrix,
     linear_map.mul_left_to_matrix, matrix.mul_eq_mul, ← mul_kronecker_mul, matrix.one_mul,
-    matrix.mul_one, linear_map.is_faithful_pos_map.sig_apply_sig],
+    matrix.mul_one, module.dual.is_faithful_pos_map.sig_apply_sig],
   have : (1 / 2 : ℝ) + -1 = - (1 / 2) := by norm_num,
-  rw [this, ← linear_map.is_faithful_pos_map.sig_conj_transpose, alg_equiv.apply_symm_apply,
-    linear_map.is_faithful_pos_map.Psi, linear_equiv.coe_mk,
-    linear_map.is_faithful_pos_map.Psi_to_fun'_apply, tensor_product.map_tmul,
-    tensor_product.to_kronecker_apply, linear_map.is_faithful_pos_map.sig_zero,
+  rw [this, ← module.dual.is_faithful_pos_map.sig_conj_transpose, alg_equiv.apply_symm_apply,
+    module.dual.is_faithful_pos_map.Psi, linear_equiv.coe_mk,
+    module.dual.is_faithful_pos_map.Psi_to_fun'_apply, tensor_product.map_tmul,
+    tensor_product.to_kronecker_apply, module.dual.is_faithful_pos_map.sig_zero,
     linear_map.one_apply, alg_equiv.to_linear_map_apply, op, linear_equiv.coe_coe,
     mul_opposite.coe_op_linear_equiv, transpose_alg_equiv_symm_op_apply],
 end
@@ -90,11 +90,11 @@ begin
   rw kmul_representation (hφ.elim.to_matrix (|x⟩⟨y|)),
   simp_rw [map_sum, smul_hom_class.map_smul, kronecker_to_tensor_product_apply,
     tensor_product.map_tmul, linear_map.one_apply, alg_equiv.to_linear_map_apply,
-    transpose_alg_equiv_apply, linear_map.is_faithful_pos_map.Psi, linear_equiv.coe_symm_mk,
-    linear_map.is_faithful_pos_map.Psi_inv_fun'_apply, unop, linear_equiv.coe_coe,
+    transpose_alg_equiv_apply, module.dual.is_faithful_pos_map.Psi, linear_equiv.coe_symm_mk,
+    module.dual.is_faithful_pos_map.Psi_inv_fun'_apply, unop, linear_equiv.coe_coe,
     mul_opposite.coe_op_linear_equiv_symm, mul_opposite.unop_op,
     matrix.std_basis_matrix.transpose', std_basis_matrix_conj_transpose,
-    neg_zero, linear_map.is_faithful_pos_map.sig_zero, star_one,
+    neg_zero, module.dual.is_faithful_pos_map.sig_zero, star_one,
     linear_map.matrix.mul_right_adjoint, linear_map.ext_iff, linear_map.sum_apply,
     linear_map.mul_apply, linear_map.smul_apply, continuous_linear_map.coe_coe,
     rank_one_apply, rank_one_to_matrix, conj_transpose_col, ← vec_mul_vec_eq,
@@ -103,12 +103,12 @@ begin
   have : ∀ (i j : n) (a : ℍ), ⟪hφ.elim.sig (-(1/2)) e_{i,j}, a⟫_ℂ
     = ⟪e_{i,j} ⬝ hφ.elim.matrix_is_pos_def.rpow (-(1/2)), hφ.elim.matrix_is_pos_def.rpow (1/2) ⬝ a⟫_ℂ,
   { intros i j a,
-    simp_rw [linear_map.is_faithful_pos_map.sig_apply, matrix.mul_assoc, neg_neg,
-      ← linear_map.is_faithful_pos_map.basis_apply hφ.elim (i,j),
-      linear_map.is_faithful_pos_map.inner_left_mul,
-      linear_map.is_faithful_pos_map.inner_coord', (pos_def.rpow.is_hermitian _ _).eq], },
+    simp_rw [module.dual.is_faithful_pos_map.sig_apply, matrix.mul_assoc, neg_neg,
+      ← module.dual.is_faithful_pos_map.basis_apply hφ.elim (i,j),
+      module.dual.is_faithful_pos_map.inner_left_mul,
+      module.dual.is_faithful_pos_map.inner_coord', (pos_def.rpow.is_hermitian _ _).eq], },
   intros a,
-  simp_rw [this, ← hφ.elim.basis_apply (_,_), linear_map.is_faithful_pos_map.inner_coord',
+  simp_rw [this, ← hφ.elim.basis_apply (_,_), module.dual.is_faithful_pos_map.inner_coord',
     ← conj_transpose_apply, smul_smul, mul_assoc, ← finset.sum_smul, ← finset.mul_sum,
     mul_comm _ ((_ ⬝ a ⬝ _) _ _), ← mul_apply, ← smul_std_basis_matrix', conj_transpose_mul,
     (pos_def.rpow.is_hermitian _ _).eq, matrix.mul_assoc, ← matrix.mul_assoc
@@ -227,7 +227,9 @@ begin
       simp_rw [this], },
     { simp only [mul_add, map_add, conj_transpose_add, star_add],
       intros z w hz hw,
-      simp_rw [hz, hw], }, },
+      rw [hz, hw],
+       },
+       },
 end
 
 lemma one_map_transpose_eq (x : ℍ ⊗[ℂ] ℍᵐᵒᵖ) :
@@ -252,10 +254,10 @@ lemma to_matrix''_map_star (x : l(ℍ)) :
     star (hφ.elim.to_matrix x) :=
 begin
   ext1,
-  simp only [linear_map.is_faithful_pos_map.to_matrix, linear_map.to_matrix_alg_equiv_apply,
+  simp only [module.dual.is_faithful_pos_map.to_matrix, linear_map.to_matrix_alg_equiv_apply,
     pi.star_apply, star_apply, star_eq_conj_transpose, conj_transpose_apply,
     linear_map.star_eq_adjoint, linear_map.adjoint_inner_right, is_R_or_C.star_def,
-    inner_conj_symm, linear_map.is_faithful_pos_map.basis_repr_apply],
+    inner_conj_symm, module.dual.is_faithful_pos_map.basis_repr_apply],
 end
 private lemma ffsugh {x : matrix (n × n) (n × n) ℂ} {y : l(ℍ)} :
   hφ.elim.to_matrix.symm x = y ↔ x = hφ.elim.to_matrix y :=
@@ -391,7 +393,7 @@ begin
     by { simp_rw [pos_def.rpow_mul_rpow, add_neg_self, pos_def.rpow_zero, matrix.mul_one], }
     ... = ⟪↑(qam.onb_of_idempotent_and_real hA1 hA2 x),
       ↑(qam.onb_of_idempotent_and_real hA1 hA2 x)⟫_ℂ :
-    by { simp_rw [linear_map.is_faithful_pos_map.inner_eq'],
+    by { simp_rw [module.dual.is_faithful_pos_map.inner_eq'],
       rw [← trace_mul_cycle], }
     ... = ⟪qam.onb_of_idempotent_and_real hA1 hA2 x,
       qam.onb_of_idempotent_and_real hA1 hA2 x⟫_ℂ : rfl
@@ -416,7 +418,7 @@ begin
     = (qam.complete_graph hφ.elim φ.matrix⁻¹).trace : real_qam.edges_eq _,
   haveI ig := hφ.elim.matrix_is_pos_def.invertible,
   simp_rw [qam.complete_graph, continuous_linear_map.coe_coe,
-    rank_one_apply, linear_map.is_faithful_pos_map.inner_eq',
+    rank_one_apply, module.dual.is_faithful_pos_map.inner_eq',
     conj_transpose_one, matrix.mul_one,
     mul_inv_of_invertible, trace_smul, smul_eq_mul, trace_one] at this,
   norm_cast at this,
@@ -471,8 +473,8 @@ end
 lemma Psi_apply_complete_graph {t s : ℝ} :
   hφ.elim.Psi t s (|(1 : ℍ)⟩⟨(1 : ℍ)|) = 1 :=
 begin
-  simp only [linear_map.is_faithful_pos_map.Psi, linear_equiv.coe_mk,
-    linear_map.is_faithful_pos_map.Psi_to_fun'_apply, _root_.map_one, conj_transpose_one],
+  simp only [module.dual.is_faithful_pos_map.Psi, linear_equiv.coe_mk,
+    module.dual.is_faithful_pos_map.Psi_to_fun'_apply, _root_.map_one, conj_transpose_one],
   refl,
 end
 
@@ -550,7 +552,7 @@ begin
   { rintros ⟨x, rfl⟩,
     letI := hφ.elim.matrix_is_pos_def.invertible,
     have ugh : ((x : ℍ) ⬝ φ.matrix ⬝ (x : ℍ)ᴴ).trace = ‖(x : ℍ)‖ ^ 2,
-    { rw [← trace_mul_cycle, ← linear_map.is_faithful_pos_map.inner_eq',
+    { rw [← trace_mul_cycle, ← module.dual.is_faithful_pos_map.inner_eq',
         inner_self_eq_norm_sq_to_K], },
     have := real_qam.edges_eq hA,
     simp only [linear_map.smul_apply, trace_smul, linear_map.mul_apply,

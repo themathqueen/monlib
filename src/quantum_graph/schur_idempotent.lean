@@ -54,7 +54,8 @@ noncomputable def schur_idempotent
   [inner_product_space ℂ B]
   [smul_comm_class ℂ B B]
   [is_scalar_tower ℂ B B]
-  [finite_dimensional ℂ B] :
+  [finite_dimensional ℂ B]
+  :
   l(B) →ₗ[ℂ] l(B) →ₗ[ℂ] l(B) :=
 begin
   exact { to_fun := λ x,
@@ -95,8 +96,54 @@ begin
     ← inner_sum, h, linear_map.adjoint_inner_right, linear_map.mul'_apply],
 end
 
-private lemma schur_idempotent_one_right_aux
-  {B : Type*}
+-- @[elab_as_eliminator]
+-- theorem linear_map.induction_on
+--   {𝕜 B : Type*} [is_R_or_C 𝕜] [normed_add_comm_group B] [inner_product_space 𝕜 B]
+--   [finite_dimensional 𝕜 B] {C : (B →ₗ[𝕜] B) → Prop}
+--   (z : B →ₗ[𝕜] B) (C0 : C 0) (C1 : ∀ {x y}, C $ ((rank_one x y : B →L[𝕜] B) : B →ₗ[𝕜] B))
+--   (Cp : ∀ {x y}, C x → C y → C (x + y)) : C z :=
+-- begin
+--   -- let f := std_orthonormal_basis 𝕜 B,
+--   let n := finite_dimensional.finrank 𝕜 B * finite_dimensional.finrank 𝕜 B,
+--   obtain ⟨α, β, rfl⟩ :
+--     ∃ x y : fin n → B, z = ∑ i, ↑(rank_one (x i) (y i) : B →L[𝕜] B) :=
+--   begin
+--     let n' := finite_dimensional.finrank 𝕜 B,
+--     let σ : fin (n' * n') ≃ fin n' × fin n' := fin_prod_fin_equiv.symm,
+--     obtain ⟨α, β, rfl⟩ := linear_map.exists_sum_rank_one z,
+--     refine ⟨λ i, α (σ i), λ i, β (σ i), _⟩,
+--     apply fintype.sum_bijective σ.symm,
+--     { exact (equiv.symm σ).bijective, },
+--     { simp only [equiv.apply_symm_apply, eq_self_iff_true, forall_true_iff], },
+--   end,
+  
+-- end
+
+lemma schur_idempotent_one_one_right {B : Type*}
+  [normed_ring B]
+  [inner_product_space ℂ B]
+  [smul_comm_class ℂ B B]
+  [is_scalar_tower ℂ B B]
+  [finite_dimensional ℂ B] (A : l(B)) :
+  schur_idempotent (A : l(B)) (|(1 : B)⟩⟨(1 : B)| : l(B)) = A :=
+begin
+  obtain ⟨α, β, rfl⟩ := linear_map.exists_sum_rank_one A,
+  simp_rw [linear_map.map_sum, linear_map.sum_apply, schur_idempotent.apply_rank_one, mul_one],
+end
+
+lemma schur_idempotent_one_one_left {B : Type*}
+  [normed_ring B]
+  [inner_product_space ℂ B]
+  [smul_comm_class ℂ B B]
+  [is_scalar_tower ℂ B B]
+  [finite_dimensional ℂ B] (A : l(B)) :
+  schur_idempotent (|(1 : B)⟩⟨(1 : B)| : l(B)) A = A :=
+begin
+  obtain ⟨α, β, rfl⟩ := linear_map.exists_sum_rank_one A,
+  simp_rw [linear_map.map_sum, schur_idempotent.apply_rank_one, one_mul],
+end
+
+private lemma schur_idempotent_one_right_aux {B : Type*}
   [normed_ring B]
   [inner_product_space ℂ B]
   [smul_comm_class ℂ B B]

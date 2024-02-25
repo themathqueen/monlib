@@ -20,8 +20,8 @@ local notation `ℍ` := matrix n n ℂ
 local notation `⊗K` := matrix (n × n) (n × n) ℂ
 local notation `l(` x `)` := x →ₗ[ℂ] x
 
-variables {φ : ℍ →ₗ[ℂ] ℂ} [hφ : fact φ.is_faithful_pos_map]
-  {ψ : matrix p p ℂ →ₗ[ℂ] ℂ} (hψ : ψ.is_faithful_pos_map)
+variables {φ : module.dual ℂ ℍ} [hφ : fact φ.is_faithful_pos_map]
+  {ψ : module.dual ℂ (matrix p p ℂ)} (hψ : ψ.is_faithful_pos_map)
 
 local notation `|` x `⟩⟨` y `|` := @rank_one ℂ _ _ _ _ x y
 local notation `m` := linear_map.mul' ℂ ℍ
@@ -50,6 +50,21 @@ noncomputable def qam.complete_graph (hφ : φ.is_faithful_pos_map) :
 begin
   letI := fact.mk hφ,
   exact |(1 : ℍ)⟩⟨(1 : ℍ)|,
+end
+
+lemma qam.complete_graph_eq :
+  qam.complete_graph hφ.elim = |(1 : ℍ)⟩⟨(1 : ℍ)| :=
+rfl
+
+lemma qam.complete_graph_eq' :
+  qam.complete_graph hφ.elim = η ∘ₗ (η).adjoint :=
+begin
+  rw [linear_map.ext_iff],
+  intros x,
+  simp_rw [qam.complete_graph_eq, continuous_linear_map.coe_coe, linear_map.comp_apply,
+    rank_one_apply, nontracial.unit_adjoint_eq, module.dual.is_faithful_pos_map.inner_eq,
+    conj_transpose_one, matrix.one_mul],
+  refl,
 end
 
 lemma qam.nontracial.complete_graph.qam :

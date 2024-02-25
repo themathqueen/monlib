@@ -74,7 +74,7 @@ begin
   refl,
 end
 
-@[instance] def modul.dual.is_faithful_pos_map.tensor_mul
+@[instance] def module.dual.is_faithful_pos_map.tensor_mul
   {φ₁ : module.dual ℂ (matrix n n ℂ)}
   {φ₂ : module.dual ℂ (matrix p p ℂ)} [hφ₁ : fact φ₁.is_faithful_pos_map]
   [hφ₂ : fact φ₂.is_faithful_pos_map] :

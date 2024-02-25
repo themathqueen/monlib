@@ -28,29 +28,33 @@ variables {n : Type*} [fintype n] [decidable_eq n]
 
 local notation `ℍ` := matrix n n ℂ
 
+def trace_module_dual {𝕜 n : Type*} [fintype n] [is_R_or_C 𝕜] :
+  module.dual 𝕜 (matrix n n 𝕜) :=
+trace_linear_map n 𝕜 𝕜
+
 @[instance] def trace_is_faithful_pos_map
   {n : Type*} [fintype n] {𝕜 : Type*} [is_R_or_C 𝕜] :
-  fact (trace_linear_map n 𝕜 𝕜 : matrix n n 𝕜 →ₗ[𝕜] 𝕜).is_faithful_pos_map :=
+  fact (trace_module_dual : module.dual 𝕜 (matrix n n 𝕜)).is_faithful_pos_map :=
 begin
   apply fact.mk,
-  simp_rw [linear_map.is_faithful_pos_map, linear_map.is_faithful, linear_map.is_pos_map,
-    trace_linear_map_apply, is_R_or_C.nonneg_def', ← is_R_or_C.conj_eq_iff_re, star_ring_end_apply,
+  simp_rw [module.dual.is_faithful_pos_map, module.dual.is_faithful, module.dual.is_pos_map,
+    trace_module_dual, trace_linear_map_apply, is_R_or_C.nonneg_def', ← is_R_or_C.conj_eq_iff_re, star_ring_end_apply,
     trace_star, mul_eq_mul, star_eq_conj_transpose, conj_transpose_mul,
     conj_transpose_conj_transpose, trace_conj_transpose_mul_self_eq_zero,
     trace_conj_transpose_mul_self_re_nonneg, eq_self_iff_true, iff_self,
     implies_true_iff, and_true, forall_true_iff],
 end
 
-lemma trace_is_faithful_pos_map_matrix {n : Type*}
+lemma trace_module_dual_matrix {n : Type*}
   [fintype n] [decidable_eq n] :
-  (trace_linear_map n ℂ ℂ : matrix n n ℂ →ₗ[ℂ] ℂ).matrix = 1 :=
+  (trace_module_dual : module.dual ℂ (matrix n n ℂ)).matrix = 1 :=
 begin
   ext1,
-  have := (trace_linear_map n ℂ ℂ : matrix n n ℂ →ₗ[ℂ] ℂ).linear_functional_eq'
+  have := (trace_module_dual : module.dual ℂ (matrix n n ℂ)).apply
     (λ k l, ite (j = k) (ite (i = l) 1 0) 0),
-  simp only [trace_linear_map_apply, trace_iff, mul_apply, mul_ite, mul_zero, mul_one,
+  simp only [trace_module_dual, trace_linear_map_apply, trace_iff, mul_apply, mul_ite, mul_zero, mul_one,
     finset.sum_ite_eq, finset.mem_univ, if_true] at this,
-  rw ← this,
+  rw [trace_module_dual, ← this],
   refl,
 end
 
@@ -77,7 +81,7 @@ end
 private lemma pos_def_one_rpow_eq_trace_matrix_rpow
   (r : ℝ) :
   (pos_def_one : pos_def (1 : matrix n n ℂ)).rpow r
-    = (trace_is_faithful_pos_map.elim : (trace_linear_map n ℂ ℂ : ℍ →ₗ[ℂ] ℂ).is_faithful_pos_map).matrix_is_pos_def.rpow r :=
+    = (trace_is_faithful_pos_map.elim : (trace_module_dual : module.dual ℂ ℍ).is_faithful_pos_map).matrix_is_pos_def.rpow r :=
 begin
   rw [eq_comm, pos_def_one_rpow, pos_def.rpow, inner_aut_eq_iff,
     inner_aut_apply_one, ← coe_diagonal_eq_diagonal_coe],
@@ -86,7 +90,7 @@ begin
   intros i,
   simp_rw [function.comp_apply, pi.pow_apply],
   rw [← is_R_or_C.of_real_one, is_R_or_C.of_real_inj, is_hermitian.eigenvalues_eq],
-  simp_rw [trace_is_faithful_pos_map_matrix, one_mul_vec, dot_product, pi.star_apply,
+  simp_rw [trace_module_dual_matrix, one_mul_vec, dot_product, pi.star_apply,
     transpose_apply, ← conj_transpose_apply,
     ← is_hermitian.conj_transpose_eigenvector_matrix_inv, ← mul_apply,
     ← is_hermitian.conj_transpose_eigenvector_matrix, conj_transpose_conj_transpose,
@@ -97,17 +101,17 @@ end
 
 private lemma aux.ug :
   (trace_is_faithful_pos_map.elim
-    : (trace_linear_map n ℂ ℂ : ℍ →ₗ[ℂ] ℂ).is_faithful_pos_map).to_matrix.symm
+    : (trace_module_dual : module.dual ℂ ℍ).is_faithful_pos_map).to_matrix.symm
     = to_lin_of_alg_equiv :=
 by { ext1,
   letI := fact.mk (@trace_is_faithful_pos_map n _ ℂ _),
-  simp_rw [linear_map.is_faithful_pos_map.to_matrix_symm_apply],
+  simp_rw [module.dual.is_faithful_pos_map.to_matrix_symm_apply],
   simp_rw [to_lin_of_alg_equiv_eq, rank_one_std_basis, one_smul, linear_map.ext_iff,
     linear_map.sum_apply, linear_map.smul_apply, linear_map.coe_mk,
-    continuous_linear_map.coe_coe, rank_one_apply, linear_map.is_faithful_pos_map.inner_coord',
+    continuous_linear_map.coe_coe, rank_one_apply, module.dual.is_faithful_pos_map.inner_coord',
     ← pos_def_one_rpow_eq_trace_matrix_rpow, pos_def_one_rpow, matrix.mul_one,
-    smul_std_basis_matrix, smul_eq_mul, linear_map.is_faithful_pos_map.basis_apply,
-    trace_is_faithful_pos_map_matrix, pos_def_one_rpow, matrix.mul_one, smul_std_basis_matrix, smul_eq_mul, mul_one],
+    smul_std_basis_matrix, smul_eq_mul, module.dual.is_faithful_pos_map.basis_apply,
+    trace_module_dual_matrix, pos_def_one_rpow, matrix.mul_one, smul_std_basis_matrix, smul_eq_mul, mul_one],
   intros x,
   repeat { nth_rewrite_lhs 0 ← finset.sum_product',
     simp_rw [prod.mk.eta],
@@ -251,7 +255,7 @@ begin
     eq_self_iff_true, forall_true_iff],
 end
 
-lemma qam.iso_preserves_ir_reflexive [nontrivial n] {φ : ℍ →ₗ[ℂ] ℂ}
+lemma qam.iso_preserves_ir_reflexive [nontrivial n] {φ : module.dual ℂ ℍ}
   [hφ : fact φ.is_faithful_pos_map]
   {x y : ℍ →ₗ[ℂ] ℍ} (hxhy : @qam.iso n _ _ φ x y)
   (ir_reflexive : Prop) [decidable ir_reflexive] :
@@ -260,7 +264,7 @@ lemma qam.iso_preserves_ir_reflexive [nontrivial n] {φ : ℍ →ₗ[ℂ] ℂ}
 begin
   obtain ⟨f, hf, h⟩ := hxhy,
   rw [star_alg_equiv.comp_eq_iff, linear_map.comp_assoc] at hf,
-  rw [list.tfae.out (@linear_map.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 0 4] at h,
+  rw [list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 0 4] at h,
   rw [hf, qam_ir_reflexive_star_alg_equiv_conj h, ← linear_map.comp_assoc, star_alg_equiv.comp_eq_iff,
     star_alg_equiv.symm_symm, star_alg_equiv.eq_comp_iff],
   simp only [ite_comp, comp_ite, linear_map.zero_comp, linear_map.one_comp,
@@ -365,11 +369,11 @@ theorem qam_A'.fin_two_iso (x y : {x : matrix (fin 2) (fin 2) ℂ // x ≠ 0})
   (hx2 : qam.refl_idempotent trace_is_faithful_pos_map.elim (qam_A trace_is_faithful_pos_map.elim x) 1 = 0)
   (hy1 : _root_.is_self_adjoint (qam_A trace_is_faithful_pos_map.elim y))
   (hy2 : qam.refl_idempotent trace_is_faithful_pos_map.elim (qam_A trace_is_faithful_pos_map.elim y) 1 = 0) :
-  @qam.iso (fin 2) _ _ (trace_linear_map _ _ _)
+  @qam.iso (fin 2) _ _ (trace_module_dual)
     (qam_A trace_is_faithful_pos_map.elim x)
     (qam_A trace_is_faithful_pos_map.elim y) :=
 begin
-  simp_rw [qam_A.iso_iff, trace_is_faithful_pos_map_matrix, commute.one_left,
+  simp_rw [qam_A.iso_iff, trace_module_dual_matrix, commute.one_left,
     and_true, smul_hom_class.map_smul],
   have : is_almost_similar_to (x : matrix (fin 2) (fin 2) ℂ) (y : matrix (fin 2) (fin 2) ℂ)
     ↔ ∃ (β : ℂˣ) (U : unitary_group (fin 2) ℂ), (x : matrix (fin 2) (fin 2) ℂ)
