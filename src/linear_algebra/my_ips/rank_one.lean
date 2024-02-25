@@ -108,7 +108,7 @@ end
 is_self_adjoint_iff_is_symmetric.mpr (rank_one.is_symmetric x)
 
 /-- $| x \rangle\!\langle y |^* = | y \rangle\!\langle x |$ -/
-lemma rank_one.adjoint [inner_product_space 𝕜 E] [complete_space E] (x y : E) :
+lemma rank_one.adjoint [complete_space E] (x y : E) :
   (|x⟩⟨y|).adjoint = (|y⟩⟨x| : E →L[𝕜] E) :=
 begin
   ext a,
@@ -322,25 +322,25 @@ begin
     rank_one_lm_apply, smul_smul],
 end
 
-lemma rank_one_lm_adjoint [inner_product_space 𝕜 E] [finite_dimensional 𝕜 E]
+lemma rank_one_lm_adjoint [finite_dimensional 𝕜 E]
   (x y : E) :
   (rank_one_lm x y : E →ₗ[𝕜] E).adjoint = rank_one_lm y x :=
 begin
   simp_rw [rank_one_lm, linear_map.adjoint_eq_to_clm_adjoint,
     continuous_linear_map.to_linear_map_eq_coe, continuous_linear_map.coe_inj,
-    ← @rank_one.adjoint 𝕜 _ _ _ _ _ (finite_dimensional.complete 𝕜 E) x y],
+    ← @rank_one.adjoint 𝕜 _ _ _ _ (finite_dimensional.complete 𝕜 E) x y],
   refl,
 end
 
 open_locale big_operators
-lemma sum_rank_one [inner_product_space 𝕜 E] {n : Type*} [fintype n]
+lemma sum_rank_one {n : Type*} [fintype n]
   (x : n → E) (y : E) :
   (rank_one (∑ i, x i) y : E →L[𝕜] E) = ∑ i, rank_one (x i) y :=
 begin
   ext1 z,
   simp_rw [continuous_linear_map.sum_apply, rank_one_apply, finset.smul_sum],
 end
-lemma rank_one_sum [inner_product_space 𝕜 E] {n : Type*} [fintype n]
+lemma rank_one_sum {n : Type*} [fintype n]
   (x : E) (y : n → E) :
   (rank_one x (∑ i, y i) : E →L[𝕜] E) = ∑ i, rank_one x (y i) :=
 begin
@@ -348,7 +348,7 @@ begin
   simp_rw [continuous_linear_map.sum_apply, rank_one_apply, sum_inner, finset.sum_smul],
 end
 
-lemma sum_rank_one_lm [inner_product_space 𝕜 E] {n : Type*} [fintype n]
+lemma sum_rank_one_lm {n : Type*} [fintype n]
   (x : n → E) (y : E) :
   (rank_one_lm (∑ i : n, x i) y : E →ₗ[𝕜] E) = ∑ i : n, rank_one_lm (x i) y :=
 begin
@@ -357,7 +357,7 @@ begin
   refl,
 end
 
-lemma rank_one_lm_sum [inner_product_space 𝕜 E] {n : Type*} [fintype n] (x : E) (y : n → E) :
+lemma rank_one_lm_sum {n : Type*} [fintype n] (x : E) (y : n → E) :
   (rank_one_lm x (∑ i : n, y i) : E →ₗ[𝕜] E) = ∑ i : n, rank_one_lm x (y i) :=
 begin
   rw [rank_one_lm, rank_one_sum, continuous_linear_map.to_linear_map_eq_coe,

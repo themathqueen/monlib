@@ -61,7 +61,7 @@ noncomputable def orthogonal_projection' (U : submodule 𝕜 E) [complete_space 
   E →L[𝕜] E :=
 U.subtypeL.comp (orthogonal_projection U)
 
-lemma orthogonal_projection'_apply [inner_product_space 𝕜 E] (U : submodule 𝕜 E) [complete_space U]
+lemma orthogonal_projection'_apply (U : submodule 𝕜 E) [complete_space U]
   (x : E) :
   orthogonal_projection' U x = (orthogonal_projection U x) :=
 rfl

@@ -50,7 +50,7 @@ begin
 end
 
 open_locale big_operators
-lemma linear_map.real_sum {n : Type*} [fintype n] {s : finset n} (f : n → (E →ₗ[K] F)) :
+lemma linear_map.real_sum {n : Type*} {s : finset n} (f : n → (E →ₗ[K] F)) :
   (∑ i : n in s, f i).real = ∑ i : n in s, (f i).real :=
 begin
   ext1,
@@ -154,7 +154,9 @@ begin
     exact h.symm, },
 end
 
-lemma linear_map.real.eigenspace (φ : E →ₗ[𝕜] E) (α : 𝕜) (x : E) :
+lemma linear_map.real.eigenspace {E : Type*} [normed_add_comm_group E] [inner_product_space 𝕜 E]
+  [star_add_monoid E] [star_module 𝕜 E]
+  (φ : E →ₗ[𝕜] E) (α : 𝕜) (x : E) :
   x ∈ module.End.eigenspace φ.real α ↔ star x ∈ module.End.eigenspace φ (star α) :=
 begin
   simp_rw [module.End.mem_eigenspace_iff, linear_map.real_eq, star_eq_iff_star_eq,

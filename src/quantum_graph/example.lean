@@ -202,7 +202,7 @@ noncomputable def qam.complement' (hφ : φ.is_faithful_pos_map) (x : l(ℍ)) :
   l(ℍ) :=
 (qam.complete_graph hφ) - x
 
-lemma qam.nontracial.complement'.qam [nontrivial n] (x : l(ℍ)) :
+lemma qam.nontracial.complement'.qam (x : l(ℍ)) :
   qam φ x ↔ qam φ (qam.complement' hφ.elim x) :=
 begin
   simp only [qam.complement', qam, _root_.map_sub, linear_map.sub_apply,
@@ -213,7 +213,7 @@ begin
   simp only [sub_eq_zero, @eq_comm _ x],
 end
 
-lemma qam.nontracial.complement'.qam.is_real [nontrivial n] (x : l(ℍ)) :
+lemma qam.nontracial.complement'.qam.is_real (x : l(ℍ)) :
   x.is_real ↔ (qam.complement' hφ.elim x).is_real :=
 begin
   simp only [qam.complement', linear_map.is_real_iff,
@@ -226,7 +226,7 @@ lemma qam.complement'_complement' (x : l(ℍ)) :
   qam.complement' hφ.elim (qam.complement' hφ.elim x) = x :=
 sub_sub_cancel _ _
 
-lemma qam.nontracial.complement'.ir_reflexive [nontrivial n] (x : l(ℍ)) (α : Prop)
+lemma qam.nontracial.complement'.ir_reflexive (x : l(ℍ)) (α : Prop)
   [decidable α] :
   qam.refl_idempotent hφ.elim x (1 : l(ℍ)) = ite α (1 : l(ℍ)) (0 : l(ℍ))
     ↔ qam.refl_idempotent hφ.elim (qam.complement' hφ.elim x) (1 : l(ℍ)) = ite α (0 : l(ℍ)) (1 : l(ℍ)) :=
@@ -243,15 +243,15 @@ def qam_reflexive (hφ : φ.is_faithful_pos_map) (x : l(ℍ)) : Prop :=
 def qam_irreflexive (hφ : φ.is_faithful_pos_map) (x : l(ℍ)) : Prop :=
 @qam n _ _ φ (fact.mk hφ) x ∧ qam.refl_idempotent hφ x 1 = 0
 
-lemma qam.complement'_is_irreflexive_iff [nontrivial n] (x : l(ℍ)) :
+lemma qam.complement'_is_irreflexive_iff (x : l(ℍ)) :
   qam_irreflexive hφ.elim (qam.complement' hφ.elim x) ↔ qam_reflexive hφ.elim x :=
 begin
-  have := @qam.nontracial.complement'.ir_reflexive n _ _ φ _ _ x true _,
+  have := @qam.nontracial.complement'.ir_reflexive n _ _ φ _ x true _,
   simp_rw [if_true] at this,
   rw [qam_reflexive, qam_irreflexive, ← qam.nontracial.complement'.qam],
   simp_rw [this],
 end
-lemma qam.complement'_is_reflexive_iff [nontrivial n] (x : l(ℍ)) :
+lemma qam.complement'_is_reflexive_iff (x : l(ℍ)) :
   qam_reflexive hφ.elim (qam.complement' hφ.elim x) ↔ qam_irreflexive hφ.elim x :=
 begin
   have := qam.nontracial.complement'.ir_reflexive x false,

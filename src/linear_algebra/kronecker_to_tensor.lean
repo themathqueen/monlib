@@ -67,7 +67,7 @@ by simp_rw [matrix.kronecker_to_tensor_product, tensor_product.to_kronecker,
 open_locale matrix
 
 lemma tensor_product.matrix_star {R m n : Type*} [field R] [star_ring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n]
+  [fintype m] [fintype n]
   (x : matrix m m R) (y : matrix n n R) :
   star (x ⊗ₜ[R] y) = xᴴ ⊗ₜ yᴴ :=
 tensor_product.star_tmul _ _

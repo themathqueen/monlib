@@ -110,7 +110,7 @@ begin
 end
 
 instance mul_opposite.star_module
-  {R H : Type*} [semiring R] [has_star R] [add_comm_monoid H] [has_smul R H] [has_star H] [star_module R H] :
+  {R H : Type*} [has_star R] [has_smul R H] [has_star H] [star_module R H] :
   star_module R Hᵐᵒᵖ :=
 { star_smul := λ r a, by { simp_rw [star, mul_opposite.unop_smul, star_smul,
     mul_opposite.op_smul], }  }

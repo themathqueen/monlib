@@ -263,7 +263,7 @@ lemma to_lin_of_alg_equiv_apply (x : matrix (I × J) (I × J) R) (y : matrix I J
     (x.to_lin_alg_equiv' (reshape y)) :=
 rfl
 
-def rank_one_std_basis (ij kl : I × J) (r : R) :
+def rank_one_std_basis {I J : Type*} [decidable_eq I] [decidable_eq J] (ij kl : I × J) (r : R) :
   matrix I J R →ₗ[R] matrix I J R :=
 { to_fun := λ x, std_basis_matrix ij.1 ij.2 (r • r • (x kl.1 kl.2)),
   map_add' := λ x y, by { simp_rw [pi.add_apply, smul_add,
@@ -271,7 +271,8 @@ def rank_one_std_basis (ij kl : I × J) (r : R) :
   map_smul' := λ r x, by { simp_rw [ring_hom.id_apply, pi.smul_apply,
     smul_std_basis_matrix, smul_smul, mul_rotate'], } }
 
-lemma rank_one_std_basis_apply (ij kl : I × J) (r : R) (x : matrix I J R) :
+lemma rank_one_std_basis_apply {I J : Type*} [decidable_eq I] [decidable_eq J]
+  (ij kl : I × J) (r : R) (x : matrix I J R) :
   rank_one_std_basis ij kl r x = std_basis_matrix ij.1 ij.2 (r • r • (x kl.1 kl.2)) :=
 rfl
 

@@ -501,7 +501,9 @@ begin
 end
 
 instance pi.tensor_product_finite_dimensional :
-  finite_dimensional ℂ (ℍ₂ ⊗[ℂ] ℍ₂) :=
+  -- {k : Type*} [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)]
+  -- [Π i, decidable_eq (s i)] :
+  finite_dimensional ℂ ((Π i, matrix (s i) (s i) ℂ) ⊗[ℂ] (Π i, matrix (s i) (s i) ℂ)) :=
 finite_dimensional.of_finite_basis (basis.of_vector_space ℂ _)
   (basis.of_vector_space_index ℂ _).to_finite
 
@@ -518,7 +520,8 @@ begin
   refl,
 end
 
-lemma eq_mpr_std_basis_matrix {i j : k} {b c : s j}
+lemma eq_mpr_std_basis_matrix {k : Type*} {s : k → Type*}
+  [Π i, decidable_eq (s i)] {i j : k} {b c : s j}
   (h₁ : i = j) :
   (by rw h₁; exact std_basis_matrix b c (1 : ℂ)
     : matrix (s i) (s i) ℂ)
@@ -672,11 +675,15 @@ begin
 end
 
 def module.dual.pi.is_faithful_pos_map.matrix_is_pos_def
+  {k : Type*} {s : k → Type*} [Π i, fintype (s i)]
+  [Π i, decidable_eq (s i)]
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
   (hψ : Π i, fact (ψ i).is_faithful_pos_map) :=
 λ i, (hψ i).elim.matrix_is_pos_def
 
-noncomputable def pi.pos_def.rpow
-  {a : ℍ₂} (ha : Π i, (a i).pos_def) (r : ℝ) :=
+noncomputable def pi.pos_def.rpow {k : Type*} {s : k → Type*} [Π i, fintype (s i)]
+  [Π i, decidable_eq (s i)]
+  {a : Π i, matrix (s i) (s i) ℂ} (ha : Π i, (a i).pos_def) (r : ℝ) :=
 λ i, (ha i).rpow r
 
 lemma pi.pos_def.rpow_mul_rpow
@@ -878,7 +885,6 @@ end
 lemma tensor_product.of_basis_eq_span
   {𝕜 : Type u_1} {E : Type u_2} {F : Type u_3}
   [is_R_or_C 𝕜] [add_comm_group E] [module 𝕜 E] [add_comm_group F] [module 𝕜 F]
-  [finite_dimensional 𝕜 E] [finite_dimensional 𝕜 F]
   (x : tensor_product 𝕜 E F)
   {ι₁ ι₂ : Type*} [fintype ι₁] [fintype ι₂]
   (b₁ : basis ι₁ 𝕜 E) (b₂ : basis ι₂ 𝕜 F) :

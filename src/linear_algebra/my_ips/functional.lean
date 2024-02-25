@@ -50,8 +50,8 @@ begin
 end
 
 /-- we linear maps `φ_i : M_[n_i] →ₗ[R] R`, we define its direct sum as the linear map `(Π i, M_[n_i]) →ₗ[R] R`. -/
-@[simps] def module.dual.pi {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+@[simps] def module.dual.pi {k : Type*} [fintype k]
+  {s : k → Type*}
   (φ : Π i, module.dual R (matrix (s i) (s i) R)):
   module.dual R (Π i, matrix (s i) (s i) R) :=
 { to_fun := λ a, ∑ i : k, φ i (a i),
@@ -60,7 +60,7 @@ end
     finset.smul_sum, ring_hom.id_apply], }
 
 /-- for direct sums, we get `φ x = ∑ i, ((φ i).matrix ⬝ x i).trace` -/
-lemma module.dual.pi.apply {k : Type*} [fintype k] [decidable_eq k]
+lemma module.dual.pi.apply {k : Type*} [fintype k]
   {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
   (φ : Π i, module.dual R (matrix (s i) (s i) R))
   (x : Π i, matrix (s i) (s i) R) :
@@ -280,7 +280,7 @@ begin
 end
 
 /-- A linear functional $f$ is tracial if and only if $f(xy)=f(yx)$ for all $x,y$. -/
-def module.dual.is_tracial  {A : Type*} [non_unital_semiring A] [star_ring A]
+def module.dual.is_tracial  {A : Type*} [non_unital_semiring A]
   [module 𝕜 A] (φ : module.dual 𝕜 A) :
   Prop :=
 ∀ x y : A, φ (x * y) = φ (y * x)
@@ -625,7 +625,7 @@ inner_product_space.of_core _
 
 @[instance, reducible] noncomputable def module.dual.pi.normed_add_comm_group
   {k : Type*} [fintype k]
-  [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
   {φ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)} [hφ : (Π i, fact (φ i).is_faithful_pos_map)] :
   normed_add_comm_group (Π i, matrix (s i) (s i) ℂ) :=
 begin

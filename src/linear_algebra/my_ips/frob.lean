@@ -28,7 +28,9 @@ open matrix
 -- def linear_map.is_faithful_pos_map.tensor_pow (x : ℕ) :
 --   ⨂[ℂ]^x (matrix n n ℂ) →ₗ[ℂ] ℂ :=
 -- { to_fun := λ a, by { simp only [tensor_algebra] } }
-noncomputable def module.dual.tensor_mul (φ₁ : module.dual ℂ (matrix n n ℂ))
+noncomputable def module.dual.tensor_mul
+  {n p : Type*}
+  (φ₁ : module.dual ℂ (matrix n n ℂ))
   (φ₂ : module.dual ℂ (matrix p p ℂ)) :
   module.dual ℂ (matrix n n ℂ ⊗[ℂ] matrix p p ℂ) :=
 ((tensor_product.lid ℂ ℂ) : ℂ ⊗[ℂ] ℂ →ₗ[ℂ] ℂ) ∘ₗ (tensor_product.map φ₁ φ₂)
@@ -193,15 +195,18 @@ local notation `l(`x`)` := x →ₗ[ℂ] x
 open_locale big_operators
 
 noncomputable def matrix_direct_sum_from_to (i j : k) :
-  (ℍ_ i) →ₗ[ℂ] (ℍ_ j) :=
-@direct_sum_from_to ℂ _ k _ (λ a, ℍ_ a) _ (λ a, matrix.module) i j
+  -- {k : Type*} [decidable_eq k] {s : k → Type*}
+  -- [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  -- (i j : k) :
+  (matrix (s i) (s i) ℂ) →ₗ[ℂ] (matrix (s j) (s j) ℂ) :=
+@direct_sum_from_to ℂ _ k _ (λ a, matrix (s a) (s a) ℂ) _ (λ a, matrix.module) i j
 
 lemma linear_map.pi_mul'_apply_include_block' {i j : k} :
   (linear_map.mul' ℂ ℍ₂) ∘ₗ
     (tensor_product.map (include_block : (ℍ_ i) →ₗ[ℂ] ℍ₂) (include_block : (ℍ_ j) →ₗ[ℂ] ℍ₂))
     = if (i = j) then ((include_block : (ℍ_ j) →ₗ[ℂ] ℍ₂)
       ∘ₗ (linear_map.mul' ℂ (ℍ_ j))
-      ∘ₗ ((matrix_direct_sum_from_to i j) ⊗ₘ 1)) else 0 :=
+      ∘ₗ (tensor_product.map (matrix_direct_sum_from_to i j) (1 : (ℍ_ j) →ₗ[ℂ] (ℍ_ j)))) else 0 :=
 begin
   rw [tensor_product.ext_iff],
   intros x y,
@@ -218,8 +223,9 @@ begin
 end
 
 noncomputable def direct_sum_tensor_matrix :
-  ℍ₂ ⊗[ℂ] ℍ₂ ≃ₗ[ℂ] Π i : k × k, (ℍ_ i.fst) ⊗[ℂ] (ℍ_ i.snd) :=
-@direct_sum_tensor ℂ _ k k _ _ _ _ (λ i, ℍ_ i) (λ i, ℍ_ i) _ _
+  (Π i, matrix (s i) (s i) ℂ) ⊗[ℂ] (Π i, matrix (s i) (s i) ℂ)
+    ≃ₗ[ℂ] Π i : k × k, (ℍ_ i.1) ⊗[ℂ] (ℍ_ i.2) :=
+@direct_sum_tensor ℂ _ k k _ _ _ _ (λ i, matrix (s i) (s i) ℂ) (λ i, matrix (s i) (s i) ℂ) _ _
   (λ i, matrix.module) (λ i, matrix.module)
 
 noncomputable def direct_sum_tensor_to_kronecker :
@@ -402,8 +408,9 @@ begin
 end
 
 lemma linear_map.mul'_assoc :
-  (linear_map.mul' ℂ ℍ) ∘ₗ (linear_map.mul' ℂ ℍ ⊗ₘ id)
-    = linear_map.mul' ℂ ℍ ∘ₗ (id ⊗ₘ linear_map.mul' ℂ ℍ) ∘ₗ υ :=
+  (linear_map.mul' ℂ (matrix n n ℂ)) ∘ₗ (linear_map.mul' ℂ (matrix n n ℂ) ⊗ₘ id)
+    = linear_map.mul' ℂ (matrix n n ℂ) ∘ₗ (id ⊗ₘ linear_map.mul' ℂ (matrix n n ℂ))
+      ∘ₗ (↑(tensor_product.assoc ℂ (matrix n n ℂ) (matrix n n ℂ) (matrix n n ℂ) : _ ≃ₗ[ℂ] _) : _ →ₗ[ℂ] _) :=
 begin
   apply tensor_product.ext_threefold,
   intros x y z,

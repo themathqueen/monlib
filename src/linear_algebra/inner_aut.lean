@@ -538,7 +538,7 @@ begin
     is_hermitian.eigenvector_matrix_mul_inv, matrix.one_mul],
 end
 
-lemma coe_diagonal_eq_diagonal_coe {𝕜 : Type*} [is_R_or_C 𝕜] (x : n → ℝ) :
+lemma coe_diagonal_eq_diagonal_coe {n 𝕜 : Type*} [is_R_or_C 𝕜] [decidable_eq n] (x : n → ℝ) :
   (diagonal (coe ∘ x) : matrix n n 𝕜) = coe ∘ (diagonal x) :=
 begin
   simp_rw [← matrix.ext_iff, diagonal, function.comp_apply, of_apply],
@@ -548,7 +548,7 @@ begin
   simp_rw [this, of_apply, ite_cast, is_R_or_C.of_real_zero],
 end
 
-lemma diagonal.spectrum [decidable_eq 𝕜] (A : n → 𝕜) :
+lemma diagonal.spectrum {𝕜 n : Type*} [field 𝕜] [fintype n] [decidable_eq n] (A : n → 𝕜) :
   spectrum 𝕜 (diagonal A : matrix n n 𝕜).to_lin' = {x : 𝕜 | ∃ i : n, A i = x} :=
 begin
   simp_rw [set.ext_iff, ← module.End.has_eigenvalue_iff_mem_spectrum,
@@ -645,24 +645,24 @@ end
 
 open_locale kronecker
 lemma kronecker_mem_unitary_group {p : Type*} [fintype p] [decidable_eq p]
-  [decidable_eq 𝕜] (U₁ : unitary_group n 𝕜) (U₂ : unitary_group p 𝕜) :
+  (U₁ : unitary_group n 𝕜) (U₂ : unitary_group p 𝕜) :
   (U₁ ⊗ₖ U₂) ∈ unitary_group (n × p) 𝕜 :=
 begin
   simp_rw [mem_unitary_group_iff, star_eq_conj_transpose, kronecker_conj_transpose, mul_eq_mul,
     ← mul_kronecker_mul, ← star_eq_conj_transpose, unitary_group.mul_star_self, one_kronecker_one],
 end
 
-def unitary_group.kronecker {p : Type*} [fintype p] [decidable_eq p] [decidable_eq 𝕜]
+def unitary_group.kronecker {p : Type*} [fintype p] [decidable_eq p]
   (U₁ : unitary_group n 𝕜) (U₂ : unitary_group p 𝕜) :
   unitary_group (n × p) 𝕜 :=
 ⟨U₁ ⊗ₖ U₂, kronecker_mem_unitary_group _ _⟩
 
 lemma unitary_group.kronecker_coe {p : Type*} [fintype p] [decidable_eq p]
-  [decidable_eq 𝕜] (U₁ : unitary_group n 𝕜) (U₂ : unitary_group p 𝕜) :
+  (U₁ : unitary_group n 𝕜) (U₂ : unitary_group p 𝕜) :
   (unitary_group.kronecker U₁ U₂ : matrix _ _ 𝕜) = U₁ ⊗ₖ U₂ :=
 rfl
 
-lemma inner_aut_kronecker {p : Type*} [fintype p] [decidable_eq p] [decidable_eq 𝕜]
+lemma inner_aut_kronecker {p : Type*} [fintype p] [decidable_eq p]
   (U₁ : unitary_group n 𝕜) (U₂ : unitary_group p 𝕜) (x : matrix n n 𝕜) (y : matrix p p 𝕜) :
   inner_aut U₁ x ⊗ₖ inner_aut U₂ y = inner_aut (unitary_group.kronecker U₁ U₂) (x ⊗ₖ y) :=
 begin
@@ -697,7 +697,7 @@ begin
 end
 
 lemma unitary_group.injective_mul {n 𝕜 : Type*} [fintype n] [decidable_eq n]
-  [is_R_or_C 𝕜] [decidable_eq 𝕜]
+  [is_R_or_C 𝕜]
   (U : unitary_group n 𝕜) (x y : matrix n n 𝕜) :
   x = y ↔ x ⬝ U = y ⬝ U :=
 begin
@@ -712,7 +712,7 @@ lemma inner_aut_star_alg_equiv_to_linear_map {n 𝕜 : Type*} [fintype n] [decid
   (inner_aut_star_alg U).to_alg_equiv.to_linear_map = inner_aut U :=
 rfl
 lemma inner_aut_star_alg_equiv_symm_to_linear_map {n 𝕜 : Type*} [fintype n] [decidable_eq n]
-  [is_R_or_C 𝕜] [decidable_eq 𝕜] (U : unitary_group n 𝕜) :
+  [is_R_or_C 𝕜] (U : unitary_group n 𝕜) :
   (inner_aut_star_alg U).symm.to_alg_equiv.to_linear_map = inner_aut U⁻¹ :=
 begin
   ext1,
@@ -724,7 +724,7 @@ end
 
 
 lemma inner_aut.comp_inj {n 𝕜 : Type*} [fintype n] [decidable_eq n]
-  [is_R_or_C 𝕜] [decidable_eq 𝕜] (U : matrix.unitary_group n 𝕜) (S T : matrix n n 𝕜 →ₗ[𝕜] matrix n n 𝕜) :
+  [is_R_or_C 𝕜] (U : matrix.unitary_group n 𝕜) (S T : matrix n n 𝕜 →ₗ[𝕜] matrix n n 𝕜) :
   S = T ↔ inner_aut U ∘ₗ S = inner_aut U ∘ₗ T :=
 begin
   simp_rw [linear_map.ext_iff, linear_map.comp_apply, inner_aut_eq_iff,
@@ -732,7 +732,7 @@ begin
 end
 
 lemma inner_aut.inj_comp {n 𝕜 : Type*} [fintype n] [decidable_eq n]
-  [is_R_or_C 𝕜] [decidable_eq 𝕜] (U : unitary_group n 𝕜) (S T : matrix n n 𝕜 →ₗ[𝕜] matrix n n 𝕜) :
+  [is_R_or_C 𝕜] (U : unitary_group n 𝕜) (S T : matrix n n 𝕜 →ₗ[𝕜] matrix n n 𝕜) :
   S = T ↔ S ∘ₗ inner_aut U = T ∘ₗ inner_aut U :=
 begin
   refine ⟨λ h, by rw h, λ h, _⟩,

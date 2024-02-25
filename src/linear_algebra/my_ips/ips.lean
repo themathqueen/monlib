@@ -186,7 +186,7 @@ begin
 end
 
 /-- $T$ is normal if and only if $\forall v, \|T v\| = \|T^* v\|$ -/
-lemma linear_map.is_star_normal.norm_eq_adjoint [inner_product_space 𝕜 V]
+lemma linear_map.is_star_normal.norm_eq_adjoint
   [finite_dimensional 𝕜 V] (T : V →ₗ[𝕜] V) :
   is_star_normal T ↔ ∀ v : V, ‖T v‖ = ‖T.adjoint v‖ :=
 begin
@@ -200,7 +200,7 @@ begin
   simp_rw eq_comm,
 end
 
-lemma continuous_linear_map.is_star_normal.norm_eq_adjoint [inner_product_space 𝕜 V]
+lemma continuous_linear_map.is_star_normal.norm_eq_adjoint
   [complete_space V] (T : V →L[𝕜] V) :
   is_star_normal T ↔ ∀ v : V, ‖T v‖ = ‖T.adjoint v‖ :=
 begin
@@ -235,7 +235,7 @@ by rw [← submodule.orthogonal_orthogonal T.adjoint.range, ← ker_is_ortho_adj
        ker_is_ortho_adjoint_range, adjoint_adjoint,
        submodule.orthogonal_orthogonal]
 
-lemma continuous_linear_map.is_star_normal.ker_eq_ker_adjoint [inner_product_space 𝕜 V]
+lemma continuous_linear_map.is_star_normal.ker_eq_ker_adjoint
   [complete_space V] (T : V →L[𝕜] V) (h : is_star_normal T) : T.ker = T.adjoint.ker :=
 by { ext, simp_rw [mem_ker, continuous_linear_map.to_linear_map_eq_coe,
                    continuous_linear_map.coe_coe],
@@ -256,7 +256,7 @@ begin
           λ h, inner_self_eq_zero.mp (h _)⟩,
 end
 
-theorem continuous_linear_map.is_star_normal.is_compl_ker_range [inner_product_space 𝕜 V]
+theorem continuous_linear_map.is_star_normal.is_compl_ker_range
   [complete_space V] (T : V →L[𝕜] V) [finite_dimensional 𝕜 V] (h : is_star_normal T) : is_compl T.ker T.range :=
 begin
   rw continuous_linear_map.ker_is_eq_ortho_adjoint_range,

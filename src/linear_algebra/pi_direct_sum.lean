@@ -48,8 +48,7 @@ def pi.tensor_proj {R : Type*} [comm_semiring R] {ι₁ ι₂ : Type*}
 (@linear_map.proj R ι₁ _ M₁ _ _ i.fst ⊗ₘ @linear_map.proj R ι₂ _ M₂ _ _ i.snd)
 
 def direct_sum_tensor_to_fun
-  {R : Type*} [comm_semiring R] {ι₁ : Type*} {ι₂ : Type*} [decidable_eq ι₁]
-  [decidable_eq ι₂]
+  {R : Type*} [comm_semiring R] {ι₁ : Type*} {ι₂ : Type*}
   {M₁ : ι₁ → Type*} {M₂ : ι₂ → Type*} [Π (i₁ : ι₁), add_comm_group (M₁ i₁)]
   [Π (i₂ : ι₂), add_comm_group (M₂ i₂)] [Π (i₁ : ι₁), module R (M₁ i₁)]
   [Π (i₂ : ι₂), module R (M₂ i₂)] :
@@ -84,7 +83,7 @@ def direct_sum_tensor_inv_fun {R : Type*} [comm_ring R] {ι₁ : Type*} {ι₂ :
   map_smul' := λ r x, by { simp only [smul_hom_class.map_smul, pi.smul_apply, ring_hom.id_apply],
     rw [← finset.smul_sum], } }
 
-lemma function.sum_update_eq_self {R : Type*} [semiring R] {ι₁ : Type*} [decidable_eq ι₁]
+lemma function.sum_update_eq_self {R : Type*} {ι₁ : Type*} [decidable_eq ι₁]
   [fintype ι₁]
   {M₁ : ι₁ → Type*} [Π (i₁ : ι₁), add_comm_group (M₁ i₁)] (x : Π i, M₁ i) :
   ∑ (x_1 : ι₁), function.update 0 x_1 (x x_1) = x :=
@@ -123,7 +122,7 @@ begin
     by { simp only [tensor_product.tmul_sum, tensor_product.sum_tmul], }
     ... = x ⊗ₜ[R] y : _,
     congr;
-    exact @function.sum_update_eq_self R _ _ _ _ _ _ _, },
+    exact @function.sum_update_eq_self R _ _ _ _ _ _, },
   { intros x y hx hy,
     simp only [map_add, hx, hy], },
 end
@@ -206,8 +205,7 @@ end
   (φ : ι₁ → Type*) (ψ : ι₂ → Type*)
   [Π i, add_comm_monoid (φ i)] [Π i, module R (φ i)]
   [Π i, add_comm_monoid (ψ i)] [Π i, module R (ψ i)]
-  (S : Type*) [fintype ι₁] [decidable_eq ι₁]
-  [fintype ι₂] [decidable_eq ι₂]
+  (S : Type*)
   [semiring S] [Π i, module S (ψ i)] [Π i, smul_comm_class R S (ψ i)] :
     (Π i : ι₁ × ι₂, φ i.1 →ₗ[R] ψ i.2) ≃ₗ[S] (Π i j, φ i →ₗ[R] ψ j) :=
 by { refine linear_equiv.of_linear _ _ _ _,
@@ -230,8 +228,7 @@ by { refine linear_equiv.of_linear _ _ _ _,
   (φ : ι₁ → Type*) (ψ : ι₂ → Type*)
   [Π i, add_comm_monoid (φ i)] [Π i, module R (φ i)]
   [Π i, add_comm_monoid (ψ i)] [Π i, module R (ψ i)]
-  (S : Type*) [fintype ι₁] [decidable_eq ι₁]
-  [fintype ι₂] [decidable_eq ι₂]
+  (S : Type*)
   [semiring S] [Π i, module S (ψ i)] [Π i, smul_comm_class R S (ψ i)] :
     (Π i j, φ i →ₗ[R] ψ j) ≃ₗ[S] (Π j i, φ i →ₗ[R] ψ j) :=
 begin
@@ -252,7 +249,7 @@ end
 @[simps] def linear_map.rsum (R : Type*) {M : Type*} {ι : Type*}
   [semiring R] (φ : ι → Type*) [Π (i : ι), add_comm_monoid (φ i)]
   [Π (i : ι), module R (φ i)]
-  (S : Type*) [add_comm_monoid M] [module R M] [fintype ι] [decidable_eq ι]
+  (S : Type*) [add_comm_monoid M] [module R M]
   [semiring S] [Π i, module S (φ i)] [Π i, smul_comm_class R S (φ i)] :
   (Π i, M →ₗ[R] φ i) ≃ₗ[S] (M →ₗ[R] (Π i, φ i)) :=
 { to_fun := λ f, linear_map.pi f,

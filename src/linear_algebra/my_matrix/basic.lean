@@ -58,7 +58,7 @@ begin
 end
 
 /-- two vectors are equal iff their elements are equal -/
-lemma ext_vec (α β : n → 𝕜) : α = β ↔ ∀ i : n, α i = β i :=
+lemma ext_vec {𝕜 n : Type*} (α β : n → 𝕜) : α = β ↔ ∀ i : n, α i = β i :=
 begin
   refine ⟨λ h i, by rw h, λ h, _⟩,
   ext i, exact h i,
@@ -254,12 +254,12 @@ begin
     conj_transpose_apply, eq_self_iff_true, forall_2_true_iff],
 end
 
-lemma matrix.kronecker.star (x y : matrix n n 𝕜) :
+lemma matrix.kronecker.star {n : Type*} (x y : matrix n n 𝕜) :
   star (x ⊗ₖ y) = (star x) ⊗ₖ (star y) :=
 matrix.kronecker_conj_transpose _ _
 
 -- MOVE:
-lemma matrix.kronecker.transpose (x y : matrix n n 𝕜) :
+lemma matrix.kronecker.transpose {n : Type*} (x y : matrix n n 𝕜) :
   (x ⊗ₖ y)ᵀ = xᵀ ⊗ₖ yᵀ :=
 begin
   simp_rw [← matrix.ext_iff],

@@ -966,8 +966,9 @@ begin
   rw [← sig_eq_iff_eq_sig_inv],
 end
 
-lemma rsmul_module_map_of_real_lsmul_module_map {f : l(ℍ)} (hf : ∀ a x : ℍ, f (a ⬝ x) = a ⬝ f x)
-  (a x : ℍ) :
+lemma rsmul_module_map_of_real_lsmul_module_map {n : Type*} [fintype n]
+  {f : l(matrix n n ℂ)} (hf : ∀ a x : matrix n n ℂ, f (a ⬝ x) = a ⬝ f x)
+  (a x : matrix n n ℂ) :
   f.real (a ⬝ x) = f.real a ⬝ x :=
 begin
   simp_rw [linear_map.real_eq, star_eq_conj_transpose, conj_transpose_mul, hf, conj_transpose_mul,

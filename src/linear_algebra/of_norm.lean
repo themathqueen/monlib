@@ -460,7 +460,7 @@ begin
   simp only [and_iff_right_iff_imp, f.is_linear, implies_true_iff],
 end
 
-def with_bound (𝕜 : Type*) {E : Type*} [normed_field 𝕜]
+def with_bound (𝕜 : Type*) {E : Type*}
   [normed_add_comm_group E] {F : Type*} [normed_add_comm_group F] (f : E → F) : Prop :=
 ∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖
 
@@ -549,27 +549,27 @@ structure is_bilinear_map (𝕜 : Type*) [normed_field 𝕜]
 
 def is_left_linear_map (𝕜 : Type*) [normed_field 𝕜]
   {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
-  {F : Type*} [normed_add_comm_group F]
+  {F : Type*}
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   (f : E × F → G) :
   Prop :=
 ∀ b : F, is_linear_map 𝕜 (λ a, f (a, b))
 lemma is_left_linear_map_iff {𝕜 : Type*} [normed_field 𝕜]
   {E : Type*} [normed_add_comm_group E] [normed_space 𝕜 E]
-  {F : Type*} [normed_add_comm_group F]
+  {F : Type*}
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   {f : E × F → G} :
   is_left_linear_map 𝕜 f ↔ ∀ b : F, is_linear_map 𝕜 (λ a, f (a, b)) :=
 iff.rfl
 def is_right_linear_map (𝕜 : Type*) [normed_field 𝕜]
-  {E : Type*} [normed_add_comm_group E]
+  {E : Type*}
   {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   (f : E × F → G) :
   Prop :=
 ∀ a : E, is_linear_map 𝕜 (λ b, f (a, b))
 lemma is_right_linear_map_iff {𝕜 : Type*} [normed_field 𝕜]
-  {E : Type*} [normed_add_comm_group E]
+  {E : Type*}
   {F : Type*} [normed_add_comm_group F] [normed_space 𝕜 F]
   {G : Type*} [normed_add_comm_group G] [normed_space 𝕜 G]
   {f : E × F → G} :

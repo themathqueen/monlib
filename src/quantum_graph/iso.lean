@@ -407,7 +407,7 @@ begin
     exact ⟨inner_aut_star_alg U, hU⟩, },
 end
 
-lemma qam.iso_preserves_spectrum [hφ : fact φ.is_faithful_pos_map] (A B : l(ℍ))
+lemma qam.iso_preserves_spectrum (A B : l(ℍ))
   (h : @qam.iso n _ _ φ A B) :
   spectrum ℂ A = spectrum ℂ B :=
 begin

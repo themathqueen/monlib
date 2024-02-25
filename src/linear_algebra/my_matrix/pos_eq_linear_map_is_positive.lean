@@ -359,7 +359,7 @@ def linear_map.positive_map (T : (M₁ →ₗ[ℂ] M₁) →ₗ[ℂ] (M₂ →�
 /-- a $^*$-homomorphism from $L(M_1)$ to $L(M_2)$ is a positive map -/
 lemma linear_map.positive_map.star_hom {n₁ n₂ : ℕ}
   [finite_dimensional ℂ M₁] [finite_dimensional ℂ M₂]
-  (hn₁ : finite_dimensional.finrank ℂ M₁ = n₁) (hn₂ : finite_dimensional.finrank ℂ M₂ = n₂)
+  (hn₁ : finite_dimensional.finrank ℂ M₁ = n₁)
   (φ : star_alg_hom ℂ (M₁ →ₗ[ℂ] M₁) (M₂ →ₗ[ℂ] M₂)) :
   φ.to_alg_hom.to_linear_map.positive_map :=
 begin
@@ -472,13 +472,13 @@ begin
     and_comm (j = k), eq_comm],
 end
 
-lemma matrix.smul_std_basis_matrix' {R : Type*} [comm_semiring R] [decidable_eq n] (i j : n) (c : R) :
+lemma matrix.smul_std_basis_matrix' {n R : Type*} [comm_semiring R] [decidable_eq n] (i j : n) (c : R) :
   std_basis_matrix i j c = c • std_basis_matrix i j 1 :=
 begin
   rw [smul_std_basis_matrix, smul_eq_mul, mul_one],
 end
 
-lemma matrix.trace_iff' [decidable_eq n] (x : matrix n n 𝕜) :
+lemma matrix.trace_iff' (x : matrix n n 𝕜) :
   x.trace = ∑ i : n, x i i :=
 rfl
 
@@ -546,7 +546,7 @@ lemma matrix.std_basis_matrix.trace [decidable_eq n] (i j : n) (a : 𝕜) :
 by simp_rw [matrix.trace_iff', std_basis_matrix, ite_and, finset.sum_ite_eq, finset.mem_univ,
   if_true, eq_comm]
 
-lemma matrix.std_basis_matrix_eq [decidable_eq n] (i j : n) (a : 𝕜) :
+lemma matrix.std_basis_matrix_eq {n : Type*} [decidable_eq n] (i j : n) (a : 𝕜) :
   std_basis_matrix i j a = λ (i' j' : n), ite (i = i' ∧ j = j') a 0 :=
 rfl
 

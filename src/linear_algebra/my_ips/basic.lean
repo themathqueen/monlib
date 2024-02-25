@@ -115,7 +115,7 @@ end is_R_or_C
 
 /-- copy of `inner_map_self_eq_zero` for bounded linear maps -/
 lemma continuous_linear_map.inner_map_self_eq_zero [inner_product_space ℂ E]
-  [complete_space E] {p : E →L[ℂ] E} :
+  {p : E →L[ℂ] E} :
   (∀ x : E, ⟪p x, x⟫_ℂ = 0) ↔ p = 0 :=
 begin
   simp_rw [continuous_linear_map.ext_iff, ← continuous_linear_map.coe_coe,

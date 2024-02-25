@@ -39,9 +39,7 @@ noncomputable instance tensor_product.has_star :
     exact ∑ i j, star (((b₁.tensor_product b₂).repr x) (i,j))
       • (star (b₁ i) ⊗ₜ[𝕜] star (b₂ j)), } }
 
-variables [star_module 𝕜 E] [star_module 𝕜 F]
-
-@[simp] lemma tensor_product.star_tmul (x : E) (y : F) :
+@[simp] lemma tensor_product.star_tmul [star_module 𝕜 E] [star_module 𝕜 F] (x : E) (y : F) :
   star (x ⊗ₜ[𝕜] y) = (star x) ⊗ₜ[𝕜] (star y) :=
 begin
   simp_rw [star, basis.tensor_product_repr_tmul_apply, star_mul',
@@ -51,14 +49,15 @@ begin
     ← star_sum, basis.sum_repr],
 end
 
-lemma tensor_product.star_add (x y : E ⊗[𝕜] F) :
+lemma tensor_product.star_add
+  (x y : E ⊗[𝕜] F) :
   star (x + y) = star x + star y :=
 begin
   simp only [star, map_add, map_add, add_smul, star_add, finsupp.add_apply,
     finset.sum_add_distrib],
 end
 
-def tensor_product.star_is_involutive :
+def tensor_product.star_is_involutive [star_module 𝕜 E] [star_module 𝕜 F] :
   function.involutive (tensor_product.has_star.star : E ⊗[𝕜] F → E ⊗[𝕜] F) :=
 begin
   intros a,
@@ -72,12 +71,12 @@ begin
     simp_rw [← tensor_product.star_add], },
 end
 
-@[instance] noncomputable def tensor_product.has_involutive_star :
+@[instance] noncomputable def tensor_product.has_involutive_star [star_module 𝕜 E] [star_module 𝕜 F] :
   has_involutive_star (E ⊗[𝕜] F) :=
 { to_has_star := tensor_product.has_star,
   star_involutive := tensor_product.star_is_involutive }
 
-@[instance] noncomputable def tensor_product.star_add_monoid :
+@[instance] noncomputable def tensor_product.star_add_monoid [star_module 𝕜 E] [star_module 𝕜 F] :
   star_add_monoid (E ⊗[𝕜] F) :=
 { to_has_involutive_star := tensor_product.has_involutive_star,
   star_add := tensor_product.star_add }
@@ -87,10 +86,14 @@ end
 { star_smul := λ α x, by { simp only [star, map_smul, finsupp.smul_apply, star_smul,
     smul_assoc, ← finset.smul_sum], } }
 
-lemma tensor_product.map_real {A B : Type*} [add_comm_group A] [add_comm_group B]
-  [star_add_monoid A] [star_add_monoid B] [module 𝕜 A] [module 𝕜 B]
-  [star_module 𝕜 A] [star_module 𝕜 B]
-  [finite_dimensional 𝕜 A] [finite_dimensional 𝕜 B] (f : E →ₗ[𝕜] F) (g : A →ₗ[𝕜] B) :
+lemma tensor_product.map_real
+  {A B E F : Type*} [add_comm_group A] [add_comm_group B]
+  [add_comm_group E] [add_comm_group F]
+  [star_add_monoid A] [star_add_monoid B] [star_add_monoid E] [star_add_monoid F]
+  [module 𝕜 A] [module 𝕜 B] [module 𝕜 E] [module 𝕜 F]
+  [star_module 𝕜 A] [star_module 𝕜 B] [star_module 𝕜 E] [star_module 𝕜 F]
+  [finite_dimensional 𝕜 A] [finite_dimensional 𝕜 B] [finite_dimensional 𝕜 E] [finite_dimensional 𝕜 F]
+  (f : E →ₗ[𝕜] F) (g : A →ₗ[𝕜] B) :
   (tensor_product.map f g).real = (tensor_product.map f.real g.real) :=
 begin
   rw tensor_product.ext_iff,
@@ -113,6 +116,8 @@ begin
     linear_equiv.to_linear_map_eq_coe, linear_equiv.coe_coe, linear_map.comp_apply,
     tensor_product.comm_tmul, linear_map.mul'_apply, star_mul, star_star],
 end
+
+variables [star_module 𝕜 E] [star_module 𝕜 F]
 
 lemma tensor_product.assoc_real :
   (tensor_product.assoc 𝕜 E F G : E ⊗[𝕜] F ⊗[𝕜] G →ₗ[𝕜] E ⊗[𝕜] (F ⊗[𝕜] G)).real
