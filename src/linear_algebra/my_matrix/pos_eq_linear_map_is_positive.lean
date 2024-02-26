@@ -357,7 +357,7 @@ def linear_map.positive_map (T : (M₁ →ₗ[ℂ] M₁) →ₗ[ℂ] (M₂ →�
 ∀ x : M₁ →ₗ[ℂ] M₁, x.is_positive → (T x).is_positive
 
 /-- a $^*$-homomorphism from $L(M_1)$ to $L(M_2)$ is a positive map -/
-lemma linear_map.positive_map.star_hom {n₁ n₂ : ℕ}
+lemma linear_map.positive_map.star_hom {n₁ : ℕ}
   [finite_dimensional ℂ M₁] [finite_dimensional ℂ M₂]
   (hn₁ : finite_dimensional.finrank ℂ M₁ = n₁)
   (φ : star_alg_hom ℂ (M₁ →ₗ[ℂ] M₁) (M₂ →ₗ[ℂ] M₂)) :

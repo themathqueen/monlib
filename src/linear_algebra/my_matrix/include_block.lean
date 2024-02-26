@@ -98,9 +98,9 @@ linear_map.single i
 --     { intros h,
 --       simp only [h, pi.zero_apply, dif_neg, not_false_iff, smul_zero], }, } }
 
-lemma include_block_apply {o : Type*} [fintype o] [decidable_eq o] {m' : o → Type*}
+lemma include_block_apply {o : Type*} [decidable_eq o] {m' : o → Type*}
   {α : Type*}
-  [Π i, fintype (m' i)] [Π i, decidable_eq (m' i)] [comm_semiring α] {i : o} (x : matrix (m' i) (m' i) α) :
+  [comm_semiring α] {i : o} (x : matrix (m' i) (m' i) α) :
   (include_block : matrix (m' i) (m' i) α →ₗ[α] Π j, matrix (m' j) (m' j) α) x
     = λ (j : o), dite (i = j) (λ h, eq.mp (by rw [h]) x) (λ _, 0) :=
 begin
@@ -224,8 +224,8 @@ lemma is_block_diagonal.eq {k : Type*} [decidable_eq k]
   block_diagonal' (x.block_diag') = x :=
 hx
 
-lemma is_block_diagonal.add {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+lemma is_block_diagonal.add {k : Type*} [decidable_eq k]
+  {s : k → Type*}
   {x y : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal)
   (hy : y.is_block_diagonal) :
   (x + y).is_block_diagonal :=
@@ -294,8 +294,8 @@ lemma is_block_diagonal.coe_zero {k : Type*} [fintype k] [decidable_eq k]
   ((0 : { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal }) : matrix (Σ i, s i) (Σ i, s i) R) = 0 :=
 rfl
 
-lemma is_block_diagonal.smul  {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+lemma is_block_diagonal.smul  {k : Type*} [decidable_eq k]
+  {s : k → Type*}
   {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal) (α : R) :
   (α • x).is_block_diagonal :=
 begin
@@ -342,15 +342,15 @@ begin
   rw [matrix.is_block_diagonal, block_diag'_block_diagonal'],
 end
 
-lemma is_block_diagonal_iff {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+lemma is_block_diagonal_iff {k : Type*} [decidable_eq k]
+  {s : k → Type*}
   (x : matrix (Σ i, s i) (Σ i, s i) R) :
   x.is_block_diagonal ↔ ∃ y : (Π i, matrix (s i) (s i) R), x = block_diagonal' y :=
 ⟨λ h, ⟨x.block_diag', h.symm⟩,
   by rintros ⟨y, rfl⟩; exact matrix.is_block_diagonal.block_diagonal' y⟩
 
-def std_basis_matrix_block_diagonal {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+def std_basis_matrix_block_diagonal {k : Type*} [decidable_eq k]
+  {s : k → Type*} [Π i, decidable_eq (s i)]
   (i : k) (j l : s i) (α : R) :
   {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
 ⟨std_basis_matrix ⟨i, j⟩ ⟨i, l⟩ α, by {
@@ -469,7 +469,7 @@ begin
 end
 
 lemma is_block_diagonal.mul {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  {s : k → Type*} [Π i, fintype (s i)]
   {x y : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal)
   (hy : y.is_block_diagonal) :
   (x ⬝ y).is_block_diagonal :=
@@ -495,8 +495,8 @@ lemma is_block_diagonal.one {k : Type*} [decidable_eq k]
   (1 : matrix (Σ i, s i) (Σ i, s i) R).is_block_diagonal :=
 by simp only [matrix.is_block_diagonal, block_diag'_one, block_diagonal'_one]
 
-@[instance] def is_block_diagonal.has_one {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
+@[instance] def is_block_diagonal.has_one {k : Type*} [decidable_eq k]
+  {s : k → Type*} [Π i, decidable_eq (s i)] :
   has_one {x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal} :=
 { one := ⟨(1 : matrix (Σ i, s i) (Σ i, s i) R), is_block_diagonal.one⟩ }
 
@@ -625,8 +625,8 @@ x.2
       is_block_diagonal.coe_block_diagonal'_block_diag' (x * y),
       is_block_diagonal.coe_mul, mul_eq_mul], }, }
 
-lemma is_block_diagonal.star {R : Type*} [comm_semiring R] [star_add_monoid R] {k : Type*} [fintype k] [decidable_eq k]
-  {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+lemma is_block_diagonal.star {R : Type*} [comm_semiring R] [star_add_monoid R] {k : Type*} [decidable_eq k]
+  {s : k → Type*}
   {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal) :
   (xᴴ).is_block_diagonal :=
 begin
@@ -705,7 +705,7 @@ end
     refl, }, }
 
 lemma is_block_diagonal.apply_of_ne {R : Type*} [comm_semiring R] {k : Type*}
-  [fintype k] [decidable_eq k] {s : k → Type*} [Π i, fintype (s i)] [Π i, decidable_eq (s i)]
+  [decidable_eq k] {s : k → Type*}
   {x : matrix (Σ i, s i) (Σ i, s i) R} (hx : x.is_block_diagonal)
   (i j : Σ i, s i) (h : i.1 ≠ j.1) :
   x i j = 0 :=
@@ -745,8 +745,8 @@ end
   [Π i, fintype (s i)] [Π i, decidable_eq (s i)] :
   ((Π i, matrix (s i) (s i) R) →ₗ[R] (Π i, matrix (s i) (s i) R))
     ≃ₐ[R]
-  { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal }
-    →ₗ[R] { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal } :=
+  ({ x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal }
+    →ₗ[R] { x : matrix (Σ i, s i) (Σ i, s i) R // x.is_block_diagonal }) :=
 is_block_diagonal_pi_alg_equiv.symm.to_linear_equiv.inner_conj
 
 end matrix
@@ -760,14 +760,15 @@ local notation `ℍ_ `i := matrix (s i) (s i) R
 open matrix
 
 lemma tensor_product.assoc_include_block
+  {k : Type*} [decidable_eq k] {s : k → Type*}
   {i j : k} :
-  ↑(tensor_product.assoc R ℍ₂ ℍ₂ ℍ₂).symm ∘ₗ
-    ((include_block : (ℍ_ i) →ₗ[R] ℍ₂)
-      ⊗ₘ ((include_block : (ℍ_ j) →ₗ[R] ℍ₂) ⊗ₘ (include_block : (ℍ_ j) →ₗ[R] ℍ₂)))
+  ↑(tensor_product.assoc R (Π a, matrix (s a) (s a) R) (Π a, matrix (s a) (s a) R) (Π a, matrix (s a) (s a) R)).symm ∘ₗ
+    ((include_block : (matrix (s i) (s i) R) →ₗ[R] Π a, matrix (s a) (s a) R)
+      ⊗ₘ ((include_block : (matrix (s j) (s j) R) →ₗ[R] Π a, matrix (s a) (s a) R) ⊗ₘ (include_block : (matrix (s j) (s j) R) →ₗ[R] Π a, matrix (s a) (s a) R)))
   =
-   (((include_block : (ℍ_ i) →ₗ[R] ℍ₂)
-      ⊗ₘ ((include_block : (ℍ_ j) →ₗ[R] ℍ₂))) ⊗ₘ (include_block : (ℍ_ j) →ₗ[R] ℍ₂)) ∘ₗ
-    ↑(tensor_product.assoc R (ℍ_ i) (ℍ_ j) (ℍ_ j)).symm :=
+   (((include_block : (matrix (s i) (s i) R) →ₗ[R] Π a, matrix (s a) (s a) R)
+      ⊗ₘ ((include_block : (matrix (s j)(s j) R) →ₗ[R] Π a, matrix (s a) (s a) R))) ⊗ₘ (include_block : (matrix (s j) (s j) R) →ₗ[R] Π a, matrix (s a) (s a) R)) ∘ₗ
+    ↑(tensor_product.assoc R (matrix (s i) (s i) R) (matrix (s j) (s j) R) (matrix (s j) (s j) R)).symm :=
 begin
   apply tensor_product.ext_threefold',
   intros x y z,

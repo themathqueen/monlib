@@ -267,7 +267,8 @@ begin
   simp only [matrix.transpose_apply, matrix.kronecker_map, of_apply],
 end
 
-lemma matrix.kronecker.conj (x y : matrix n n 𝕜) :
+lemma matrix.kronecker.conj
+  {n : Type*} (x y : matrix n n 𝕜) :
   (x ⊗ₖ y)ᴴᵀ = xᴴᵀ ⊗ₖ yᴴᵀ :=
 by rw [conj, matrix.kronecker_conj_transpose, matrix.kronecker.transpose]; refl
 

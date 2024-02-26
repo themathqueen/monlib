@@ -460,20 +460,20 @@ begin
   simp only [and_iff_right_iff_imp, f.is_linear, implies_true_iff],
 end
 
-def with_bound (𝕜 : Type*) {E : Type*}
+def with_bound {E : Type*}
   [normed_add_comm_group E] {F : Type*} [normed_add_comm_group F] (f : E → F) : Prop :=
 ∃ M, 0 < M ∧ ∀ x : E, ‖f x‖ ≤ M * ‖x‖
 
 lemma is_bounded_linear_map.def {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
   [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
   [normed_space 𝕜 F] {f : E → F} :
-  is_bounded_linear_map 𝕜 f ↔ (is_linear_map 𝕜 f ∧ with_bound 𝕜 f) :=
+  is_bounded_linear_map 𝕜 f ↔ (is_linear_map 𝕜 f ∧ with_bound f) :=
 ⟨λ h, ⟨h.1, h.2⟩, λ h, ⟨h.1, h.2⟩⟩
 
 lemma linear_map.with_bound_iff_is_continuous {𝕜 E : Type*} [nontrivially_normed_field 𝕜]
   [normed_add_comm_group E] [normed_space 𝕜 E] {F : Type*} [normed_add_comm_group F]
   [normed_space 𝕜 F] {f : E →ₗ[𝕜] F} :
-  with_bound 𝕜 f ↔ continuous f :=
+  with_bound f ↔ continuous f :=
 begin
   have := @is_bounded_linear_map_iff_is_continuous_linear_map 𝕜 _ _ _ _ _ _ _ f,
   simp only [is_bounded_linear_map.def, is_continuous_linear_map, and.congr_right_iff,

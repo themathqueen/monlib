@@ -360,8 +360,10 @@ begin
     exact h, }
 end
 
-lemma ext_inner_left_iff [inner_product_space 𝕜 E] (x y : E) :
-  x = y ↔ ∀ v : E, ⟪x, v⟫ = ⟪y, v⟫ :=
+lemma ext_inner_left_iff {𝕜 E : Type*}
+  [is_R_or_C 𝕜] [normed_add_comm_group E]
+  [inner_product_space 𝕜 E] (x y : E) :
+  x = y ↔ ∀ v : E, inner x v = (inner y v : 𝕜) :=
 begin
   split,
   { intros h v,
@@ -398,7 +400,7 @@ begin
     rw [mul_inv_of_self, one_apply] at ugh,
     exact ugh,
     rw ugh,
-    exact t1.1, exact _inst_4, exact _inst_6, },
+    exact t1.1, },
   { intro x,
     by_cases b : ⅟ T x = 0,
     { rw [b, inner_zero_right, map_zero], },
@@ -533,7 +535,7 @@ begin
 end
 
 open_locale big_operators
-lemma linear_map.is_positive_iff_eq_sum_rank_one {n : ℕ} [inner_product_space 𝕜 E]
+lemma linear_map.is_positive_iff_eq_sum_rank_one {n : ℕ}
   [decidable_eq 𝕜] [finite_dimensional 𝕜 E] (hn : finite_dimensional.finrank 𝕜 E = n)
   (T : E →ₗ[𝕜] E) :
   T.is_positive ↔ ∃ (m : ℕ) (u : fin m → E),
