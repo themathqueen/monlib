@@ -1349,4 +1349,71 @@ begin
     module.dual.is_faithful_pos_map.sig_adjoint],
 end
 
+lemma module.dual.is_faithful_pos_map.norm_eq
+  {ψ : module.dual ℂ (matrix n n ℂ)}
+  [hψ : fact ψ.is_faithful_pos_map]
+  (x : matrix n n ℂ) :
+  ‖x‖ = real.sqrt (is_R_or_C.re (ψ (xᴴ ⬝ x))) :=
+begin
+  simp_rw [inner_product_space.core.norm_eq_sqrt_inner,
+    ← module.dual.is_faithful_pos_map.inner_eq],
+end
+lemma module.dual.pi.is_faithful_pos_map.norm_eq
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (x : Π i, matrix (s i) (s i) ℂ) :
+  ‖x‖ = real.sqrt (is_R_or_C.re (pi ψ ((star x) * x))) :=
+begin
+  simp_rw [inner_product_space.core.norm_eq_sqrt_inner,
+    ← module.dual.pi.is_faithful_pos_map.inner_eq],
+end
+
+lemma norm_mul_norm_eq_norm_tmul
+  {𝕜 B C : Type*}
+  [is_R_or_C 𝕜]
+  [normed_add_comm_group B]
+  [normed_add_comm_group C]
+  [inner_product_space 𝕜 B]
+  [inner_product_space 𝕜 C]
+  [finite_dimensional 𝕜 B]
+  [finite_dimensional 𝕜 C]
+  (x : B) (y : C) :
+  ‖x‖ * ‖y‖ = ‖x ⊗ₜ[𝕜] y‖ :=
+begin
+  calc ‖x‖ * ‖y‖ = real.sqrt (is_R_or_C.re (inner x x : 𝕜)) * real.sqrt (is_R_or_C.re (inner y y : 𝕜)) :
+  by simp_rw [@norm_eq_sqrt_inner 𝕜]
+    ... = real.sqrt (is_R_or_C.re (inner x x : 𝕜) * is_R_or_C.re (inner y y : 𝕜)) :
+  by rw [real.sqrt_mul (inner_self_nonneg)]
+    ... = real.sqrt (is_R_or_C.re ((inner x x : 𝕜) * (inner y y : 𝕜))) :
+  by { congr' 1,
+    simp only [is_R_or_C.mul_re, @inner_self_im 𝕜, zero_mul, sub_zero], }
+    ... = real.sqrt (is_R_or_C.re (inner (x ⊗ₜ[𝕜] y) (x ⊗ₜ[𝕜] y) : 𝕜)) :
+  by rw [tensor_product.inner_tmul]
+    ... = ‖x ⊗ₜ[𝕜] y‖ : by rw [@norm_eq_sqrt_inner 𝕜],
+end
+
+
+instance matrix.is_fd :
+  finite_dimensional ℂ (matrix n n ℂ) :=
+by apply_instance
+instance matrix.is_star_module {n : Type*} [fintype n] [decidable_eq n] :
+  star_module ℂ (matrix n n ℂ) :=
+by apply_instance
+
+instance pi.matrix.is_fd :
+  finite_dimensional ℂ ℍ₂ :=
+by apply_instance
+instance pi.matrix.is_star_module :
+  star_module ℂ ℍ₂ :=
+by apply_instance
+
+instance pi.matrix.is_topological_add_group :
+  topological_add_group (Π (i : k), matrix (s i) (s i) ℂ) :=
+by { apply @pi.topological_add_group _ _ _ _ _,
+  intros b,
+  apply_instance, }
+instance pi.matrix.has_continuous_smul :
+  has_continuous_smul ℂ ℍ₂ :=
+by { apply_instance, }
+
 end direct_sum

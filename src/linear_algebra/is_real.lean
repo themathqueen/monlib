@@ -64,7 +64,7 @@ begin
   simp only [linear_map.real, linear_map.coe_mk, star_star],
 end
 
-lemma linear_map.real_comp {G : Type*} [non_unital_semiring G] [star_ring G] [module K G]
+lemma linear_map.real_comp {G : Type*} [add_comm_monoid G] [star_add_monoid G] [module K G]
   [star_module K G] (f : E →ₗ[K] F) (g : G →ₗ[K] E) :
   (f ∘ₗ g).real = f.real ∘ₗ g.real :=
 begin
@@ -73,7 +73,7 @@ begin
 end
 
 lemma linear_map.real_star_alg_equiv_conj {E K : Type*} [comm_semiring K] [semiring E]
-  [algebra K E] [has_involutive_star K] [star_ring E] [star_module K E]
+  [algebra K E] [has_involutive_star K] [star_add_monoid E] [star_module K E]
   (f : E →ₗ[K] E) (φ : E ≃⋆ₐ[K] E) :
 (φ.to_alg_equiv.to_linear_equiv.to_linear_map ∘ₗ f
   ∘ₗ φ.symm.to_alg_equiv.to_linear_equiv.to_linear_map).real
@@ -87,7 +87,7 @@ begin
 end
 
 lemma linear_map.real_star_alg_equiv_conj_iff {E K : Type*} [comm_semiring K] [semiring E]
-  [algebra K E] [has_involutive_star K] [star_ring E] [star_module K E]
+  [algebra K E] [has_involutive_star K] [star_add_monoid E] [star_module K E]
   (f : E →ₗ[K] E) (φ : E ≃⋆ₐ[K] E) :
 (φ.to_alg_equiv.to_linear_equiv.to_linear_map ∘ₗ f
   ∘ₗ φ.symm.to_alg_equiv.to_linear_equiv.to_linear_map).is_real
@@ -104,7 +104,7 @@ begin
 end
 
 def linear_map.real_ring_equiv {R E : Type*} [semiring R]
-  [non_unital_normed_ring E] [star_ring E] [module R E]
+  [add_comm_monoid E] [star_add_monoid E] [module R E]
   [has_involutive_star R] [star_module R E] :
   (E →ₗ[R] E) ≃+* (E →ₗ[R] E) :=
 { to_fun := λ f, f.real,
@@ -165,7 +165,7 @@ end
 
 lemma linear_map.real_neg {E : Type*} {F : Type*} {K : Type*} [add_comm_monoid E]
   [star_add_monoid E] [add_comm_group F] [star_add_monoid F]
-  [semiring K]  [module K E] [module K F] [has_involutive_star K]
+  [semiring K] [module K E] [module K F] [has_involutive_star K]
   [star_module K E] [star_module K F] (f : E →ₗ[K] F) :
   (-f).real = - f.real :=
 begin
@@ -175,7 +175,7 @@ end
 
 lemma linear_map.real_sub {E : Type*} {F : Type*} {K : Type*} [add_comm_monoid E]
   [star_add_monoid E] [add_comm_group F] [star_add_monoid F]
-  [semiring K]  [module K E] [module K F] [has_involutive_star K]
+  [semiring K] [module K E] [module K F] [has_involutive_star K]
   [star_module K E] [star_module K F] (f g : E →ₗ[K] F) :
   (f - g).real = f.real - g.real :=
 begin
@@ -183,8 +183,8 @@ begin
   exact linear_map.real_add _ _,
 end
 
-lemma linear_map.real_smul {E F K : Type*} [comm_semiring K] [non_unital_semiring E]
-  [non_unital_semiring F] [star_ring K] [star_ring E] [star_ring F]
+lemma linear_map.real_smul {E F K : Type*} [comm_semiring K] [add_comm_monoid E]
+  [add_comm_monoid F] [star_ring K] [star_add_monoid E] [star_add_monoid F]
   [module K E] [module K F] [star_module K E] [star_module K F] (f : E →ₗ[K] F) (α : K) :
   (α • f).real = (star_ring_end K α) • f.real :=
 begin
@@ -193,8 +193,8 @@ begin
   refl,
 end
 
-lemma linear_map.real_inj_eq {E F K : Type*} [semiring K] [non_unital_semiring E]
-  [non_unital_semiring F] [has_involutive_star K] [star_ring E] [star_ring F] [module K E]
+lemma linear_map.real_inj_eq {E F K : Type*} [semiring K] [add_comm_monoid E]
+  [add_comm_monoid F] [has_involutive_star K] [star_add_monoid E] [star_add_monoid F] [module K E]
   [module K F] [star_module K E] [star_module K F] (f g : E →ₗ[K] F) :
   f = g ↔ f.real = g.real :=
 begin

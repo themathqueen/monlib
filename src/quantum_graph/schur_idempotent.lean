@@ -25,7 +25,7 @@ open_locale tensor_product big_operators kronecker
 
 local notation `𝔹` := Π i, matrix (s i) (s i) ℂ
 local notation `l(`x`)` := x →ₗ[ℂ] x
-local notation `L(`x`)` := x →L[ℂ] x
+-- local notation `L(`x`)` := x →L[ℂ] x
 
 -- variables {℘ : Π i, matrix (s i) (s i) ℂ →ₗ[ℂ] ℂ}
 
@@ -48,43 +48,6 @@ local notation x ` ⊗ₘ ` y := tensor_product.map x y
 
 open_locale functional
 
-lemma module.dual.is_faithful_pos_map.norm_eq (i : n)
-  {ψ : module.dual ℂ (matrix (s i) (s i) ℂ)}
-  [hψ : fact ψ.is_faithful_pos_map]
-  (x : matrix (s i) (s i) ℂ) :
-  ‖x‖ = real.sqrt (is_R_or_C.re (ψ (xᴴ ⬝ x))) :=
-begin
-  simp_rw [inner_product_space.core.norm_eq_sqrt_inner,
-    ← module.dual.is_faithful_pos_map.inner_eq],
-end
-
-lemma norm_mul_norm_eq_norm_tmul
-  {B : Type*}
-  [normed_add_comm_group B]
-  [inner_product_space ℂ B]
-  [finite_dimensional ℂ B]
-  (x y : B) :
-  ‖x‖ * ‖y‖ = ‖x ⊗ₜ[ℂ] y‖ :=
-begin
-  calc ‖x‖ * ‖y‖ = real.sqrt (is_R_or_C.re ⟪x, x⟫_ℂ) * real.sqrt (is_R_or_C.re ⟪y, y⟫_ℂ) :
-  by simp_rw [@norm_eq_sqrt_inner ℂ]
-    ... = real.sqrt (is_R_or_C.re ⟪x, x⟫_ℂ * is_R_or_C.re ⟪y, y⟫_ℂ) :
-  by rw [real.sqrt_mul (inner_self_nonneg)]
-    ... = real.sqrt (is_R_or_C.re (⟪x, x⟫_ℂ * ⟪y, y⟫_ℂ)) :
-  by { congr' 1,
-    simp only [is_R_or_C.re_to_complex, complex.mul_re,
-      ← is_R_or_C.im_to_complex, @inner_self_im ℂ, zero_mul, sub_zero], }
-    ... = real.sqrt (is_R_or_C.re ⟪x ⊗ₜ[ℂ] y, x ⊗ₜ[ℂ] y⟫_ℂ) :
-  by rw [tensor_product.inner_tmul]
-    ... = ‖x ⊗ₜ[ℂ] y‖ : by rw [@norm_eq_sqrt_inner ℂ],
-end
-
-def norm_equiv {B : Type*}
-  (h1 : has_norm B) (h2 : has_norm B) :
-  Prop :=
-∃ M₁ M₂ : nnrealˣ, ∀ x, h1.norm x ≤ ((M₁ : nnreal) : ℝ) * h2.norm x
-  ∧ ((M₂ : nnreal) : ℝ) * h2.norm x ≤ h1.norm x
-
 class normed_add_comm_group_of_ring (B : Type*) extends ring B :=
 (to_has_norm : has_norm B)
 (to_metric_space : metric_space B)
@@ -96,7 +59,6 @@ instance my_normed_ring.to_normed_add_comm_group {B : Type*} [normed_add_comm_gr
   dist_eq := normed_add_comm_group_of_ring.dist_eq,
   ..normed_add_comm_group_of_ring.to_metric_space }
 
-
 noncomputable instance module.dual.is_normed_add_comm_group_of_ring
   {n : Type*} [fintype n] [decidable_eq n]
   {ψ : module.dual ℂ (matrix n n ℂ)}
@@ -105,16 +67,6 @@ noncomputable instance module.dual.is_normed_add_comm_group_of_ring
 { to_has_norm := normed_add_comm_group.to_has_norm,
   to_metric_space := normed_add_comm_group.to_metric_space,
   dist_eq := normed_add_comm_group.dist_eq }
-instance module.dual.is_fd {n : Type*} [fintype n] [decidable_eq n]
-  {ψ : module.dual ℂ (matrix n n ℂ)}
-  [hψ : fact ψ.is_faithful_pos_map] :
-  finite_dimensional ℂ (matrix n n ℂ) :=
-by apply_instance
-instance module.dual.is_star_module {n : Type*} [fintype n] [decidable_eq n]
-  {ψ : module.dual ℂ (matrix n n ℂ)}
-  [hψ : fact ψ.is_faithful_pos_map] :
-  star_module ℂ (matrix n n ℂ) :=
-by apply_instance
 
 noncomputable instance pi.module.dual.is_normed_add_comm_group_of_ring
   {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
@@ -123,14 +75,6 @@ noncomputable instance pi.module.dual.is_normed_add_comm_group_of_ring
 { to_has_norm := normed_add_comm_group.to_has_norm,
   to_metric_space := normed_add_comm_group.to_metric_space,
   dist_eq := normed_add_comm_group.dist_eq }
-instance pi.module.dual.is_fd {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
-  [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  finite_dimensional ℂ 𝔹 :=
-by apply_instance
-instance pi.module.dual.is_star_module {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
-  [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
-  star_module ℂ 𝔹 :=
-by apply_instance
 
 noncomputable def schur_idempotent
   {B : Type*}
@@ -256,6 +200,59 @@ begin
     lmul_apply,
     schur_idempotent_one_right_aux hψ, star_star],
 end
+
+lemma continuous_linear_map.linear_map_adjoint {𝕜 B C : Type*} [is_R_or_C 𝕜]
+  [normed_add_comm_group B]
+  [normed_add_comm_group C]
+  [inner_product_space 𝕜 B]
+  [inner_product_space 𝕜 C]
+  [finite_dimensional 𝕜 B]
+  [finite_dimensional 𝕜 C]
+  (x : B →L[𝕜] C) :
+  (x : B →ₗ[𝕜] C).adjoint
+    = @continuous_linear_map.adjoint 𝕜 _ _ _ _ _ _ _
+      (finite_dimensional.complete 𝕜 B) (finite_dimensional.complete 𝕜 C) x :=
+rfl
+
+lemma schur_idempotent_adjoint {B : Type*}
+  [normed_add_comm_group_of_ring B]
+  [inner_product_space ℂ B]
+  [smul_comm_class ℂ B B]
+  [is_scalar_tower ℂ B B]
+  [finite_dimensional ℂ B]
+  (x y : l(B)) :
+  (schur_idempotent x y).adjoint = schur_idempotent x.adjoint y.adjoint :=
+begin
+  obtain ⟨α, β, rfl⟩ := linear_map.exists_sum_rank_one x,
+  obtain ⟨γ, δ, rfl⟩ := linear_map.exists_sum_rank_one y,
+  simp only [map_sum, linear_map.sum_apply],
+  repeat { apply finset.sum_congr rfl, intros, },
+  simp_rw [schur_idempotent.apply_rank_one, continuous_linear_map.linear_map_adjoint,
+    rank_one.adjoint, schur_idempotent.apply_rank_one],
+end
+
+-- lemma schur_idempotent_real
+-- -- {B : Type*}
+-- --   [normed_add_comm_group_of_ring B]
+-- --   [inner_product_space ℂ B]
+-- --   [smul_comm_class ℂ B B]
+-- --   [is_scalar_tower ℂ B B]
+-- --   [finite_dimensional ℂ B]
+-- --   [star_ring B]
+-- --   [star_module ℂ B]
+--   -- {ψ : module.dual ℂ B} (hψ : ∀ a b, ⟪a, b⟫_ℂ = ψ (star a * b))
+--   {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+--   [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+--   (x y : l(𝔹)) :
+--   (schur_idempotent x y : l(𝔹)).real =
+--     schur_idempotent y.real x.real :=
+-- begin
+--   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
+--   obtain ⟨γ, ζ, rfl⟩ := y.exists_sum_rank_one,
+--   simp only [map_sum, linear_map.real_sum, linear_map.sum_apply,
+--     schur_idempotent.apply_rank_one],
+--   rw finset.sum_comm,
+-- end
 
 lemma schur_idempotent_one_right_rank_one
   {B : Type*}
