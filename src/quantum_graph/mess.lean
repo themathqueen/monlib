@@ -705,6 +705,7 @@ begin
   simp_rw [← linear_map.comp_assoc, linear_map.comp_assoc (_ ⊗ₘ _) (_ ⊗ₘ _),
     ← tensor_product.map_comp, linear_map.one_comp, linear_map.comp_one,
     D_in_Schur_product_eq_ir_refl, D_out_Schur_product_eq_ir_refl', qam.refl_idempotent,
+    schur_idempotent,
     linear_map.coe_mk, linear_map.real_real, linear_map.comp_assoc,
     sub_eq_add_neg, neg_add, neg_neg, add_assoc],
 end

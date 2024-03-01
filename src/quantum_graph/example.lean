@@ -134,7 +134,7 @@ begin
   let hQ := hφ.elim.matrix_is_pos_def,
   let Q := φ.matrix,
   simp_rw [qam, smul_hom_class.map_smul, linear_map.smul_apply, qam.refl_idempotent,
-      smul_smul, linear_map.coe_mk, tensor_product.map_one, linear_map.one_eq_id,
+      smul_smul, schur_idempotent, linear_map.coe_mk, tensor_product.map_one, linear_map.one_eq_id,
       linear_map.id_comp, qam.nontracial.mul_comp_mul_adjoint, smul_smul, mul_assoc],
     rw [inv_mul_cancel _, mul_one, linear_map.one_eq_id],
     exact matrix.pos_def.trace_ne_zero (pos_def.inv hφ.elim.matrix_is_pos_def),
@@ -156,7 +156,8 @@ lemma qam.nontracial.trivial_graph [nontrivial n] :
 begin
   rw [qam_lm_nontracial_is_reflexive, qam.trivial_graph_eq,
     smul_hom_class.map_smul, linear_map.smul_apply],
-  simp_rw [qam.refl_idempotent, linear_map.coe_mk, tensor_product.map_one, linear_map.one_eq_id,
+  simp_rw [qam.refl_idempotent, schur_idempotent, linear_map.coe_mk,
+    tensor_product.map_one, linear_map.one_eq_id,
     linear_map.id_comp, qam.nontracial.mul_comp_mul_adjoint, smul_smul,
     inv_mul_cancel (matrix.pos_def.trace_ne_zero (pos_def.inv hφ.elim.matrix_is_pos_def)), one_smul,
     linear_map.one_eq_id],
@@ -165,8 +166,8 @@ end
 private lemma qam.refl_idempotent_one_one :
   qam.refl_idempotent hφ.elim (1 : l(ℍ)) (1 : l(ℍ)) = (φ.matrix⁻¹).trace • (1 : l(ℍ)) :=
 begin
-  simp_rw [qam.refl_idempotent, linear_map.coe_mk, tensor_product.map_one, linear_map.one_comp,
-    qam.nontracial.mul_comp_mul_adjoint],
+  simp_rw [qam.refl_idempotent, schur_idempotent, linear_map.coe_mk,
+    tensor_product.map_one, linear_map.one_comp, qam.nontracial.mul_comp_mul_adjoint],
 end
 
 lemma qam.lm.nontracial.is_unreflexive_iff_reflexive_add_one [nontrivial n] (x : l(ℍ)) :

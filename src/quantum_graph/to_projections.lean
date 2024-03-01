@@ -169,68 +169,39 @@ begin
     refl, },
 end
 
+lemma matrix.conj_eq_transpose_conj_transpose {R n₁ n₂ : Type*} [has_star R] (A : matrix n₁ n₂ R) :
+  Aᴴᵀ = Aᵀᴴ :=
+rfl
+lemma matrix.conj_eq_conj_transpose_transpose {R n₁ n₂ : Type*} [has_star R] (A : matrix n₁ n₂ R) :
+  Aᴴᵀ = (Aᴴ)ᵀ :=
+rfl
+
 noncomputable def one_map_transpose :
   (ℍ ⊗[ℂ] ℍᵐᵒᵖ) ≃⋆ₐ[ℂ] (matrix (n × n) (n × n) ℂ) :=
-begin
-  apply star_alg_equiv.of_alg_equiv _ _,
-  { apply alg_equiv.of_linear_equiv _ _ _,
-    { apply linear_equiv.of_linear
-        (tensor_product.to_kronecker.comp (tensor_product.map (1 : ℍ →ₗ[ℂ] ℍ)
-          (transpose_alg_equiv n ℂ ℂ).symm.to_linear_map))
-        ((tensor_product.map (1 : ℍ →ₗ[ℂ] ℍ)
-          (transpose_alg_equiv n ℂ ℂ).to_linear_map).comp kronecker_to_tensor_product),
-      work_on_goal 1 { rw kronecker_product.ext_iff, },
-      work_on_goal 2 { rw tensor_product.ext_iff, },
-      all_goals { intros x y,
-        simp only [linear_map.comp_apply, kronecker_to_tensor_product_apply, tensor_product.map_tmul,
-          tensor_product.to_kronecker_apply, alg_equiv.to_linear_map_apply, alg_equiv.symm_apply_apply,
-          alg_equiv.apply_symm_apply, linear_map.one_apply, linear_map.id_apply], }, },
-    { intros x y,
-      simp_rw [linear_equiv.of_linear_apply],
-      apply x.induction_on,
-      { simp only [zero_mul, map_zero], },
-      { intros x₁ x₂,
-        apply y.induction_on,
-        { simp only [mul_zero, map_zero], },
-        { intros y₁ y₂,
-          simp only [tensor_product.map_tmul, linear_map.comp_apply,
-            algebra.tensor_product.tmul_mul_tmul, tensor_product.to_kronecker_apply,
-            linear_map.one_apply, mul_eq_mul, ← mul_kronecker_mul, alg_equiv.to_linear_map_apply,
-            _root_.map_mul], },
-        { simp only [mul_add, map_add],
-          intros z w hz hw,
-          simp_rw [hz, hw], }, },
-      { simp only [add_mul, map_add],
-        intros z w hz hw,
-        simp_rw [hz, hw], }, },
-    { intros r,
-      simp_rw [linear_equiv.of_linear_apply, algebra.algebra_map_eq_smul_one,
-        smul_hom_class.map_smul, algebra.tensor_product.one_def, linear_map.comp_apply,
-        tensor_product.map_tmul, tensor_product.to_kronecker_apply, alg_equiv.to_linear_map_apply,
-        _root_.map_one, linear_map.one_apply, one_kronecker_one], }, },
-  { intros,
-    simp only [alg_equiv.of_linear_equiv_apply, linear_equiv.of_linear_apply],
-    apply x.induction_on,
-    { simp only [mul_zero, map_zero, tensor_product.star_tmul, star_zero, conj_transpose_zero], },
-    { intros y₁ y₂,
-      simp only [tensor_product.map_tmul, linear_map.comp_apply,
-        algebra.tensor_product.tmul_mul_tmul, tensor_product.to_kronecker_apply,
-        linear_map.one_apply, mul_eq_mul, ← mul_kronecker_mul, alg_equiv.to_linear_map_apply,
-        _root_.map_mul, star_eq_conj_transpose, kronecker_conj_transpose,
-        tensor_op_star_apply, op, linear_equiv.coe_coe, mul_opposite.coe_op_linear_equiv,
-        transpose_alg_equiv_symm_op_apply],
-      let y' := (unop : ℍᵐᵒᵖ →ₗ[ℂ] ℍ) y₂,
-      have : y₂ = mul_opposite.op y' := rfl,
-      simp only [this, transpose_alg_equiv_symm_op_apply, unop, linear_equiv.coe_coe,
-        mul_opposite.coe_op_linear_equiv_symm, mul_opposite.unop_op],
-      have : (y'ᴴ)ᵀ = y'ᵀᴴ := by ext1; simp only [transpose_apply, conj_transpose_apply],
-      simp_rw [this], },
-    { simp only [mul_add, map_add, conj_transpose_add, star_add],
-      intros z w hz hw,
-      rw [hz, hw],
-       },
-       },
-end
+star_alg_equiv.of_alg_equiv ( (alg_equiv.tensor_product.map (1 : ℍ ≃ₐ[ℂ] ℍ)
+          (transpose_alg_equiv n ℂ ℂ).symm).trans tensor_to_kronecker)
+(begin
+  intro x,
+  simp only [alg_equiv.trans_apply],
+  apply x.induction_on,
+  { simp only [star_zero, map_zero], },
+  { intros x₁ x₂,
+    let x₂' : ℍ := mul_opposite.unop x₂,
+    have : x₂ = mul_opposite.op x₂' := rfl,
+    simp only [tensor_product.star_tmul,
+      alg_equiv.tensor_product.map,
+      alg_equiv.coe_mk, algebra.tensor_product.map_tmul,
+      alg_equiv.to_alg_hom_eq_coe, alg_equiv.coe_alg_hom,
+      alg_equiv.one_apply],
+    simp_rw [this, ← mul_opposite.op_star, transpose_alg_equiv_symm_op_apply,
+      tensor_to_kronecker, alg_equiv.coe_mk,
+      tensor_product.to_kronecker_star, tensor_product.star_tmul,
+      star_eq_conj_transpose,
+      ← matrix.conj_eq_transpose_conj_transpose,
+      ← matrix.conj_eq_conj_transpose_transpose], },
+  { intros a b ha hb,
+    simp only [map_add, star_add, ha, hb], },
+end)
 
 lemma one_map_transpose_eq (x : ℍ ⊗[ℂ] ℍᵐᵒᵖ) :
   (one_map_transpose : (ℍ ⊗[ℂ] ℍᵐᵒᵖ) ≃⋆ₐ[ℂ] _) x = ((tensor_product.map (1 : l(ℍ))

@@ -64,35 +64,12 @@ noncomputable def qam.refl_idempotent (hφ : φ.is_faithful_pos_map) :
   l(ℍ) →ₗ[ℂ] l(ℍ) →ₗ[ℂ] l(ℍ) :=
 begin
   letI := fact.mk hφ,
-  exact { to_fun := λ x,
-    { to_fun := λ y, m ∘ₗ (x ⊗ₘ y) ∘ₗ (m).adjoint,
-      map_add' := λ x y, by { simp only [tensor_product.map_add_right, linear_map.add_comp,
-        linear_map.comp_add], },
-      map_smul' := λ r x, by { simp only [tensor_product.map_smul_right, linear_map.smul_comp,
-        linear_map.comp_smul, ring_hom.id_apply], } },
-    map_add' := λ x y, by { simp only [tensor_product.map_add_left, linear_map.add_comp,
-      linear_map.comp_add, linear_map.ext_iff, linear_map.add_apply, linear_map.coe_mk],
-      intros _ _, refl, },
-    map_smul' := λ r x, by { simp only [tensor_product.map_smul_left, linear_map.smul_comp,
-      linear_map.comp_smul, linear_map.ext_iff, linear_map.smul_apply, linear_map.coe_mk,
-      ring_hom.id_apply],
-      intros _ _, refl, }, },
+  exact schur_idempotent,
 end
 
 lemma qam.rank_one.refl_idempotent_eq [hφ : fact φ.is_faithful_pos_map] (a b c d : ℍ) :
   qam.refl_idempotent hφ.elim (↑|a⟩⟨b|) (↑|c⟩⟨d|) = |a ⬝ c⟩⟨b ⬝ d| :=
-begin
-  rw [qam.refl_idempotent, linear_map.ext_iff_inner_map],
-  intros x,
-  simp only [continuous_linear_map.coe_coe, linear_map.coe_mk, rank_one_apply,
-    linear_map.comp_apply],
-  obtain ⟨α, β, h⟩ := tensor_product.eq_span ((linear_map.mul' ℂ ℍ).adjoint x),
-  rw ← h,
-  simp_rw [map_sum, tensor_product.map_tmul, continuous_linear_map.coe_coe, rank_one_apply,
-    linear_map.mul'_apply, smul_mul_smul, ← tensor_product.inner_tmul, ← finset.sum_smul,
-    ← inner_sum, h, linear_map.adjoint_inner_right, linear_map.mul'_apply],
-  refl,
-end
+schur_idempotent.apply_rank_one a b c d
 
 open tensor_product
 
@@ -684,16 +661,10 @@ rfl
 lemma qam.reflexive_eq_rank_one (a b : ℍ) :
   qam.refl_idempotent hφ.elim (|a⟩⟨b|) 1 = linear_map.mul_left ℂ (a ⬝ bᴴ) :=
 begin
-  simp_rw [linear_map.ext_iff_inner_map],
-  intros u,
-  let f := @module.dual.is_faithful_pos_map.orthonormal_basis n _ _ φ _,
-  rw [← rank_one.sum_orthonormal_basis_eq_id_lm f],
-  simp_rw [map_sum, linear_map.sum_apply, qam.rank_one.refl_idempotent_eq,
-    continuous_linear_map.coe_coe, rank_one_apply, linear_map.mul_left_apply,
-    sum_inner, mul_eq_mul, inner_product_space.core.inner_smul_left,
-    module.dual.is_faithful_pos_map.inner_left_mul _ (f _), inner_conj_symm,
-    orthonormal_basis.sum_inner_mul_inner, ← module.dual.is_faithful_pos_map.inner_left_mul,
-    matrix.mul_assoc],
+  have : ∀ x y : ℍ, ⟪x, y⟫_ℂ = φ (star x * y) := module.dual.is_faithful_pos_map.inner_eq,
+  rw [← mul_eq_mul, linear_map.mul_left_mul,
+    ← lmul_eq_mul bᴴ, ← star_eq_conj_transpose, ← lmul_adjoint this],
+  exact schur_idempotent_one_right_rank_one this _ _,
 end
 
 lemma qam.reflexive'_eq_rank_one (a b : ℍ) :

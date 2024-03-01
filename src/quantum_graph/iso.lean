@@ -227,7 +227,8 @@ lemma qam.refl_idempotent_star_alg_equiv_conj [hφ : fact φ.is_faithful_pos_map
   = f.to_alg_equiv.to_linear_map ∘ₗ (qam.refl_idempotent hφ.elim A B)
     ∘ₗ f.symm.to_alg_equiv.to_linear_map :=
 begin
-  simp only [qam.refl_idempotent, linear_map.coe_mk, tensor_product.map_comp,
+  simp only [qam.refl_idempotent, schur_idempotent,
+    linear_map.coe_mk, tensor_product.map_comp,
     ← linear_map.comp_assoc, f.commutes_with_mul'],
   have : f.symm.is_isometry,
   { simp_rw [star_alg_equiv.is_isometry] at hf ⊢,

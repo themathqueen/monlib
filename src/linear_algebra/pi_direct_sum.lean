@@ -187,7 +187,83 @@ lemma direct_sum_tensor_apply
   direct_sum_tensor (x ⊗ₜ[R] y) i = x i.1 ⊗ₜ[R] y i.2 :=
 rfl
 
-@[ext] lemma pi.tensor_ext_iff
+lemma direct_sum_tensor_to_fun.map_mul
+  {R : Type*} [comm_ring R] {ι₁ : Type*} {ι₂ : Type*} [decidable_eq ι₁]
+  [decidable_eq ι₂] [fintype ι₁] [fintype ι₂]
+  {M₁ : ι₁ → Type*} {M₂ : ι₂ → Type*} [Π (i₁ : ι₁), ring (M₁ i₁)]
+  [Π (i₂ : ι₂), ring (M₂ i₂)] [Π (i₁ : ι₁), algebra R (M₁ i₁)]
+  [Π (i₂ : ι₂), algebra R (M₂ i₂)] (x y : (Π i, M₁ i) ⊗[R] (Π i, M₂ i)) :
+  direct_sum_tensor_to_fun (x * y)
+    = direct_sum_tensor_to_fun x * direct_sum_tensor_to_fun y :=
+begin
+  apply x.induction_on,
+  { simp only [zero_mul, map_zero], },
+  { intros x₁ x₂,
+    apply y.induction_on,
+    { simp only [mul_zero, map_zero], },
+    { intros y₁ y₂,
+      ext1,
+      simp only [pi.mul_apply, direct_sum_tensor_to_fun_apply,
+        algebra.tensor_product.tmul_mul_tmul], },
+    { intros y₁ y₂ hy₁ hy₂,
+      simp only [mul_add, map_add, hy₁, hy₂], }, },
+  { intros x₁ x₂ hx hy,
+    simp only [add_mul, map_add, hx, hy], },
+end
+
+-- @[instance] def pi_prod_tensor.semiring (R : Type*) {ι₁ ι₂ : Type*} [comm_ring R]
+--   (φ : ι₁ → Type*) (ψ : ι₂ → Type*)
+--   [Π i, add_comm_monoid (φ i)] [Π i, module R (φ i)]
+--   [Π i, add_comm_monoid (ψ i)] [Π i, module R (ψ i)] :
+--   semiring ((Π i, φ i) ⊗[R] (Π i, ψ i)) :=
+-- begin
+  
+-- end
+
+@[instance] def pi_prod_tensor.algebra {R : Type*} {ι₁ ι₂ : Type*} [comm_ring R]
+  {φ : ι₁ → Type*} {ψ : ι₂ → Type*}
+  [Π i, ring (φ i)] [Π i, ring (ψ i)]
+  [Π i, algebra R (ψ i)] [Π i, algebra R (φ i)] :
+  algebra R (Π i : ι₁ × ι₂, (φ i.1) ⊗[R] (ψ i.2)) :=
+by { apply pi.algebra _ _,
+  intros i,
+  apply_instance, }
+
+lemma direct_sum_tensor_to_fun.map_one {R : Type*} [comm_ring R] {ι₁ : Type*} {ι₂ : Type*}
+  [decidable_eq ι₁] [decidable_eq ι₂] [fintype ι₁] [fintype ι₂]
+  {M₁ : ι₁ → Type*} {M₂ : ι₂ → Type*} [Π (i₁ : ι₁), ring (M₁ i₁)]
+  [Π (i₂ : ι₂), ring (M₂ i₂)] [Π (i₁ : ι₁), algebra R (M₁ i₁)]
+  [Π (i₂ : ι₂), algebra R (M₂ i₂)] :
+  direct_sum_tensor_to_fun (1 : (Π i, M₁ i) ⊗[R] (Π i, M₂ i)) = 1 :=
+rfl
+
+@[simps] def direct_sum_tensor_alg_equiv
+  (R : Type*) {ι₁ ι₂ : Type*} [comm_ring R] [fintype ι₁] [fintype ι₂]
+  [decidable_eq ι₁] [decidable_eq ι₂]
+  (M₁ : ι₁ → Type*) (M₂ : ι₂ → Type*)
+  [Π (i₁ : ι₁), ring (M₁ i₁)] [Π (i₂ : ι₂), ring (M₂ i₂)]
+  [Π (i₁ : ι₁), algebra R (M₁ i₁)] [Π (i₂ : ι₂), algebra R (M₂ i₂)] :
+  ((Π i, M₁ i) ⊗[R] (Π i, M₂ i)) ≃ₐ[R] (Π i : ι₁ × ι₂, M₁ i.fst ⊗[R] M₂ i.snd) :=
+{ to_fun := λ x i, direct_sum_tensor_to_fun x i,
+  inv_fun := λ x, (direct_sum_tensor_inv_fun : _ →ₗ[R] _)
+    (x : Π i : ι₁ × ι₂, M₁ i.fst ⊗[R] M₂ i.snd),
+  right_inv := λ x, by 
+  { simp only [],
+    rw [direct_sum_tensor_to_fun_apply_inv_fun], },
+  left_inv := λ x, by
+  { simp only [],
+    rw [direct_sum_tensor_inv_fun_apply_to_fun], },
+  map_add' := λ x y, by simp only [map_add],
+  map_mul' := λ x y, by
+  { ext,
+    simp only [],
+    rw direct_sum_tensor_to_fun.map_mul, },
+  commutes' := λ r, by
+  { ext,
+    simp_rw [algebra.algebra_map_eq_smul_one, smul_hom_class.map_smul,
+      pi.smul_apply, direct_sum_tensor_to_fun.map_one], } }
+
+lemma pi.tensor_ext_iff
   {R : Type*} [comm_ring R] {ι₁ : Type*} {ι₂ : Type*} [decidable_eq ι₁]
   [decidable_eq ι₂] [fintype ι₁] [fintype ι₂]
   {M₁ : ι₁ → Type*} {M₂ : ι₂ → Type*} [Π (i₁ : ι₁), add_comm_group (M₁ i₁)]
@@ -197,6 +273,18 @@ rfl
 begin
   rw ← function.injective.eq_iff (direct_sum_tensor : (Π i, M₁ i) ⊗[R] (Π i, M₂ i) ≃ₗ[R] Π i : ι₁ × ι₂, M₁ i.fst ⊗[R] M₂ i.snd).injective,
   simp_rw [function.funext_iff, direct_sum_tensor_apply, prod.forall],
+end
+
+@[ext] lemma pi.tensor_ext
+  {R : Type*} [comm_ring R] {ι₁ : Type*} {ι₂ : Type*} [decidable_eq ι₁]
+  [decidable_eq ι₂] [fintype ι₁] [fintype ι₂]
+  {M₁ : ι₁ → Type*} {M₂ : ι₂ → Type*} [Π (i₁ : ι₁), add_comm_group (M₁ i₁)]
+  [Π (i₂ : ι₂), add_comm_group (M₂ i₂)] [Π (i₁ : ι₁), module R (M₁ i₁)]
+  [Π (i₂ : ι₂), module R (M₂ i₂)] (x z : (Π i, M₁ i)) (y w : (Π i, M₂ i)) :
+  (∀ i j, x i ⊗ₜ[R] y j = z i ⊗ₜ[R] w j) → x ⊗ₜ[R] y = z ⊗ₜ[R] w :=
+begin
+  rw [pi.tensor_ext_iff],
+  simp only [imp_self],
 end
 
 
