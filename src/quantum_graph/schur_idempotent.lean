@@ -201,6 +201,49 @@ begin
     schur_idempotent_one_right_aux hψ, star_star],
 end
 
+lemma pi.pos_def.rpow_one_eq_self {Q : 𝔹} (hQ : Π i, (Q i).pos_def) :
+  pi.pos_def.rpow hQ 1 = Q :=
+begin
+  ext1 i,
+  simp only [pi.pos_def.rpow, pos_def.rpow_one_eq_self],
+end
+
+lemma pi.pos_def.rpow_neg_one_eq_inv_self {Q : 𝔹} (hQ : Π i, (Q i).pos_def) :
+  pi.pos_def.rpow hQ (-1) = Q⁻¹ :=
+begin
+  ext1 i,
+  simp only [pi.pos_def.rpow, pos_def.rpow_neg_one_eq_inv_self, pi.inv_apply],
+end
+
+lemma module.dual.pi.is_faithful_pos_map.inner_left_conj'
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (a b c : Π i, matrix (s i) (s i) ℂ) :
+  ⟪a, b * c⟫_ℂ = ⟪a * module.dual.pi.is_faithful_pos_map.sig hψ (-1) (star c), b⟫_ℂ :=
+begin
+  simp_rw [module.dual.pi.is_faithful_pos_map.sig_apply, neg_neg,
+    pi.pos_def.rpow_one_eq_self, pi.pos_def.rpow_neg_one_eq_inv_self,
+    ← module.dual.pi.matrix_block_apply, ← module.dual.pi.is_faithful_pos_map.inner_left_conj],
+end
+lemma module.dual.pi.is_faithful_pos_map.inner_right_conj'
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (a b c : Π i, matrix (s i) (s i) ℂ) :
+  ⟪a * c, b⟫_ℂ = ⟪a, b * module.dual.pi.is_faithful_pos_map.sig hψ (-1) (star c)⟫_ℂ :=
+begin
+  rw [← inner_conj_symm, module.dual.pi.is_faithful_pos_map.inner_left_conj', inner_conj_symm],
+end
+
+
+lemma rmul_adjoint {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (a : 𝔹) :
+  (rmul a : l(𝔹)).adjoint
+    = rmul (module.dual.pi.is_faithful_pos_map.sig hψ (-1) (star a)) :=
+begin
+  rw [linear_map.ext_iff_inner_map],
+  intros u,
+  simp_rw [linear_map.adjoint_inner_left,
+    rmul_apply, module.dual.pi.is_faithful_pos_map.inner_left_conj'],
+end
+
 lemma continuous_linear_map.linear_map_adjoint {𝕜 B C : Type*} [is_R_or_C 𝕜]
   [normed_add_comm_group B]
   [normed_add_comm_group C]
@@ -290,33 +333,125 @@ begin
     lmul_adjoint hψ, lmul_apply],
 end
 
--- lemma schur_idempotent_one_left_rank_one
---   {B : Type*}
---   [normed_ring B]
---   [inner_product_space ℂ B]
---   [smul_comm_class ℂ B B]
---   [is_scalar_tower ℂ B B]
---   [finite_dimensional ℂ B]
---   [star_semigroup B]
---   {ψ : module.dual ℂ B} (hψ : ∀ a b, ⟪a, b⟫_ℂ = ψ (star a * b))
---   (a b : B) :
---   schur_idempotent (1 : l(B)) (↑|a⟩⟨b|)
---     = (rmul a : l(B)) * (rmul b : l(B)).adjoint :=
--- begin
---   simp_rw [← ext_inner_map],
---   intros u,
---   let f := std_orthonormal_basis ℂ B,
---   rw [← rank_one.sum_orthonormal_basis_eq_id_lm f, map_sum, linear_map.sum_apply],
---   simp_rw [schur_idempotent.apply_rank_one, linear_map.sum_apply,
---     continuous_linear_map.coe_coe, rank_one_apply,
---     linear_map.mul_apply, rmul_apply, sum_inner,
---     inner_smul_left,
---     linear_map.is_faithful_pos_map.inner_right_conj _ a,
---     linear_map.is_faithful_pos_map.inner_right_conj _ b,
---     inner_conj_symm, orthonormal_basis.sum_inner_mul_inner,
---     ← linear_map.is_faithful_pos_map.inner_right_conj, linear_map.is_faithful_pos_map.sig_apply,
---     neg_neg, pos_def.rpow_one_eq_self, pos_def.rpow_neg_one_eq_inv_self, matrix.mul_assoc],
--- end
+lemma matrix.cast_apply
+  {i j : n} (x : matrix (s i) (s i) ℂ)
+  (h : i = j)
+  (p q : s j) :
+  (by rw [h] : matrix (s i) (s i) ℂ = matrix (s j) (s j) ℂ).mp x p q = x (by rw [h]; exact p) (by rw [h]; exact q) :=
+begin
+  tidy,
+end
+lemma matrix.cast_mul
+  {i j : n} (x y : matrix (s i) (s i) ℂ)
+  (h : i = j) :
+  (by rw [h] : matrix (s i) (s i) ℂ = matrix (s j) (s j) ℂ).mp (x * y)
+    = (by rw [h] : matrix (s i) (s i) ℂ = matrix (s j) (s j) ℂ).mp x
+      * (by rw [h] : matrix (s i) (s i) ℂ = matrix (s j) (s j) ℂ).mp y :=
+begin
+  tidy,
+end
+lemma module.dual.pi.is_faithful_pos_map.basis.apply_cast_eq_mp
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] {i j : n}
+  (h : i = j)
+  (p : s i × s i) :
+  (by rw [h] : matrix (s i) (s i) ℂ = matrix (s j) (s j) ℂ).mp ((hψ i).elim.basis p)
+  = (hψ j).elim.basis (by rw [← h]; exact p) :=
+begin
+  tidy,
+end
+
+lemma pi_lmul_to_matrix
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (x : 𝔹) :
+  (module.dual.pi.is_faithful_pos_map.to_matrix (λ i, (hψ i).elim) (lmul x : l(𝔹))
+    : matrix (Σ i, s i × s i) (Σ i, s i × s i) ℂ)
+    = block_diagonal' (λ i, (x i) ⊗ₖ 1) :=
+begin
+  ext1 r l,
+  simp_rw [module.dual.pi.is_faithful_pos_map.to_matrix_apply', lmul_apply,
+    mul_include_block, include_block_apply, mul_apply,
+    dite_apply, dite_mul, pi.zero_apply, zero_mul,
+    finset.sum_dite_irrel, ← mul_apply, block_diagonal'_apply, kronecker_map, of_apply,
+    @eq_comm _ r.fst, one_apply, mul_boole, matrix.cast_mul,
+    module.dual.pi.is_faithful_pos_map.basis.apply_cast_eq_mp,
+    mul_eq_mul,
+    matrix.mul_assoc, module.dual.is_faithful_pos_map.basis_apply, matrix.mul_assoc,
+    pos_def.rpow_mul_rpow, neg_add_self, pos_def.rpow_zero, matrix.mul_one,
+    mul_apply, std_basis_matrix, mul_boole, ite_and, finset.sum_ite_eq,
+    finset.mem_univ, if_true, @eq_comm _ r.snd.snd, finset.sum_const_zero,
+    eq_mpr_eq_cast],
+  congr' 2,
+  ext1 h,
+  tidy,
+end
+lemma pi_rmul_to_matrix
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (x : 𝔹) :
+  (module.dual.pi.is_faithful_pos_map.to_matrix (λ i, (hψ i).elim) (rmul x : l(𝔹))
+    : matrix (Σ i, s i × s i) (Σ i, s i × s i) ℂ)
+    = block_diagonal' (λ i, 1 ⊗ₖ ((hψ i).elim.sig (1/2) (x i))ᵀ) :=
+begin
+  ext1 r l,
+  simp_rw [module.dual.pi.is_faithful_pos_map.to_matrix_apply', rmul_apply,
+    include_block_mul, include_block_apply, mul_apply,
+    dite_apply, dite_mul, pi.zero_apply, zero_mul,
+    finset.sum_dite_irrel, ← mul_apply, block_diagonal'_apply, kronecker_map, of_apply,
+    @eq_comm _ r.fst, one_apply, mul_boole, matrix.cast_mul,
+    module.dual.pi.is_faithful_pos_map.basis.apply_cast_eq_mp,
+    mul_eq_mul,
+    matrix.mul_assoc, module.dual.is_faithful_pos_map.basis_apply, matrix.mul_assoc,
+    ← matrix.mul_assoc (pos_def.rpow _ _) _ (pos_def.rpow _ (1/2 : ℝ)),
+    ← module.dual.is_faithful_pos_map.sig_apply,
+    mul_apply, std_basis_matrix, boole_mul, ite_and,
+    finset.sum_ite_irrel, finset.sum_const_zero, finset.sum_ite_eq,
+    finset.mem_univ, if_true, transpose_apply, finset.sum_const_zero,
+    eq_mpr_eq_cast, @eq_comm _ r.snd.1],
+  congr' 2,
+  ext1 h,
+  tidy,
+end
+lemma schur_idempotent_one_left_rank_one
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (a b : 𝔹) :
+  schur_idempotent (1 : l(𝔹)) (|a⟩⟨b|)
+    = (rmul a : l(𝔹)) * (rmul b : l(𝔹)).adjoint :=
+begin
+  simp_rw [← ext_inner_map],
+  intros u,
+  let f := std_orthonormal_basis ℂ 𝔹,
+  rw [← rank_one.sum_orthonormal_basis_eq_id_lm f, map_sum, linear_map.sum_apply],
+  simp_rw [schur_idempotent.apply_rank_one, linear_map.sum_apply,
+    continuous_linear_map.coe_coe, rank_one_apply,
+    linear_map.mul_apply, rmul_apply, sum_inner,
+    inner_smul_left,
+    module.dual.pi.is_faithful_pos_map.inner_right_conj',
+    inner_conj_symm, orthonormal_basis.sum_inner_mul_inner,
+    ← module.dual.pi.is_faithful_pos_map.inner_right_conj',
+    rmul_adjoint, rmul_apply],
+end
+
+lemma linear_map.pi.adjoint_real_eq
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (f : 𝔹 →ₗ[ℂ] 𝔹) :
+  (f.adjoint).real
+    = (module.dual.pi.is_faithful_pos_map.sig hψ 1).to_linear_map
+      ∘ₗ (f.real).adjoint
+      ∘ₗ (module.dual.pi.is_faithful_pos_map.sig hψ (-1)).to_linear_map :=
+begin
+  rw [← ext_inner_map],
+  intros u,
+  nth_rewrite_lhs 0 pi.inner_symm,
+  simp_rw [linear_map.real_eq, star_star, linear_map.adjoint_inner_right],
+  nth_rewrite_lhs 0 pi.inner_symm,
+  simp_rw [star_star, ← module.dual.pi.is_faithful_pos_map.sig_star,
+    ← linear_map.real_eq f, linear_map.comp_apply, ← linear_map.adjoint_inner_left (f.real),
+    ← alg_equiv.to_linear_map_apply, ← linear_map.adjoint_inner_left
+      (module.dual.pi.is_faithful_pos_map.sig hψ 1).to_linear_map,
+    module.dual.pi.is_faithful_pos_map.sig_adjoint],
+end
 
 -- open tensor_product
 
@@ -342,20 +477,6 @@ end
 --     map_smul' := λ r x, by {
 --       simp only [tensor_product.map_smul, tensor_product.smul_map, linear_map.smul_comp,
 --         linear_map.comp_smul, ring_hom.id_apply], } },
--- end
-
--- lemma pi.pos_def.rpow_one_eq_self {Q : 𝔹} (hQ : Π i, (Q i).pos_def) :
---   pi.pos_def.rpow hQ 1 = Q :=
--- begin
---   ext1 i,
---   simp only [pi.pos_def.rpow, pos_def.rpow_one_eq_self],
--- end
-
--- lemma pi.pos_def.rpow_neg_one_eq_inv_self {Q : 𝔹} (hQ : Π i, (Q i).pos_def) :
---   pi.pos_def.rpow hQ (-1) = Q⁻¹ :=
--- begin
---   ext1 i,
---   simp only [pi.pos_def.rpow, pos_def.rpow_neg_one_eq_inv_self, pi.inv_apply],
 -- end
 
 -- lemma pi.qam.rank_one.symmetric_eq [h℘ : Π i, fact (℘ i).is_faithful_pos_map] (a b : 𝔹) :
@@ -440,11 +561,6 @@ end
 --   by { rw [inner_smul_left], },
 -- end
 
--- lemma rank_one_lm_eq_rank_one {𝕜 E : Type*} [is_R_or_C 𝕜]
---   [normed_add_comm_group E] [inner_product_space 𝕜 E] (x y : E) :
---   (rank_one_lm x y : E →ₗ[𝕜] E) = (rank_one x y : E →L[𝕜] E) :=
--- rfl
-
 -- lemma pi.qam.symm_adjoint_eq_symm'_of_adjoint [h℘ : Π i, fact (℘ i).is_faithful_pos_map] (x : l(𝔹)) :
 --   (qam.symm (λ i, (h℘ i).elim) x).adjoint = qam.symm' (λ i, (h℘ i).elim) (x.adjoint) :=
 -- begin
@@ -469,25 +585,6 @@ end
 --   apply @pi.star_module _ _ ℂ _ _ _ _,
 --   exact λ i, matrix.star_module,
 -- }
-
--- lemma linear_map.direct_sum.adjoint_real_eq [h℘ : Π i, fact (℘ i).is_faithful_pos_map]
---   (f : 𝔹 →ₗ[ℂ] 𝔹) :
---   (f.adjoint).real
---     = (linear_map.is_faithful_pos_map.direct_sum.sig h℘ 1).to_linear_map
---       ∘ₗ (f.real).adjoint
---       ∘ₗ (linear_map.is_faithful_pos_map.direct_sum.sig h℘ (-1)).to_linear_map :=
--- begin
---   rw [← ext_inner_map],
---   intros u,
---   nth_rewrite_lhs 0 direct_sum.inner_symm,
---   simp_rw [linear_map.real_eq, star_star, linear_map.adjoint_inner_right],
---   nth_rewrite_lhs 0 direct_sum.inner_symm,
---   simp_rw [star_star, ← linear_map.is_faithful_pos_map.direct_sum.sig_star,
---     ← linear_map.real_eq f, linear_map.comp_apply, ← linear_map.adjoint_inner_left (f.real),
---     ← alg_equiv.to_linear_map_apply, ← linear_map.adjoint_inner_left
---       (linear_map.is_faithful_pos_map.direct_sum.sig h℘ 1).to_linear_map,
---     linear_map.is_faithful_pos_map.direct_sum.sig_adjoint],
--- end
 
 -- lemma linear_map.is_faithful_pos_map.direct_sum.sig_trans_sig
 --   [h℘ : Π i, fact (℘ i).is_faithful_pos_map]
