@@ -231,28 +231,36 @@ begin
     rank_one.adjoint, schur_idempotent.apply_rank_one],
 end
 
--- lemma schur_idempotent_real
--- -- {B : Type*}
--- --   [normed_add_comm_group_of_ring B]
--- --   [inner_product_space ℂ B]
--- --   [smul_comm_class ℂ B B]
--- --   [is_scalar_tower ℂ B B]
--- --   [finite_dimensional ℂ B]
--- --   [star_ring B]
--- --   [star_module ℂ B]
---   -- {ψ : module.dual ℂ B} (hψ : ∀ a b, ⟪a, b⟫_ℂ = ψ (star a * b))
---   {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
---   [hψ : Π i, fact (ψ i).is_faithful_pos_map]
---   (x y : l(𝔹)) :
---   (schur_idempotent x y : l(𝔹)).real =
---     schur_idempotent y.real x.real :=
--- begin
---   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
---   obtain ⟨γ, ζ, rfl⟩ := y.exists_sum_rank_one,
---   simp only [map_sum, linear_map.real_sum, linear_map.sum_apply,
---     schur_idempotent.apply_rank_one],
---   rw finset.sum_comm,
--- end
+lemma rank_one_lm_eq_rank_one {𝕜 E : Type*} [is_R_or_C 𝕜]
+  [normed_add_comm_group E] [inner_product_space 𝕜 E] (x y : E) :
+  (rank_one_lm x y : E →ₗ[𝕜] E) = (rank_one x y : E →L[𝕜] E) :=
+rfl
+
+lemma schur_idempotent_real
+-- {B : Type*}
+--   [normed_add_comm_group_of_ring B]
+--   [inner_product_space ℂ B]
+--   [smul_comm_class ℂ B B]
+--   [is_scalar_tower ℂ B B]
+--   [finite_dimensional ℂ B]
+--   [star_ring B]
+--   [star_module ℂ B]
+  -- {ψ : module.dual ℂ B} (hψ : ∀ a b, ⟪a, b⟫_ℂ = ψ (star a * b))
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (x y : l(𝔹)) :
+  (schur_idempotent x y : l(𝔹)).real =
+    schur_idempotent y.real x.real :=
+begin
+  obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
+  obtain ⟨γ, ζ, rfl⟩ := y.exists_sum_rank_one,
+  simp only [map_sum, linear_map.real_sum, linear_map.sum_apply,
+    schur_idempotent.apply_rank_one],
+  simp_rw [← rank_one_lm_eq_rank_one, pi.rank_one_lm_real_apply,
+    rank_one_lm_eq_rank_one, schur_idempotent.apply_rank_one,
+    ← _root_.map_mul, ← star_semigroup.star_mul],
+  rw finset.sum_comm,
+end
 
 lemma schur_idempotent_one_right_rank_one
   {B : Type*}

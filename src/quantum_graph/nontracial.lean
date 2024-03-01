@@ -163,11 +163,6 @@ begin
   by { rw [inner_smul_left], },
 end
 
-lemma rank_one_lm_eq_rank_one {𝕜 E : Type*} [is_R_or_C 𝕜]
-  [normed_add_comm_group E] [inner_product_space 𝕜 E] (x y : E) :
-  (rank_one_lm x y : E →ₗ[𝕜] E) = (rank_one x y : E →L[𝕜] E) :=
-rfl
-
 lemma qam.symm_adjoint_eq_symm'_of_adjoint (x : l(ℍ)) :
   (qam.symm hφ.elim x).adjoint = qam.symm' hφ.elim (x.adjoint) :=
 begin

@@ -1416,4 +1416,17 @@ instance pi.matrix.has_continuous_smul :
   has_continuous_smul ℂ ℍ₂ :=
 by { apply_instance, }
 
+lemma pi.rank_one_lm_real_apply
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (x y : ℍ₂) :
+  linear_map.real (rank_one_lm x y : ℍ₂ →ₗ[ℂ] ℍ₂)
+    = rank_one_lm (star x) (module.dual.pi.is_faithful_pos_map.sig hψ (-1) (star y)) :=
+begin
+  ext1,
+  simp_rw [rank_one_lm_apply, linear_map.real_eq, rank_one_lm_apply],
+  have : ⟪star x_1, y⟫_ℂ = _ := pi.inner_symm (star x_1) y,
+  rw [star_star] at this,
+  rw [← this, star_smul, ← star_ring_end_apply, inner_conj_symm],
+end
+
 end direct_sum
