@@ -1304,7 +1304,7 @@ begin
     mul_opposite.op_unop],
 end
 
-@[simps] noncomputable def module.dual.is_faithful_pos_map.direct_sum.Psi
+@[simps] noncomputable def module.dual.pi.is_faithful_pos_map.Psi
   (hψ : Π i, fact (ψ i).is_faithful_pos_map) (t r : ℝ) :
   l(ℍ₂) ≃ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂ᵐᵒᵖ) :=
 begin
@@ -1427,6 +1427,120 @@ begin
   have : ⟪star x_1, y⟫_ℂ = _ := pi.inner_symm (star x_1) y,
   rw [star_star] at this,
   rw [← this, star_smul, ← star_ring_end_apply, inner_conj_symm],
+end
+
+lemma pi.pos_def.rpow_one_eq_self {Q : ℍ₂} (hQ : Π i, (Q i).pos_def) :
+  pi.pos_def.rpow hQ 1 = Q :=
+begin
+  ext1 i,
+  simp only [pi.pos_def.rpow, pos_def.rpow_one_eq_self],
+end
+
+lemma pi.pos_def.rpow_neg_one_eq_inv_self {Q : ℍ₂} (hQ : Π i, (Q i).pos_def) :
+  pi.pos_def.rpow hQ (-1) = Q⁻¹ :=
+begin
+  ext1 i,
+  simp only [pi.pos_def.rpow, pos_def.rpow_neg_one_eq_inv_self, pi.inv_apply],
+end
+
+lemma module.dual.pi.is_faithful_pos_map.inner_left_conj'
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (a b c : Π i, matrix (s i) (s i) ℂ) :
+  ⟪a, b * c⟫_ℂ = ⟪a * module.dual.pi.is_faithful_pos_map.sig hψ (-1) (star c), b⟫_ℂ :=
+begin
+  simp_rw [module.dual.pi.is_faithful_pos_map.sig_apply, neg_neg,
+    pi.pos_def.rpow_one_eq_self, pi.pos_def.rpow_neg_one_eq_inv_self,
+    ← module.dual.pi.matrix_block_apply, ← module.dual.pi.is_faithful_pos_map.inner_left_conj],
+end
+lemma module.dual.pi.is_faithful_pos_map.inner_right_conj'
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (a b c : Π i, matrix (s i) (s i) ℂ) :
+  ⟪a * c, b⟫_ℂ = ⟪a, b * module.dual.pi.is_faithful_pos_map.sig hψ (-1) (star c)⟫_ℂ :=
+begin
+  rw [← inner_conj_symm, module.dual.pi.is_faithful_pos_map.inner_left_conj', inner_conj_symm],
+end
+
+lemma moudle.dual.pi.is_faithful_pos_map.sig_trans_sig
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (x y : ℝ) :
+  (module.dual.pi.is_faithful_pos_map.sig hψ y).trans
+    (module.dual.pi.is_faithful_pos_map.sig hψ x)
+  = module.dual.pi.is_faithful_pos_map.sig hψ (x + y) :=
+begin
+  ext1,
+  simp_rw [alg_equiv.trans_apply, module.dual.pi.is_faithful_pos_map.sig_apply_sig],
+end
+
+lemma module.dual.pi.is_faithful_pos_map.sig_comp_sig
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (x y : ℝ) :
+  (module.dual.pi.is_faithful_pos_map.sig hψ x).to_linear_map
+    .comp
+      (module.dual.pi.is_faithful_pos_map.sig hψ y).to_linear_map
+  = (module.dual.pi.is_faithful_pos_map.sig hψ (x + y)).to_linear_map :=
+by ext1; simp_rw [linear_map.comp_apply, alg_equiv.to_linear_map_apply, module.dual.pi.is_faithful_pos_map.sig_apply_sig]
+
+lemma module.dual.pi.is_faithful_pos_map.sig_zero'
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] :
+  module.dual.pi.is_faithful_pos_map.sig hψ 0 = 1 :=
+begin
+  rw alg_equiv.ext_iff,
+  intros,
+  rw [module.dual.pi.is_faithful_pos_map.sig_zero],
+  refl,
+end
+
+lemma pi.comp_sig_eq_iff [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (t : ℝ) (f g : ℍ₂ →ₗ[ℂ] ℍ₂) :
+  f ∘ₗ (module.dual.pi.is_faithful_pos_map.sig hψ t).to_linear_map = g
+    ↔ f = g ∘ₗ (module.dual.pi.is_faithful_pos_map.sig hψ (-t)).to_linear_map :=
+begin
+  split; rintros rfl,
+  all_goals
+  { rw [linear_map.comp_assoc, module.dual.pi.is_faithful_pos_map.sig_comp_sig], },
+  work_on_goal 1 { rw add_neg_self },
+  work_on_goal 2 { rw neg_add_self },
+  all_goals { rw [module.dual.pi.is_faithful_pos_map.sig_zero', alg_equiv.one_to_linear_map,
+      linear_map.comp_one], },
+end
+
+lemma pi.sig_comp_eq_iff [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (t : ℝ) (f g : ℍ₂ →ₗ[ℂ] ℍ₂) :
+  (module.dual.pi.is_faithful_pos_map.sig hψ t).to_linear_map ∘ₗ f = g
+    ↔ f = (module.dual.pi.is_faithful_pos_map.sig hψ (-t)).to_linear_map ∘ₗ g :=
+begin
+  split; rintros rfl,
+  all_goals
+  { rw [← linear_map.comp_assoc, module.dual.pi.is_faithful_pos_map.sig_comp_sig], },
+  work_on_goal 1 { rw neg_add_self },
+  work_on_goal 2 { rw add_neg_self },
+  all_goals { rw [module.dual.pi.is_faithful_pos_map.sig_zero', alg_equiv.one_to_linear_map,
+      linear_map.one_comp], },
+end
+
+lemma rank_one_lm_eq_rank_one {𝕜 E : Type*} [is_R_or_C 𝕜]
+  [normed_add_comm_group E] [inner_product_space 𝕜 E] (x y : E) :
+  (rank_one_lm x y : E →ₗ[𝕜] E) = (rank_one x y : E →L[𝕜] E) :=
+rfl
+
+lemma linear_map.pi.adjoint_real_eq
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (f : ℍ₂ →ₗ[ℂ] ℍ₂) :
+  (f.adjoint).real
+    = (module.dual.pi.is_faithful_pos_map.sig hψ 1).to_linear_map
+      ∘ₗ (f.real).adjoint
+      ∘ₗ (module.dual.pi.is_faithful_pos_map.sig hψ (-1)).to_linear_map :=
+begin
+  rw [← ext_inner_map],
+  intros u,
+  nth_rewrite_lhs 0 pi.inner_symm,
+  simp_rw [linear_map.real_eq, star_star, linear_map.adjoint_inner_right],
+  nth_rewrite_lhs 0 pi.inner_symm,
+  simp_rw [star_star, ← module.dual.pi.is_faithful_pos_map.sig_star,
+    ← linear_map.real_eq f, linear_map.comp_apply, ← linear_map.adjoint_inner_left (f.real),
+    ← alg_equiv.to_linear_map_apply, ← linear_map.adjoint_inner_left
+      (module.dual.pi.is_faithful_pos_map.sig hψ 1).to_linear_map,
+    module.dual.pi.is_faithful_pos_map.sig_adjoint],
 end
 
 end direct_sum
