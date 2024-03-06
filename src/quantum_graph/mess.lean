@@ -303,7 +303,7 @@ begin
   rw tensor_product.inner_ext_iff',
   intros c d,
   simp_rw [linear_map.sub_apply, inner_sub_left,
-    linear_map.comp_apply, one_tensor_map_apply, tensor_one_map_apply, qam.rank_one.real, grad,
+    linear_map.comp_apply, one_tensor_map_apply, tensor_one_map_apply, rank_one_real_apply, grad,
     add_monoid_hom.coe_mk, linear_map.sub_comp, linear_map.sub_apply, inner_sub_left,
     ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint, linear_map.comp_apply],
   obtain ⟨α, β, h⟩ := tensor_product.eq_span ((m).adjoint a),
@@ -362,7 +362,7 @@ by simp_rw [tensor_one_map_adjoint, linear_map.comp_apply, tensor_product.map_tm
 private lemma φ_map_adjoint_rank_one (x y : ℍ) :
   (φ_map hφ.elim (|x⟩⟨y|)).adjoint = φ_map hφ.elim (|x⟩⟨y| : l(ℍ)).real :=
 begin
-  simp_rw [φ_map_eq, qam.rank_one.real, linear_map.comp_apply,
+  simp_rw [φ_map_eq, rank_one_real_apply, linear_map.comp_apply,
     ι_map_apply_rank_one, rmul_map_lmul_apply, tensor_product.map_adjoint, rmul_eq_mul,
     lmul_eq_mul, linear_map.matrix.mul_left_adjoint, ← linear_map.matrix.mul_right_adjoint],
 end
@@ -576,7 +576,7 @@ begin
     linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
     tensor_product.map_tmul, tensor_product.comm_tmul, tensor_product.lid_tmul,
     lmul_apply, rmul_apply, nontracial.unit_adjoint_eq, one_smul, one_mul, linear_map.one_apply,
-    qam.rank_one.real, ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint,
+    rank_one_real_apply, ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint,
     rank_one_lm_apply, module.dual.is_faithful_pos_map.inner_eq, conj_transpose_conj_transpose, mul_eq_mul],
 end
 
@@ -600,7 +600,7 @@ begin
     algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, φ_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
     tensor_product.map_tmul, tensor_product.comm_tmul, tensor_product.lid_tmul,
     lmul_apply, rmul_apply, nontracial.unit_adjoint_eq, one_smul, mul_one, linear_map.one_apply,
-    D_out_apply, rmul_eq_mul, qam.rank_one.real, ← rank_one_lm_eq_rank_one,
+    D_out_apply, rmul_eq_mul, rank_one_real_apply, ← rank_one_lm_eq_rank_one,
     rank_one_lm_adjoint, linear_map.mul_right_apply, rank_one_lm_apply,
     ← alg_equiv.to_linear_map_apply, module.dual.is_faithful_pos_map.inner_eq, matrix.mul_one, conj_transpose_conj_transpose,
     mul_smul_comm],
@@ -620,7 +620,7 @@ end
 private lemma qam.refl_idempotent_real_rank_one (a b c d : ℍ) :
   (qam.refl_idempotent hφ.elim (|a⟩⟨b|) (|c⟩⟨d|)).real = qam.refl_idempotent hφ.elim (|c⟩⟨d| : l(ℍ)).real (|a⟩⟨b| : l(ℍ)).real :=
 begin
-  simp only [qam.rank_one.refl_idempotent_eq, qam.rank_one.real,
+  simp only [qam.rank_one.refl_idempotent_eq, rank_one_real_apply,
     ← sig_map_mul, ← conj_transpose_mul],
 end
 
@@ -647,7 +647,7 @@ private lemma D_in_Schur_product_eq_ir_refl_rank_one (a b c d : ℍ) :
   D_in (qam.refl_idempotent hφ.elim (|a⟩⟨b|) (|c⟩⟨d|))
     = qam.refl_idempotent hφ.elim ((|a⟩⟨b| : l(ℍ)) ∘ₗ ((|c⟩⟨d| : l(ℍ)).real.adjoint)) id :=
 begin
-  simp_rw [D_in_apply, qam.rank_one.real, ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint,
+  simp_rw [D_in_apply, rank_one_real_apply, ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint,
     rank_one_lm_comp_rank_one_lm, smul_hom_class.map_smul,
     linear_map.smul_apply, rank_one_lm_eq_rank_one],
   rw [qam.rank_one.refl_idempotent_eq, qam.reflexive_eq_rank_one,
@@ -669,7 +669,7 @@ private lemma D_out_Schur_product_eq_ir_refl'_rank_one (a b c d : ℍ) :
   D_out hφ.elim (qam.refl_idempotent hφ.elim (|a⟩⟨b|) (|c⟩⟨d|))
     = qam.refl_idempotent hφ.elim id ((|c⟩⟨d| : l(ℍ)).adjoint ∘ₗ (|a⟩⟨b| : l(ℍ)).real) :=
 begin
-  simp_rw [D_out_apply, qam.rank_one.real, qam.rank_one.refl_idempotent_eq,
+  simp_rw [D_out_apply, rank_one_real_apply, qam.rank_one.refl_idempotent_eq,
     ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint, rank_one_lm_comp_rank_one_lm,
     smul_hom_class.map_smul, rank_one_lm_eq_rank_one, qam.reflexive'_eq_rank_one,
     continuous_linear_map.coe_coe, rank_one_apply, smul_hom_class.map_smul,
@@ -715,7 +715,7 @@ lemma ι_inv_grad_apply_rank_one (a b x : ℍ) :
 begin
   simp_rw [grad_apply, ι_inv_map, linear_map.comp_apply, linear_map.sub_apply, map_sub,
     linear_map.comp_apply, tensor_one_map_apply, one_tensor_map_apply,
-    φ_map_eq, linear_map.comp_apply, qam.rank_one.real, ι_map_apply_rank_one,
+    φ_map_eq, linear_map.comp_apply, rank_one_real_apply, ι_map_apply_rank_one,
     rmul_map_lmul_apply, tensor_product.map_tmul, ten_swap_apply,
     linear_equiv.coe_coe, module.dual.is_faithful_pos_map.Psi, linear_equiv.coe_symm_mk,
     module.dual.is_faithful_pos_map.Psi_inv_fun'_apply, neg_zero,
@@ -976,12 +976,14 @@ begin
     conj_transpose_conj_transpose],
 end
 
-lemma lsmul_module_map_iff_symm_eq_rsmul_module_map {f : l(ℍ)} :
-  f = rmul (f 1) ↔ qam.symm hφ.elim f = lmul (f 1) :=
+lemma lsmul_module_map_iff_symm_eq_rsmul_module_map
+  [hφ : fact φ.is_faithful_pos_map] {f : l(ℍ)} :
+  f = rmul (f 1) ↔ linear_equiv.symm_map ℂ ℍ f = lmul (f 1) :=
 begin
-  rw [qam.symm_iff_symm', qam.symm'_eq_adjoint_real, lmul_eq_mul,
-    linear_map.matrix.mul_left_adjoint, linear_map.mul_left_real, star_eq_conj_transpose,
-    conj_transpose_conj_transpose, rmul_eq_mul, eq_comm],
+  rw [← linear_equiv.eq_symm_apply, linear_equiv.symm_map_symm_apply,
+    @lmul_adjoint _ _ _ _ _ _ _ φ (λ x y, by simp only [star_eq_conj_transpose, mul_eq_mul];
+      exact module.dual.is_faithful_pos_map.inner_eq x y),
+    lmul_eq_mul, linear_map.mul_left_real, star_star, rmul_eq_mul],
   simp only [iff_self],
 end
 

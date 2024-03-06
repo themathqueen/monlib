@@ -12,6 +12,7 @@ import linear_algebra.tensor_finite
 import linear_algebra.my_ips.op_unop
 import linear_algebra.lmul_rmul
 import quantum_graph.schur_idempotent
+import quantum_graph.symm
 
 /-!
  # Quantum graphs: quantum adjacency matrices
@@ -73,98 +74,50 @@ schur_idempotent.apply_rank_one a b c d
 
 open tensor_product
 
-noncomputable def qam.symm (hφ : φ.is_faithful_pos_map) :
-  l(l(ℍ)) :=
+-- noncomputable def qam.symm (hφ : φ.is_faithful_pos_map) :
+--   l(ℍ) ≃ₗ[ℂ] l(ℍ) :=
+-- begin
+--   letI := fact.mk hφ,
+--   exact ((linear_equiv.symm_map ℂ ℍ : l(ℍ) ≃ₗ[ℂ] l(ℍ))),
+-- end
+
+lemma finset.sum_fin_one {α : Type*} [add_comm_monoid α] (f : fin 1 → α) :
+  ∑ i, f i = f 0 :=
+by simp only [fintype.univ_of_subsingleton, fin.mk_zero, finset.sum_singleton]
+
+lemma rank_one_real_apply [hφ : fact φ.is_faithful_pos_map]
+  (a b : ℍ) :
+  (|a⟩⟨b| : ℍ →ₗ[ℂ] ℍ).real = |(aᴴ)⟩⟨hφ.elim.sig (-1) (bᴴ)| :=
 begin
-  letI := fact.mk hφ,
-  exact { to_fun := λ x, τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ ((η).adjoint ∘ₗ (m)))
-      ∘ₗ υ ∘ₗ ((id ⊗ₘ x) ⊗ₘ id)
-      ∘ₗ (((m).adjoint ∘ₗ η) ⊗ₘ id) ∘ₗ τ⁻¹,
-    map_add' := λ x y, by {
-      simp only [tensor_product.map_add, tensor_product.add_map, linear_map.add_comp,
-        linear_map.comp_add], },
-    map_smul' := λ r x, by {
-      simp only [tensor_product.map_smul, tensor_product.smul_map, linear_map.smul_comp,
-        linear_map.comp_smul, ring_hom.id_apply], } },
+  have := @pi.rank_one_lm_real_apply _ _ _ _ _ _ (λ i : fin 1, φ)
+    (λ i, hφ) (λ i : fin 1, a) (λ i : fin 1, b),
+  simp only [linear_map.ext_iff, function.funext_iff, fin.forall_fin_one,
+    ← rank_one_lm_eq_rank_one, rank_one_lm_apply, linear_map.real_eq] at this ⊢,
+  simp only [pi.star_apply, pi.smul_apply, pi_Lp.inner_apply,
+    module.dual.pi.is_faithful_pos_map.sig_eq_pi_blocks,
+    finset.sum_fin_one] at this,
+  intros,
+  exact this (λ _, x) _ _,
 end
 
 lemma qam.rank_one.symmetric_eq (a b : ℍ) :
-  qam.symm hφ.elim (|a⟩⟨b|)
+  (linear_equiv.symm_map ℂ ℍ) (|a⟩⟨b|)
   = |hφ.elim.sig (-1) bᴴ⟩⟨aᴴ| :=
 begin
-  rw [qam.symm, linear_map.coe_mk, linear_map.ext_iff_inner_map],
-  intros x,
-  obtain ⟨α, β, this⟩ := tensor_product.eq_span ((linear_map.mul' ℂ ℍ).adjoint (1 : ℍ)),
-  simp_rw [linear_map.comp_apply, linear_equiv.coe_coe, lid_symm_apply,
-    map_tmul, linear_map.comp_apply, algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, one_smul],
-  rw [← this],
-  simp_rw [_root_.map_sum, map_tmul, linear_map.one_apply, sum_tmul, _root_.map_sum, assoc_tmul,
-    map_tmul, comm_tmul, lid_tmul, sum_inner, linear_map.comp_apply,
-    continuous_linear_map.coe_coe, rank_one_apply, ← smul_tmul', smul_hom_class.map_smul,
-    linear_map.one_apply, nontracial.unit_adjoint_eq, smul_eq_mul, linear_map.mul'_apply,
-    module.dual.is_faithful_pos_map.inner_eq aᴴ, conj_transpose_conj_transpose],
-  calc ∑ x_1, inner ((inner b (β x_1) * φ (a * x)) • α x_1) x
-    = star_ring_end ℂ (φ (a ⬝ x)) * ∑ x_1, inner (α x_1) x * inner (β x_1) b :
-  by { simp only [inner_smul_left, _root_.map_mul, inner_conj_symm, mul_comm,
-      finset.mul_sum],
-    simp_rw [mul_assoc], refl, }
-  ... = star_ring_end ℂ (φ (a ⬝ x)) * inner (∑ x_1, α x_1 ⊗ₜ[ℂ] β x_1) (x ⊗ₜ b) :
-  by { simp_rw [← inner_tmul, ← sum_inner], }
-  ... = star_ring_end ℂ (φ (a ⬝ x)) * inner ((m).adjoint 1) (x ⊗ₜ[ℂ] b) : by rw [this]
-  ... = star_ring_end ℂ (φ (a ⬝ x)) * inner (hφ.elim.sig (-1) bᴴ) (x) :
-  by { simp_rw [linear_map.adjoint_inner_left, linear_map.mul'_apply, mul_eq_mul,
-    module.dual.is_faithful_pos_map.inner_left_conj _ _ b,
-    module.dual.is_faithful_pos_map.sig_apply, neg_neg, matrix.one_mul,
-    pos_def.rpow_one_eq_self, pos_def.rpow_neg_one_eq_inv_self], }
-  ... = inner (φ (a ⬝ x) • hφ.elim.sig (-1) bᴴ) x : by rw inner_smul_left,
-end
-
-noncomputable def qam.symm' (hφ : φ.is_faithful_pos_map) :
-  l(l(ℍ)) :=
-begin
-  letI := fact.mk hφ,
-  exact { to_fun := λ x, τ ∘ₗ (((η).adjoint ∘ₗ m) ⊗ₘ id) ∘ₗ ((id ⊗ₘ x) ⊗ₘ id) ∘ₗ υ⁻¹
-      ∘ₗ (id ⊗ₘ ((m).adjoint ∘ₗ η)) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹,
-    map_add' := λ x y, by { simp only [tensor_product.map_add, tensor_product.add_map,
-      linear_map.comp_add, linear_map.add_comp], },
-    map_smul' := λ x y, by { simp only [tensor_product.map_smul, smul_map,
-      linear_map.comp_smul, linear_map.smul_comp, ring_hom.id_apply], },  },
+  simp_rw [linear_equiv.symm_map_apply,
+    rank_one_real_apply, ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint],
 end
 
 lemma qam.rank_one.symmetric'_eq (a b : ℍ) :
-  qam.symm' hφ.elim (|a⟩⟨b|) = |bᴴ⟩⟨hφ.elim.sig (-1) aᴴ| :=
+  (linear_equiv.symm_map ℂ ℍ).symm (|a⟩⟨b|) = |bᴴ⟩⟨hφ.elim.sig (-1) aᴴ| :=
 begin
-  rw [qam.symm', linear_map.coe_mk, linear_map.ext_iff_inner_map],
-  intros x,
-  obtain ⟨α, β, this⟩ := tensor_product.eq_span ((linear_map.mul' ℂ ℍ).adjoint (1 : ℍ)),
-  simp_rw [linear_map.comp_apply, linear_equiv.coe_coe, lid_symm_apply, comm_symm_tmul,
-    map_tmul, linear_map.comp_apply, algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, one_smul],
-  rw ← this,
-  simp_rw [tmul_sum, _root_.map_sum, assoc_symm_tmul, map_tmul,
-    linear_map.one_apply, lid_tmul, sum_inner, linear_map.comp_apply,
-    continuous_linear_map.coe_coe, rank_one_apply, ← smul_tmul, ← smul_tmul',
-    smul_hom_class.map_smul,
-    nontracial.unit_adjoint_eq, smul_eq_mul, linear_map.mul'_apply],
-  calc ∑ x_1, inner ((inner b (α x_1) * φ (x * a)) • β x_1) x
-    = star_ring_end ℂ (φ (x ⬝ a)) * ∑ x_1, inner (α x_1) b * inner (β x_1) x :
-  by { simp only [inner_smul_left, _root_.map_mul, inner_conj_symm, finset.mul_sum],
-    simp_rw [mul_assoc, mul_rotate', mul_comm], refl, }
-  ... = star_ring_end ℂ (φ (x ⬝ a)) * inner (∑ x_1, α x_1 ⊗ₜ[ℂ] β x_1) (b ⊗ₜ[ℂ] x) :
-  by { simp_rw [← inner_tmul, ← sum_inner], }
-  ... = star_ring_end ℂ (φ (x ⬝ a)) * inner ((m).adjoint 1) (b ⊗ₜ[ℂ] x) : by rw this
-  ... = star_ring_end ℂ (φ (x ⬝ a)) * inner bᴴ x :
-  by { rw [linear_map.adjoint_inner_left, linear_map.mul'_apply, mul_eq_mul,
-    module.dual.is_faithful_pos_map.inner_right_mul, matrix.mul_one], }
-  ... = star_ring_end ℂ (inner xᴴ a) * inner bᴴ x :
-  by { rw [module.dual.is_faithful_pos_map.inner_eq xᴴ a, conj_transpose_conj_transpose], }
-  ... = star_ring_end ℂ (inner (hφ.elim.sig (-1) aᴴ) x) * inner bᴴ x :
-  by { rw [nontracial.inner_symm, conj_transpose_conj_transpose], }
-  ... = inner (inner (hφ.elim.sig (-1) aᴴ) x • bᴴ) x :
-  by { rw [inner_smul_left], },
+  simp_rw [linear_equiv.symm_map_symm_apply, ← rank_one_lm_eq_rank_one,
+    rank_one_lm_adjoint, rank_one_lm_eq_rank_one, rank_one_real_apply],
 end
 
-lemma qam.symm_adjoint_eq_symm'_of_adjoint (x : l(ℍ)) :
-  (qam.symm hφ.elim x).adjoint = qam.symm' hφ.elim (x.adjoint) :=
+lemma qam.symm_adjoint_eq_symm'_of_adjoint
+  [hφ : fact φ.is_faithful_pos_map] (x : l(ℍ)) :
+  (linear_equiv.symm_map ℂ ℍ x).adjoint = (linear_equiv.symm_map ℂ ℍ).symm (x.adjoint) :=
 begin
   obtain ⟨α, β, rfl⟩ := linear_map.exists_sum_rank_one x,
   simp_rw [map_sum, ← rank_one_lm_eq_rank_one, rank_one_lm_adjoint, rank_one_lm_eq_rank_one,
@@ -306,98 +259,20 @@ begin
   norm_num,
 end
 
-lemma qam.rank_one.real (a b : ℍ) :
-  (|a⟩⟨b| : ℍ →ₗ[ℂ] ℍ).real = |aᴴ⟩⟨hφ.elim.sig (-1) bᴴ| :=
-begin
-  rw linear_map.ext_iff,
-  intros x,
-  simp_rw [linear_map.real_eq, continuous_linear_map.coe_coe, rank_one_apply, star_smul],
-  rw [nontracial.inner_symm],
-  simp_rw [star_eq_conj_transpose, conj_transpose_conj_transpose, complex.star_def,
-    inner_conj_symm, ← alg_equiv.to_linear_map_apply],
-  nth_rewrite_lhs 0 [← module.dual.is_faithful_pos_map.sig_adjoint],
-  rw linear_map.adjoint_inner_right,
-end
-
-lemma qam.symm'_eq_adjoint_real (A : ℍ →ₗ[ℂ] ℍ) :
-  qam.symm' hφ.elim A = A.adjoint.real :=
-begin
-  obtain ⟨α, β, rfl⟩ := linear_map.exists_sum_rank_one A,
-  simp_rw [map_sum, linear_map.real_sum, qam.rank_one.symmetric'_eq, ← rank_one_lm_eq_rank_one,
-    rank_one_lm_adjoint, rank_one_lm_eq_rank_one, qam.rank_one.real],
-end
-
-lemma qam.symm_eq_real_adjoint (x : l(ℍ)) :
-  qam.symm hφ.elim x = x.real.adjoint :=
-begin
-  obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
-  simp only [map_sum, linear_map.real_sum, qam.rank_one.symmetric'_eq, qam.rank_one.symmetric_eq,
-    qam.rank_one.real],
-  simp only [← rank_one_lm_eq_rank_one, rank_one_lm_adjoint],
-end
-
-lemma qam.symm_is_bijective :
-  function.bijective ⇑(qam.symm hφ.elim : l(ℍ) →ₗ[ℂ] l(ℍ)) :=
-begin
-  suffices : function.injective ⇑(qam.symm hφ.elim),
-  { exact ⟨this, linear_map.surjective_of_injective this⟩, },
-  intros x y,
-  simp_rw [qam.symm_eq_real_adjoint, ← linear_map.star_eq_adjoint,
-    star_inj, ← linear_map.real_inj_eq, imp_self],
-end
-lemma qam.symm'_is_bijective :
-  function.bijective ⇑(qam.symm' hφ.elim : l(ℍ) →ₗ[ℂ] l(ℍ)) :=
-begin
-  suffices : function.injective ⇑(qam.symm' hφ.elim),
-  { exact ⟨this, linear_map.surjective_of_injective this⟩, },
-  intros x y,
-  simp_rw [qam.symm'_eq_adjoint_real, ← linear_map.star_eq_adjoint,
-    ← linear_map.real_inj_eq, star_inj, imp_self],
-end
-
-noncomputable def qam.symm.invertible :
-  invertible (qam.symm hφ.elim : l(l(ℍ))) :=
-begin
-  use (qam.symm' hφ.elim : l(l(ℍ))),
-  all_goals
-  { apply linear_map.ext_of_rank_one',
-    intros a b,
-    simp only [linear_map.mul_apply, linear_map.one_apply,
-      qam.symm_eq_real_adjoint, qam.symm'_eq_adjoint_real,
-      linear_map.adjoint_adjoint, linear_map.real_real], },
-end
-
-noncomputable def qam.symm'.invertible :
-  invertible (qam.symm' hφ.elim : l(l(ℍ))) :=
-begin
-  use (qam.symm hφ.elim : l(l(ℍ))),
-  all_goals
-  { apply linear_map.ext_of_rank_one',
-    intros a b,
-    simp only [linear_map.mul_apply, linear_map.one_apply,
-      qam.symm_eq_real_adjoint, qam.symm'_eq_adjoint_real,
-      linear_map.adjoint_adjoint, linear_map.real_real], },
-end
-
-lemma qam.symm_iff_symm' (a b : l(ℍ)) :
-  qam.symm hφ.elim a = b ↔ qam.symm' hφ.elim b = a :=
-begin
-  rw [← linear_map.adjoint_adjoint (qam.symm hφ.elim a), qam.symm_adjoint_eq_symm'_of_adjoint],
-  simp_rw [qam.symm'_eq_adjoint_real, linear_map.adjoint_adjoint,
-    linear_map.real_inj_eq b.adjoint.real, linear_map.real_real, ← linear_map.star_eq_adjoint,
-    star_eq_iff_star_eq],
-end
-
-lemma qam.symm'_symm_real_eq_adjoint_tfae (A : ℍ →ₗ[ℂ] ℍ) :
-  tfae [qam.symm hφ.elim A = A,
-    qam.symm' hφ.elim A = A,
+lemma qam.symm'_symm_real_eq_adjoint_tfae
+  [hφ : fact φ.is_faithful_pos_map] (A : ℍ →ₗ[ℂ] ℍ) :
+  tfae [linear_equiv.symm_map ℂ ℍ A = A,
+    (linear_equiv.symm_map ℂ ℍ).symm A = A,
     A.real = A.adjoint,
     ∀ x y, φ ((A x) ⬝ y) = φ (x ⬝ (A y))] :=
 begin
+  
   tfae_have : 1 ↔ 2,
-  { exact qam.symm_iff_symm' _ _, },
+  { simp_rw [linear_equiv.symm_map_symm_apply, linear_equiv.symm_map_apply,
+      ← linear_map.star_eq_adjoint, star_eq_iff_star_eq],
+    rw [linear_map.real_inj_eq, linear_map.real_real], },
   tfae_have : 2 ↔ 3,
-  { rw [qam.symm'_eq_adjoint_real],
+  { rw [linear_equiv.symm_map_symm_apply],
     nth_rewrite_lhs 0 linear_map.real_inj_eq,
     rw [linear_map.real_real, eq_comm], },
   tfae_have : 3 → 4,
@@ -443,10 +318,10 @@ begin
 end
 
 lemma qam.commute_with_sig_iff_symm_eq_symm' {A : ℍ →ₗ[ℂ] ℍ} :
-  qam.symm hφ.elim A = qam.symm' hφ.elim A
+  linear_equiv.symm_map ℂ ℍ A = (linear_equiv.symm_map ℂ ℍ).symm A
     ↔ commute A (hφ.elim.sig 1).to_linear_map :=
 begin
-  rw [qam.symm_eq_real_adjoint, qam.symm'_eq_adjoint_real,
+  rw [linear_equiv.symm_map_apply, linear_equiv.symm_map_symm_apply,
     linear_map.adjoint_real_eq, eq_comm, sig_comp_eq_iff,
     ← star_inj],
   simp_rw [linear_map.star_eq_adjoint, linear_map.adjoint_comp, linear_map.adjoint_adjoint,
@@ -458,19 +333,17 @@ begin
   refl,
 end
 
-lemma qam.commute_with_sig_of_symm {A : ℍ →ₗ[ℂ] ℍ} (hA : qam.symm hφ.elim A = A) :
+lemma qam.commute_with_sig_of_symm {A : ℍ →ₗ[ℂ] ℍ} (hA : linear_equiv.symm_map ℂ ℍ A = A) :
   commute A (hφ.elim.sig 1).to_linear_map :=
 begin
-  rw [← qam.commute_with_sig_iff_symm_eq_symm'],
-  nth_rewrite 1 [← (qam.symm_iff_symm' _ _).mp hA] at hA,
-  exact hA,
+  rw [← qam.commute_with_sig_iff_symm_eq_symm', hA, linear_equiv.eq_symm_apply, hA],
 end
 
 -- `τ ϰ (1 ⊗ η⋆ m) (m⋆ η ⊗ 1) τ⁻¹ = 1`
-lemma qam.symm_one :
-  qam.symm hφ.elim 1 = (1 : l(ℍ)) :=
+lemma qam.symm_one [hφ : fact φ.is_faithful_pos_map] :
+  linear_equiv.symm_map ℂ ℍ 1 = (1 : l(ℍ)) :=
 begin
-  rw [qam.symm_eq_real_adjoint, linear_map.real_one, linear_map.adjoint_one],
+  rw [linear_equiv.symm_map_apply, linear_map.real_one, linear_map.adjoint_one],
 end
 
 def qam (φ : module.dual ℂ ℍ) [hφ : fact φ.is_faithful_pos_map] (x : l(ℍ)) :=
@@ -479,8 +352,8 @@ qam.refl_idempotent hφ.elim x x = x
 def qam.is_self_adjoint [hφ : fact φ.is_faithful_pos_map] (x : l(ℍ)) : Prop :=
 x.adjoint = x
 
-def qam.is_symm (x : l(ℍ)) : Prop :=
-qam.symm hφ.elim x = x
+def qam.is_symm [hφ : fact φ.is_faithful_pos_map] (x : l(ℍ)) : Prop :=
+linear_equiv.symm_map ℂ ℍ x = x
 
 def qam_lm_nontracial_is_reflexive (x : ℍ →ₗ[ℂ] ℍ) : Prop :=
 qam.refl_idempotent hφ.elim x 1 = (1 : l(ℍ))
@@ -497,25 +370,6 @@ begin
   simp only [finset.sum_ite_irrel, finset.sum_const_zero, finset.sum_ite_eq',
     finset.sum_ite_eq, finset.mem_univ, if_true, smul_eq_mul, mul_one, mul_zero],
   simp_rw [← ite_and, and_comm (l = j_1) (i = i_1)],
-end
-
-lemma finset_foo {α β γ ζ ε ξ φ ι : Type*} [add_comm_monoid β]
-  {a : finset α} {b : finset γ} {c : finset ζ} {d : finset ε} {e : finset ξ}
-  {j : finset φ} {h : finset ι} {f : α → γ → ζ → ε → ξ → φ → ι → β} :
-  ∑ (x : α) in a, ∑ (y : γ) in b, ∑ (z : ζ) in c, ∑ (w : ε) in d, ∑ (v : ξ) in e,
-    ∑ (u : φ) in j, ∑ (t : ι) in h, f x y z w v u t
-  = ∑ (w : ε) in d, ∑ (u : φ) in j,
-      ∑ (v : ξ) in e, ∑ (t : ι) in h,
-      ∑ (x : α) in a, ∑ (y : γ) in b, ∑ (z : ζ) in c,
-        f x y z w v u t :=
-begin
-  rw finset.sum_4_rotate,
-  congr, ext,
-  rw finset.sum_5_rotate,
-  congr, ext,
-  rw finset.sum_4_rotate,
-  congr, ext,
-  rw finset.sum_4_rotate,
 end
 
 lemma rank_one_lm_smul {𝕜 E : Type*} [is_R_or_C 𝕜]
@@ -541,7 +395,7 @@ noncomputable def sigop (hφ : φ.is_faithful_pos_map) (t : ℝ) :
 (op : ℍ →ₗ[ℂ] ℍᵐᵒᵖ) ∘ₗ (hφ.sig t).to_linear_map ∘ₗ (unop : ℍᵐᵒᵖ →ₗ[ℂ] ℍ)
 
 private lemma Psi.symmetric_rank_one (a b : ℍ) (t s : ℝ) :
-  hφ.elim.Psi t s (qam.symm hφ.elim (|a⟩⟨b|))
+  hφ.elim.Psi t s (linear_equiv.symm_map ℂ ℍ (|a⟩⟨b|))
     = ((hφ.elim.sig (t+s-1)).to_linear_map ⊗ₘ (sigop hφ.elim (-t-s)))
       (ten_swap (hφ.elim.Psi t s (|a⟩⟨b|))) :=
 begin
@@ -555,7 +409,7 @@ begin
 end
 
 lemma Psi.symmetric (a : l(ℍ)) (t s : ℝ) :
-  hφ.elim.Psi t s (qam.symm hφ.elim a)
+  hφ.elim.Psi t s (linear_equiv.symm_map ℂ ℍ a)
     = ((hφ.elim.sig (t+s-1)).to_linear_map ⊗ₘ (sigop hφ.elim (-t-s)))
       (ten_swap (hφ.elim.Psi t s a)) :=
 begin
@@ -564,7 +418,7 @@ begin
 end
 
 private lemma Psi.symmetric'_rank_one (a b : ℍ) (t s : ℝ) :
-  hφ.elim.Psi t s (qam.symm' hφ.elim (|a⟩⟨b|))
+  hφ.elim.Psi t s ((linear_equiv.symm_map ℂ ℍ).symm (|a⟩⟨b|))
     = ((hφ.elim.sig (t+s)).to_linear_map ⊗ₘ (sigop hφ.elim (1-t-s)))
       (ten_swap (hφ.elim.Psi t s (|a⟩⟨b|))) :=
 begin
@@ -578,7 +432,7 @@ begin
 end
 
 lemma Psi.symmetric' (a : l(ℍ)) (t s : ℝ) :
-  hφ.elim.Psi t s (qam.symm' hφ.elim a)
+  hφ.elim.Psi t s ((linear_equiv.symm_map ℂ ℍ).symm a)
     = ((hφ.elim.sig (t+s)).to_linear_map ⊗ₘ (sigop hφ.elim (1-t-s)))
       (ten_swap (hφ.elim.Psi t s a)) :=
 begin
@@ -590,8 +444,8 @@ private lemma Psi.idempotent_rank_one (a b c d : ℍ) (t s : ℝ) :
   hφ.elim.Psi t s (qam.refl_idempotent hφ.elim (↑|a⟩⟨b|) (↑|c⟩⟨d|))
     = (hφ.elim.Psi t s (|a⟩⟨b|)) * (hφ.elim.Psi t s (|c⟩⟨d|)) :=
 begin
-  simp_rw [qam.rank_one.refl_idempotent_eq, module.dual.is_faithful_pos_map.Psi,
-    linear_equiv.coe_mk, module.dual.is_faithful_pos_map.Psi_to_fun'_apply,
+  simp_rw [qam.rank_one.refl_idempotent_eq, module.dual.is_faithful_pos_map.Psi_apply,
+    module.dual.is_faithful_pos_map.Psi_to_fun'_apply,
     algebra.tensor_product.tmul_mul_tmul, mul_eq_mul, op_apply, ← mul_opposite.op_mul, mul_eq_mul,
     ← conj_transpose_mul, ← mul_eq_mul, _root_.map_mul],
 end
@@ -806,7 +660,7 @@ lemma qam.ir_refl_iff_ir_refl'_of_real {A : ℍ →ₗ[ℂ] ℍ} (hA : A.is_real
 begin
   rw linear_map.is_real_iff at hA,
   obtain ⟨α, β, rfl⟩ := A.exists_sum_rank_one,
-  simp_rw [linear_map.real_sum, qam.rank_one.real] at hA,
+  simp_rw [linear_map.real_sum, rank_one_real_apply] at hA,
   nth_rewrite_lhs 0 ← hA,
   simp_rw [map_sum, linear_map.sum_apply, qam.reflexive_eq_rank_one,
     qam.reflexive'_eq_rank_one, ← conj_transpose_mul,
@@ -824,35 +678,40 @@ begin
     linear_map.mul_left_eq_one_or_zero_iff_mul_right],
 end
 
-lemma qam.real_of_self_adjoint_symm (A : ℍ →ₗ[ℂ] ℍ)
-  (h1 : A.adjoint = A) (h2 : qam.symm hφ.elim A = A) :
+lemma qam.real_of_self_adjoint_symm
+  [hφ : fact φ.is_faithful_pos_map] (A : ℍ →ₗ[ℂ] ℍ)
+  (h1 : A.adjoint = A) (h2 : linear_equiv.symm_map ℂ ℍ A = A) :
   A.is_real :=
 begin
-  rw linear_map.is_real_iff,
-  have := qam.symm'_eq_adjoint_real A,
-  rw [qam.symm_iff_symm', this, h1] at h2,
-  exact h2,
+  rw [linear_map.is_real_iff],
+  rw [linear_equiv.symm_map_apply, ← linear_map.star_eq_adjoint, star_eq_iff_star_eq,
+    linear_map.star_eq_adjoint, h1] at h2,
+  exact h2.symm,
 end
 
-lemma qam.self_adjoint_of_symm_real (A : ℍ →ₗ[ℂ] ℍ) (h1 : qam.symm hφ.elim A = A) (h2 : A.is_real) :
+lemma qam.self_adjoint_of_symm_real
+  [hφ : fact φ.is_faithful_pos_map]
+  (A : ℍ →ₗ[ℂ] ℍ) (h1 : linear_equiv.symm_map ℂ ℍ A = A) (h2 : A.is_real) :
   A.adjoint = A :=
 begin
   rw linear_map.is_real_iff at h2,
-  have := qam.symm'_eq_adjoint_real A,
-  rw [qam.symm_iff_symm', this, ← h2, ← linear_map.real_inj_eq, h2] at h1,
+  rw [linear_equiv.symm_map_apply, h2] at h1,
   exact h1,
 end
 
-lemma qam.symm_of_real_self_adjoint (A : ℍ →ₗ[ℂ] ℍ) (h1 : A.is_real) (h2 : A.adjoint = A) :
-  qam.symm hφ.elim A = A :=
+lemma qam.symm_of_real_self_adjoint
+  [hφ : fact φ.is_faithful_pos_map]
+  (A : ℍ →ₗ[ℂ] ℍ) (h1 : A.is_real) (h2 : A.adjoint = A) :
+  linear_equiv.symm_map ℂ ℍ A = A :=
 begin
-  rw [qam.symm_iff_symm', qam.symm'_eq_adjoint_real, h2, ← linear_map.is_real_iff],
-  exact h1,
+  rw [linear_equiv.symm_map_apply, (linear_map.is_real_iff _).mp h1],
+  exact h2,
 end
-lemma qam.self_adjoint_symm_real_tfae (A : ℍ →ₗ[ℂ] ℍ) :
-  tfae [A.adjoint = A ∧ qam.symm hφ.elim A = A,
+lemma qam.self_adjoint_symm_real_tfae
+  [hφ : fact φ.is_faithful_pos_map] (A : ℍ →ₗ[ℂ] ℍ) :
+  tfae [A.adjoint = A ∧ linear_equiv.symm_map ℂ ℍ A = A,
     A.adjoint = A ∧ A.is_real,
-    qam.symm hφ.elim A = A ∧ A.is_real] :=
+    linear_equiv.symm_map ℂ ℍ A = A ∧ A.is_real] :=
 begin
   tfae_have : 1 → 2,
   { intros h,
@@ -873,7 +732,7 @@ lemma Psi.real (A : ℍ →ₗ[ℂ] ℍ) (t s : ℝ) :
 begin
   obtain ⟨α, β, rfl⟩ := A.exists_sum_rank_one,
   simp_rw [linear_map.real_sum, map_sum, star_sum],
-  simp only [map_sum, qam.rank_one.real, module.dual.is_faithful_pos_map.Psi,
+  simp only [map_sum, rank_one_real_apply, module.dual.is_faithful_pos_map.Psi,
     linear_equiv.coe_mk, module.dual.is_faithful_pos_map.Psi_to_fun'_apply,
     tensor_op_star_apply, unop_op, conj_transpose_conj_transpose,
     map_tmul, module.dual.is_faithful_pos_map.sig_conj_transpose,
