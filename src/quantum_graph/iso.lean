@@ -173,12 +173,14 @@ begin
     star_alg_equiv.is_isometry],
 end
 
-lemma qam.symm_apply_star_alg_equiv_conj [nontrivial n] {f : ℍ ≃⋆ₐ[ℂ] ℍ} (hf : @star_alg_equiv.is_isometry n _ _ φ _ f) (A : l(ℍ)) :
-  qam.symm hφ.elim (f.to_alg_equiv.to_linear_map ∘ₗ A ∘ₗ f.symm.to_alg_equiv.to_linear_map)
-    = f.to_alg_equiv.to_linear_map ∘ₗ (qam.symm hφ.elim A) ∘ₗ f.symm.to_alg_equiv.to_linear_map :=
+lemma qam.symm_apply_star_alg_equiv_conj
+  [hφ : fact φ.is_faithful_pos_map]
+  [nontrivial n] {f : ℍ ≃⋆ₐ[ℂ] ℍ} (hf : @star_alg_equiv.is_isometry n _ _ φ _ f) (A : l(ℍ)) :
+  linear_equiv.symm_map ℂ ℍ (f.to_alg_equiv.to_linear_map ∘ₗ A ∘ₗ f.symm.to_alg_equiv.to_linear_map)
+    = f.to_alg_equiv.to_linear_map ∘ₗ (linear_equiv.symm_map ℂ ℍ A) ∘ₗ f.symm.to_alg_equiv.to_linear_map :=
 begin
   rw [star_alg_equiv.is_isometry, list.tfae.out (@module.dual.is_faithful_pos_map.star_alg_equiv_is_isometry_tfae n _ _ φ _ _ f) 4 1] at hf,
-  simp only [qam.symm_eq_real_adjoint, linear_map.adjoint_comp,
+  simp only [linear_equiv.symm_map_apply, linear_map.adjoint_comp,
     ← alg_equiv.to_linear_equiv_to_linear_map,
     linear_map.real_star_alg_equiv_conj],
   simp_rw [alg_equiv.to_linear_equiv_to_linear_map, hf],
@@ -189,12 +191,11 @@ end
 lemma inner_aut.symmetric_eq [hφ : fact φ.is_faithful_pos_map]
   [nontrivial n] (A : l(ℍ)) {U : matrix.unitary_group n ℂ}
   (hU : commute φ.matrix U) :
-  qam.symm hφ.elim (f_{U} ∘ₗ A ∘ₗ f_{star U}) = f_{U} ∘ₗ qam.symm hφ.elim A ∘ₗ f_{star U} :=
+  linear_equiv.symm_map ℂ ℍ (f_{U} ∘ₗ A ∘ₗ f_{star U}) = f_{U} ∘ₗ linear_equiv.symm_map ℂ ℍ A ∘ₗ f_{star U} :=
 begin
   rw [← inner_aut_inv_eq_star, ← inner_aut_star_alg_equiv_symm_to_linear_map,
       ← inner_aut_star_alg_equiv_to_linear_map],
   exact qam.symm_apply_star_alg_equiv_conj ((unitary_commutes_with_hφ_matrix_iff_is_isometry U).mp hU) _,
-  -- simp_rw [← this, linear_map.adjoint_adjoint, linear_map.comp_assoc],
 end
 
 lemma star_alg_equiv.commutes_with_mul' (f : ℍ ≃⋆ₐ[ℂ] ℍ) :

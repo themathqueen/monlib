@@ -82,11 +82,11 @@ end
 lemma qam.nontracial.complete_graph.is_real :
   (qam.complete_graph hφ.elim).is_real :=
 begin
-  simp_rw [linear_map.is_real_iff, qam.complete_graph, qam.rank_one.real,
+  simp_rw [linear_map.is_real_iff, qam.complete_graph, rank_one_real_apply,
     conj_transpose_one, _root_.map_one],
 end
 lemma qam.nontracial.complete_graph.is_symm :
-  qam.symm hφ.elim (qam.complete_graph hφ.elim) = qam.complete_graph hφ.elim :=
+  linear_equiv.symm_map ℂ ℍ (qam.complete_graph hφ.elim) = qam.complete_graph hφ.elim :=
 by { simp_rw [qam.complete_graph, qam.rank_one.symmetric_eq, conj_transpose_one, _root_.map_one], }
 
 lemma qam.nontracial.complete_graph.is_reflexive :

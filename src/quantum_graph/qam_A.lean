@@ -300,13 +300,14 @@ begin
     linear_map.mul_left_apply, linear_map.mul_right_apply, ← mul_assoc, mul_eq_mul],
 end
 
-private lemma qam_A_is_sa_iff_aux5 (x : {x : ℍ // x ≠ 0})
+private lemma qam_A_is_sa_iff_aux5
+  [hφ : fact φ.is_faithful_pos_map] (x : {x : ℍ // x ≠ 0})
   (h : (linear_map.mul_left ℂ φ.matrix).comp (|(x : ℍ)ᴴ⟩⟨(x : ℍ)ᴴ| : l(ℍ))
     = (linear_map.mul_right ℂ φ.matrix).comp (|(x : ℍ)⟩⟨(x : ℍ)| : l(ℍ))) :
-  qam.symm hφ.elim (|(x : ℍ)⟩⟨(x : ℍ)|) = (|(x : ℍ)⟩⟨(x : ℍ)|) :=
+  linear_equiv.symm_map ℂ ℍ (|(x : ℍ)⟩⟨(x : ℍ)|) = (|(x : ℍ)⟩⟨(x : ℍ)|) :=
 begin
   haveI := hφ.elim.matrix_is_pos_def.invertible,
-  calc qam.symm hφ.elim (|(x : ℍ)⟩⟨(x : ℍ)|)
+  calc linear_equiv.symm_map ℂ ℍ (|(x : ℍ)⟩⟨(x : ℍ)|)
     = (hφ.elim.sig (-1)).to_linear_map ∘ₗ (|(x : ℍ)ᴴ⟩⟨(x : ℍ)ᴴ| : l(ℍ)) : _
   ... = (linear_map.mul_left ℂ φ.matrix) ∘ₗ (linear_map.mul_right ℂ φ.matrix⁻¹)
     ∘ₗ (|(x : ℍ)ᴴ⟩⟨(x : ℍ)ᴴ| : l(ℍ)) : _
@@ -494,10 +495,11 @@ begin
   exact hx.symm,
 end
 
-private lemma qam_A_is_sa_iff_aux5_aux6 (x' : {x : ℍ // x ≠ 0})
+private lemma qam_A_is_sa_iff_aux5_aux6 [hφ : fact φ.is_faithful_pos_map]
+  (x' : {x : ℍ // x ≠ 0})
   (this :  ⟪(x' : ℍ), (x' : ℍ)⟫_ℂ • hφ.elim.sig 1 (x' : ℍ)
     = ⟪hφ.elim.sig 1 (x' : ℍ), (x' : ℍ)⟫_ℂ • (x' : ℍ))
-  (h : qam.symm hφ.elim (|(x' : ℍ)⟩⟨(x' : ℍ)|) = (|(x' : ℍ)⟩⟨(x' : ℍ)|))
+  (h : linear_equiv.symm_map ℂ ℍ (|(x' : ℍ)⟩⟨(x' : ℍ)|) = (|(x' : ℍ)⟩⟨(x' : ℍ)|))
   (hh : (x' : ℍ).is_almost_hermitian) :
   commute φ.matrix x' :=
 begin
@@ -527,13 +529,14 @@ begin
   exact hα,
 end
 
-private lemma qam_A_is_sa_iff_aux6 (x' : {x : ℍ // x ≠ 0})
-  (h : qam.symm hφ.elim (|(x' : ℍ)⟩⟨(x' : ℍ)|) = (|(x' : ℍ)⟩⟨(x' : ℍ)|)) :
+private lemma qam_A_is_sa_iff_aux6 [hφ : fact φ.is_faithful_pos_map] (x' : {x : ℍ // x ≠ 0})
+  (h : linear_equiv.symm_map ℂ ℍ (|(x' : ℍ)⟩⟨(x' : ℍ)|) = (|(x' : ℍ)⟩⟨(x' : ℍ)|)) :
   (x' : ℍ).is_almost_hermitian ∧ commute φ.matrix x' :=
 begin
   let x : ℍ := (x' : ℍ),
   have hx : x ≠ 0 := set.mem_set_of.mp (subtype.mem x'),
-  have h' := (qam.symm_iff_symm' _ _).mp h,
+  have h' := h,
+  rw [← linear_equiv.eq_symm_apply] at h',
   have H : (|xᴴ⟩⟨xᴴ| : l(ℍ)) = (|hφ.elim.sig 1 x⟩⟨x| : l(ℍ)),
   { rw [← alg_equiv.to_linear_map_apply, ← linear_map.comp_rank_one, ← neg_neg (1 : ℝ),
       ← sig_comp_eq_iff_eq_sig_inv_comp, linear_map.comp_rank_one],
@@ -549,7 +552,7 @@ begin
     { exact linear_map.rank_one_comp _ _ _, },
     rw [this, module.dual.is_faithful_pos_map.sig_adjoint],
     rw qam.rank_one.symmetric'_eq at h',
-    exact h', },
+    exact h'.symm, },
   have : (|hφ.elim.sig 1 x⟩⟨x| : l(ℍ)) = |x⟩⟨hφ.elim.sig 1 x|,
   { rw [← H, ← H'], },
   simp_rw [continuous_linear_map.coe_inj, continuous_linear_map.ext_iff,
