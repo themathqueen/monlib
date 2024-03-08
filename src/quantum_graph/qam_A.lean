@@ -773,7 +773,7 @@ begin
 end
 
 lemma qam_A.of_trivial_graph [nontrivial n] :
-  qam_A hφ.elim ⟨φ.matrix⁻¹, hφ.elim.matrix_is_pos_def.inv.ne_zero⟩ = qam.trivial_graph hφ.elim :=
+  qam_A hφ.elim ⟨φ.matrix⁻¹, hφ.elim.matrix_is_pos_def.inv.ne_zero⟩ = qam.trivial_graph hφ rfl :=
 begin
   rw qam_A,
   haveI := hφ.elim.matrix_is_pos_def.invertible,
@@ -789,7 +789,7 @@ end
 lemma qam.unique_one_edge_and_refl [nontrivial n] {A : l(ℍ)}
   (hA : real_qam hφ.elim A) :
   (hA.edges = 1 ∧ qam.refl_idempotent hφ.elim A 1 = 1)
-    ↔ A = qam.trivial_graph hφ.elim :=
+    ↔ A = qam.trivial_graph hφ rfl :=
 begin
   split,
   { rintros ⟨h1, h2⟩,
@@ -799,7 +799,7 @@ begin
     rw [← qam_A_eq, ← qam_A.of_trivial_graph, qam_A.is_almost_injective],
     exact (qam_A.is_reflexive_iff x).mp h2, },
   { rintros rfl,
-    exact ⟨qam.trivial_graph_edges, qam.nontracial.trivial_graph⟩, },
+    exact ⟨qam.trivial_graph_edges, qam.nontracial.trivial_graph rfl⟩, },
 end
 
 private lemma star_alg_equiv.is_isometry_iff [nontrivial n] (f : ℍ ≃⋆ₐ[ℂ] ℍ) :

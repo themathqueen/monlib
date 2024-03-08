@@ -201,6 +201,10 @@ noncomputable def matrix_direct_sum_from_to (i j : k) :
   (matrix (s i) (s i) ℂ) →ₗ[ℂ] (matrix (s j) (s j) ℂ) :=
 @direct_sum_from_to ℂ _ k _ (λ a, matrix (s a) (s a) ℂ) _ (λ a, matrix.module) i j
 
+lemma matrix_direct_sum_from_to_same (i : k) :
+  (matrix_direct_sum_from_to i i : matrix (s i) (s i) ℂ →ₗ[ℂ] _) = 1 :=
+direct_sum_from_to_apply_same _
+
 lemma linear_map.pi_mul'_apply_include_block' {i j : k} :
   (linear_map.mul' ℂ ℍ₂) ∘ₗ
     (tensor_product.map (include_block : (ℍ_ i) →ₗ[ℂ] ℍ₂) (include_block : (ℍ_ j) →ₗ[ℂ] ℍ₂))
@@ -295,104 +299,70 @@ begin
     { refl, }, },
 end
 
--- lemma pi_frobenius_equation [hθ : Π i, fact (θ i).is_faithful_pos_map]
---   {i j : k} (x y : ℍ₂) :
+lemma direct_sum_tensor_to_kronecker_apply
+  (x y : ℍ₂) (r : k × k) (a b : s r.1 × s r.2) :
+  (direct_sum_tensor_to_kronecker (x ⊗ₜ[ℂ] y))
+  r a b
+  = x r.1 a.1 b.1 * y r.2 a.2 b.2 :=
+begin
+  simp_rw [direct_sum_tensor_to_kronecker,
+    linear_equiv.coe_mk, direct_sum_tensor_matrix, direct_sum_tensor_apply,
+    tensor_product.to_kronecker_apply, kronecker_map, of_apply],
+end
+
+-- lemma pi_frobenius_equation [hθ : Π i, fact (θ i).is_faithful_pos_map] :
 --   ((linear_map.mul' ℂ ℍ₂  ⊗ₘ (1 : l(ℍ₂)))
 --     ∘ₗ ↑(tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm
 --       ∘ₗ ((1 : l(ℍ₂)) ⊗ₘ ((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂))))
---         (include_block (x i) ⊗ₜ[ℂ] include_block (y j))
---     = (((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂) ∘ₗ (linear_map.mul' ℂ ℍ₂ : ℍ₂ ⊗[ℂ] ℍ₂ →ₗ[ℂ] ℍ₂))
---       (include_block (x i) ⊗ₜ[ℂ] include_block (y j)) :=
+--     = (((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂) ∘ₗ (linear_map.mul' ℂ ℍ₂ : ℍ₂ ⊗[ℂ] ℍ₂ →ₗ[ℂ] ℍ₂)) :=
 -- begin
---   -- letI := λ a, (hθ a).normed_add_comm_group,
---   -- letI := λ a, (hθ a).inner_product_space,
---   have := calc
+--   apply tensor_product.ext',
+--   intros x y,
+--   rw [← sum_include_block x, ← sum_include_block y],
+--   calc
 --   ((linear_map.mul' ℂ ℍ₂ ⊗ₘ (1 : l(ℍ₂)))
---     ∘ₗ (tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm.to_linear_map
+--     ∘ₗ ↑(tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm
 --       ∘ₗ ((1 : l(ℍ₂)) ⊗ₘ ((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] (ℍ₂ ⊗[ℂ] ℍ₂))))
---         (include_block (x i) ⊗ₜ[ℂ] include_block (y j))
---     =
---     (linear_map.mul' ℂ ℍ₂ ⊗ₘ (1 : l(ℍ₂)))
---       ((tensor_product.assoc ℂ ℍ₂ ℍ₂ ℍ₂).symm
---       ((include_block ⊗ₘ (include_block ⊗ₘ include_block))
---       (x i ⊗ₜ[ℂ] (linear_map.mul' ℂ (ℍ_ j)).adjoint (y j)))) : _
---   ... = (linear_map.mul' ℂ ℍ₂ ⊗ₘ (1 : l(ℍ₂)))
---       (((include_block ⊗ₘ include_block) ⊗ₘ include_block)
---       ((tensor_product.assoc ℂ (ℍ_ i) (ℍ_ j) (ℍ_ j)).symm
---       (x i ⊗ₜ[ℂ] (linear_map.mul' ℂ (ℍ_ j)).adjoint (y j)))) : _
---   ... = if (i = j) then (
---       (((include_block : (ℍ_ j) →ₗ[ℂ] ℍ₂) ⊗ₘ include_block) ∘ₗ
---       ((linear_map.mul' ℂ (ℍ_ j) ⊗ₘ (1 : l(ℍ_ j)))
---        ∘ₗ ↑(tensor_product.assoc ℂ (ℍ_ j) (ℍ_ j) (ℍ_ j)).symm
---        ∘ₗ ((1 : l(ℍ_ j)) ⊗ₘ (linear_map.mul' ℂ (ℍ_ j)).adjoint)))
---         (x j ⊗ₜ[ℂ] y j)) else 0 : _,
---   -- ... = if (i = j) then (
---   --     ((include_block ⊗ₘ include_block) ∘ₗ
---   --       ((linear_map.mul' ℂ (ℍ_ j)).adjoint ∘ₗ (linear_map.mul' ℂ (ℍ_ j)))) (x j ⊗ₜ[ℂ] y j)) else 0 : _,
---   -- ... = if (i = j) then (
---   --     (include_block ⊗ₘ include_block)
---   --     ((linear_map.mul' ℂ (ℍ_ j)).adjoint
---   --     ((linear_map.mul' ℂ (ℍ_ j)) (x j ⊗ₜ[ℂ] y j)))) else 0 : _,
---   { rw [linear_equiv.to_linear_map_eq_coe] at this,
---     simp_rw [frobenius_equation], }
---   -- ... = (M ⊗ₘ (1 : l(ℍ₂)))
---   --     (((include_block ⊗ₘ include_block) ⊗ₘ include_block)
---   --     ((tensor_product.assoc ℂ (ℍ_ i) (ℍ_ j) (ℍ_ j)).symm
---   --     (x ⊗ₜ[ℂ] (linear_map.mul' ℂ (ℍ_ j)).adjoint y))) : _
---   -- ... = (M ∘ₗ (include_block ⊗ₘ include_block) ⊗ₘ include_block)
---   --     ((tensor_product.assoc ℂ (ℍ_ i) (ℍ_ j) (ℍ_ j)).symm
---   --     (x ⊗ₜ[ℂ] (linear_map.mul' ℂ (ℍ_ j)).adjoint y)) : _
---   -- ... = 0 : _,
---   -- rw ← (direct_sum_tensor_to_kronecker : ℍ₂ ⊗[ℂ] ℍ₂ ≃ₗ[ℂ] Π i : (k × k), matrix (s i.fst × s i.snd) (s i.fst × s i.snd) ℂ).injective.eq_iff,
---   -- ext1 a,
---   -- ext1 b c,
---   -- simp_rw [linear_map.comp_apply, tensor_product.map_tmul, linear_map.mul'_adjoint_single_block,
---   --   linear_map.mul'_adjoint, map_sum, smul_hom_class.map_smul, tensor_product.tmul_sum,
---   --   tensor_product.tmul_smul, map_sum, smul_hom_class.map_smul, linear_equiv.coe_coe,
---   --   tensor_product.map_tmul, tensor_product.assoc_symm_tmul, tensor_product.map_tmul,
---   --   linear_map.one_apply, linear_map.mul'_apply, include_block_mul_include_block,
---   --   direct_sum_tensor_to_kronecker, linear_equiv.coe_mk, direct_sum_tensor_matrix,
---   --   direct_sum_tensor_apply, tensor_product.to_kronecker_apply,
---   --   finset.sum_apply, pi.smul_apply, kronecker_map, of_apply,
---   --   dite_apply, dite_mul, pi.zero_apply, zero_mul, smul_dite, smul_zero,include_block_apply_std_basis_matrix, include_block_apply,
---   --   block_diag'_apply, dite_apply, dite_mul, pi.zero_apply, zero_mul,
---   --   linear_map.apply_dite, map_zero, direct_sum_tensor, linear_equiv.coe_mk,
---   --   linear_map.apply_dite, dite_apply, map_zero, pi.zero_apply, linear_map.apply_dite,
---   --   map_zero, dite_apply, pi.zero_apply, finset.sum_dite_irrel, finset.sum_const_zero],
---   -- congr,
---   -- ext1 h,
---   -- simp only [h, linear_map.mul'_adjoint_single_block, smul_dite, smul_zero,
---   --   finset.sum_dite_irrel, finset.sum_const_zero, std_basis_matrix],
---   -- by_cases j = i,
---   -- { simp only [h, eq_self_iff_true, dif_pos, linear_map.mul'_adjoint_single_block,
---   --     linear_map.mul'_adjoint, map_sum, smul_hom_class.map_smul, pi.smul_apply,
---   --     finset.sum_apply, tensor_product.map_tmul, direct_sum_tensor_apply,
---   --     tensor_product.to_kronecker_apply, kronecker_map, of_apply,
---   --     include_block_apply_std_basis_matrix],
---   --   simp only [std_basis_matrix, block_diag'_apply, mul_ite, mul_one, mul_zero,
---   --     ite_mul, one_mul, zero_mul, smul_ite, smul_zero, smul_dite, mul_dite, dite_mul],
---   --   simp only [finset.sum_dite_irrel, finset.sum_const_zero, finset.sum_ite_irrel,
---   --     ite_and, sigma.mk.inj_iff, finset.sum_ite_eq', finset.sum_ite_eq, finset.sum_dite_eq,
---   --     finset.sum_dite_eq', finset.mem_univ, if_true],
---   --   split_ifs; simp [h_1, h],
---   --   apply finset.sum_congr rfl,
---   --   intros h_2,
---   --   split_ifs;
---   --   simp [h_3], }
+--         ((∑ i, include_block (x i)) ⊗ₜ[ℂ] (∑ j, include_block (y j)))
+--   =
+--   ∑ i j, if (i = j) then (
+--       ((include_block ⊗ₘ include_block) ∘ₗ
+--         ((linear_map.mul' ℂ (ℍ_ j)).adjoint ∘ₗ (linear_map.mul' ℂ (ℍ_ j))))
+--         ((x j) ⊗ₜ[ℂ] (y j))) else 0 :
+--   by { simp_rw [tensor_product.sum_tmul, tensor_product.tmul_sum, map_sum],
+--     repeat { apply finset.sum_congr rfl, intros },
+--     rw [frobenius_equation_direct_sum_aux], }
+--   ... =
+--   ∑ j, ((include_block ⊗ₘ include_block)
+--       ((linear_map.mul' ℂ (ℍ_ j)).adjoint
+--       ((linear_map.mul' ℂ (ℍ_ j))
+--       ((x j) ⊗ₜ[ℂ] (y j))))) :
+--   by { simp_rw [finset.sum_ite_eq, finset.mem_univ, if_true,
+--     linear_map.comp_apply], }
+--   ... =
+--   ∑ j, (((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂)
+--     ∘ₗ (include_block ∘ₗ (linear_map.mul' ℂ (ℍ_ j))))
+--       ((x j) ⊗ₜ[ℂ] (y j)) :
+--   by { simp_rw [linear_map.comp_apply, linear_map.pi_mul'_adjoint_single_block], }
+--   ... =
+--   ∑ i j, ite (i = j)
+--   ((((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂) ∘ₗ
+--   (include_block.comp ((linear_map.mul' ℂ (matrix (s j) (s j) ℂ)).comp (matrix_direct_sum_from_to i j ⊗ₘ 1))))
+--      (x i ⊗ₜ[ℂ] y j)
+--   )
+--    0 :
+--   by { simp_rw [finset.sum_ite_eq, finset.mem_univ, if_true,
+--     matrix_direct_sum_from_to_same, tensor_product.map_one, linear_map.comp_one], }
+--   ... =
+--   ∑ j, (((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂)
+--     ((linear_map.mul' ℂ ℍ₂ : ℍ₂ ⊗[ℂ] ℍ₂ →ₗ[ℂ] ℍ₂)
+--      (include_block (x j) ⊗ₜ[ℂ] include_block (y j)))) :
+--   by { simp_rw [← linear_map.pi_mul'_apply_include_block'], }
+--   ... =
+--   (((linear_map.mul' ℂ ℍ₂).adjoint : ℍ₂ →ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂) ∘ₗ (linear_map.mul' ℂ ℍ₂ : ℍ₂ ⊗[ℂ] ℍ₂ →ₗ[ℂ] ℍ₂))
+--   ((∑ i, include_block (x i)) ⊗ₜ[ℂ] (∑ j, include_block (y j))) :
+--   by {  },
 
---   -- rw [matrix_eq_sum_include_block x, matrix_eq_sum_include_block y],
---   -- simp only [tensor_product.sum_tmul, tensor_product.tmul_sum, map_sum,
---   -- simp_rw [← linear_map.comp_apply, ← tensor_product.map_tmul, linear_map.mul'_adjoint_single_block hθ],
---   --   linear_map.one_apply],
---   -- simp_rw [← tensor_product.map_tmul, ← linear_map.comp_apply,
---   --   ← linear_equiv.to_linear_map_eq_coe, tensor_product.assoc_symm_comp_map,
---   --   ← linear_map.comp_assoc, ← tensor_product.map_comp],
-
---   -- have := calc ∑ (x_1 x_2 : k), ((((linear_map.mul' ℂ ℍ₂).comp (include_block ⊗ₘ include_block)) ⊗ₘ include_block).comp
---   --   (tensor_product.assoc ℂ (ℍ_ x_2) (ℍ_ x_1) (ℍ_ x_1).symm.to_linear_map))
---   --   (x x_2 ⊗ₜ[ℂ] (m_ x_1 ⋆) (y x_1))
---   --   = 0 : _,
---   -- rw [linear_map.mul'_direct_sum_apply_include_block'],
 -- end
 
 lemma frobenius_equation' [hφ : fact φ.is_faithful_pos_map] :

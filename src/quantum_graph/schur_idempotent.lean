@@ -348,6 +348,14 @@ begin
   ext1 h,
   tidy,
 end
+example {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map] (x : 𝔹) :
+  (module.dual.pi.is_faithful_pos_map.to_matrix (λ i, (hψ i).elim) (lmul x : l(𝔹))
+    : matrix (Σ i, s i × s i) (Σ i, s i × s i) ℂ)
+  = block_diagonal' (λ i, (hψ i).elim.to_matrix (lmul (x i))) :=
+begin
+  simp_rw [pi_lmul_to_matrix, lmul_eq_mul, linear_map.mul_left_to_matrix],
+end
 lemma pi_rmul_to_matrix
   {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
   [hψ : Π i, fact (ψ i).is_faithful_pos_map] (x : 𝔹) :
@@ -374,6 +382,40 @@ begin
   ext1 h,
   tidy,
 end
+lemma unitary.coe_pi (U : Π i, unitary_group (s i) ℂ) :
+  (unitary.pi U : Π i, matrix (s i) (s i) ℂ) = ↑U :=
+rfl
+lemma unitary.coe_pi_apply (U : Π i, unitary_group (s i) ℂ) (i : n) :
+  (↑U : Π i, matrix (s i) (s i) ℂ) i = U i :=
+rfl
+
+lemma pi_inner_aut_to_matrix
+  {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
+  [hψ : Π i, fact (ψ i).is_faithful_pos_map]
+  (U : Π i, unitary_group (s i) ℂ) :
+  (module.dual.pi.is_faithful_pos_map.to_matrix (λ i, (hψ i).elim) ((unitary.inner_aut_star_alg ℂ (unitary.pi U)).to_alg_equiv.to_linear_map : l(𝔹))
+    : matrix (Σ i, s i × s i) (Σ i, s i × s i) ℂ)
+  =
+  block_diagonal' (λ i,
+    (U i) ⊗ₖ ((hψ i).elim.sig (- (1/2 : ℝ)) ((U i) : matrix (s i) (s i) ℂ))ᴴᵀ) :=
+begin
+  have : ((unitary.inner_aut_star_alg ℂ (unitary.pi U)).to_alg_equiv.to_linear_map : l(𝔹))
+    =
+  (lmul ↑U : l(𝔹)) * (rmul (star ↑U) : l(𝔹)),
+  { ext1,
+    simp_rw [alg_equiv.to_linear_map_apply, star_alg_equiv.coe_to_alg_equiv,
+      linear_map.mul_apply, lmul_apply, rmul_apply, unitary.inner_aut_star_alg_apply,
+      mul_assoc, unitary.coe_star, unitary.coe_pi], },
+  rw [this, _root_.map_mul, pi_lmul_to_matrix, pi_rmul_to_matrix,
+    mul_eq_mul, ← block_diagonal'_mul],
+  simp_rw [← mul_kronecker_mul, matrix.mul_one, matrix.one_mul,
+    pi.star_apply, star_eq_conj_transpose, block_diagonal'_inj, unitary.coe_pi_apply],
+  ext1 i,
+  nth_rewrite 0 [← neg_neg (1 / 2 : ℝ)],
+  simp_rw [← module.dual.is_faithful_pos_map.sig_conj_transpose],
+  refl,
+end
+
 lemma schur_idempotent_one_left_rank_one
   {ψ : Π i, module.dual ℂ (matrix (s i) (s i) ℂ)}
   [hψ : Π i, fact (ψ i).is_faithful_pos_map]

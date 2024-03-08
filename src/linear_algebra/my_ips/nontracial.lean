@@ -1182,9 +1182,31 @@ begin
   intros i,
   apply_instance,
 end
-private def f₁_equiv :
-  (ℍ₂ ⊗[ℂ] ℍ₂ᵐᵒᵖ) ≃ₗ[ℂ] ℍ₂ ⊗[ℂ] ℍ₂ :=
-linear_equiv.tensor_product.map (1 : ℍ₂ ≃ₗ[ℂ] ℍ₂) (mul_opposite.op_linear_equiv ℂ).symm
+
+@[simps] def pi.transpose_alg_equiv (p : Type*) [fintype p] [decidable_eq p]
+  (n : p → Type*) [Π i, fintype (n i)] [Π i, decidable_eq (n i)] :
+  (Π i, matrix (n i) (n i) ℂ) ≃ₐ[ℂ] (Π i, matrix (n i) (n i) ℂ)ᵐᵒᵖ :=
+{ to_fun := λ A, mul_opposite.op (λ i, (A i)ᵀ),
+  inv_fun := λ A, (λ i, (mul_opposite.unop A i)ᵀ),
+  left_inv := λ A, by
+  { simp only [mul_opposite.unop_op, transpose_transpose], },
+  right_inv := λ A, by
+  { simp only [mul_opposite.op_unop, transpose_transpose], },
+  map_add' := λ A B, by
+  { simp only [pi.add_apply, transpose_add],
+    refl, },
+  map_mul' := λ A B, by
+  { simp only [pi.mul_apply, mul_eq_mul, transpose_mul, ← mul_opposite.op_mul],
+    refl, },
+  commutes' := λ c, by
+  { simp only [algebra.algebra_map_eq_smul_one, pi.smul_apply, pi.one_apply,
+      transpose_smul, transpose_one],
+    refl, }, }
+
+lemma pi.transpose_alg_equiv_symm_op_apply (A : Π i, matrix (s i) (s i) ℂ) :
+  (pi.transpose_alg_equiv k s).symm (mul_opposite.op A) = λ i, (A i)ᵀ :=
+rfl
+
 private def f₂_equiv :
   ℍ₂ ⊗[ℂ] ℍ₂ ≃ₐ[ℂ] Π i : k × k, (matrix (s i.1) (s i.1) ℂ ⊗[ℂ] matrix (s i.2) (s i.2) ℂ) :=
 begin
@@ -1207,15 +1229,14 @@ private def f₄_equiv :
     // x.is_block_diagonal } :=
 is_block_diagonal_pi_alg_equiv.symm
 
+def tensor_product_mul_op_equiv :
+  (ℍ₂ ⊗[ℂ] ℍ₂ᵐᵒᵖ) ≃ₐ[ℂ]
+  Π i : k × k, matrix (s i.1 × s i.2) (s i.1 × s i.2) ℂ :=
+(alg_equiv.tensor_product.map
+  (1 : ℍ₂ ≃ₐ[ℂ] ℍ₂) (pi.transpose_alg_equiv k s : ℍ₂ ≃ₐ[ℂ] ℍ₂ᵐᵒᵖ).symm).trans
+  (f₂_equiv.trans (f₃_equiv))
 
-private def f₅_equiv :
-  (ℍ₂ ⊗[ℂ] ℍ₂ᵐᵒᵖ)
-    ≃ₗ[ℂ] { x : matrix (Σ i : k × k, s i.1 × s i.2) (Σ i : k × k, s i.1 × s i.2) ℂ
-      // x.is_block_diagonal } :=
-begin
-  let : ℍ₂ ⊗[ℂ] ℍ₂ ≃ₐ[ℂ] _ := f₂_equiv.trans (f₃_equiv.trans f₄_equiv),
-  exact f₁_equiv.trans this.to_linear_equiv,
-end
+
 
 noncomputable def module.dual.pi.is_faithful_pos_map.Psi_inv_fun'
   (hψ : Π i, fact (ψ i).is_faithful_pos_map) (t r : ℝ) :

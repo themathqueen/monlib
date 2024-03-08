@@ -889,11 +889,11 @@ begin
   simp_rw [linear_map.comp_apply],
   simp_rw [← ι_linear_equiv_apply_eq, ← ι_linear_equiv_symm_apply_eq,
     linear_equiv.symm_apply_apply],
-  have : (ι_linear_equiv hφ.elim).symm 1 = qam.complete_graph hφ.elim,
+  have : (ι_linear_equiv hφ.elim).symm 1 = qam.complete_graph ℍ,
   { simp_rw [ι_linear_equiv_symm_apply_eq, algebra.tensor_product.one_def,
       ι_inv_map_apply, conj_transpose_one, _root_.map_one],
     refl, },
-  rw [this, qam.refl_idempotent_complete_graph_right],
+  rw [this, qam.refl_idempotent, qam.refl_idempotent_complete_graph_right],
 end
 
 lemma φ_inv'_map_φ_map :
