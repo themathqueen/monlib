@@ -7,6 +7,8 @@ import quantum_graph.nontracial
 import quantum_graph.to_projections
 import quantum_graph.qam_A
 import linear_algebra.my_bimodule
+import quantum_graph.symm
+import quantum_graph.schur_idempotent
 
 /-!
  # Some messy stuff
@@ -147,23 +149,34 @@ begin
   exact linear_equiv.of_linear (ι_map hφ) (ι_inv_map hφ) (ι_map_comp_inv) (ι_inv_comp_ι_map),
 end
 
-noncomputable def φ_map (hφ : φ.is_faithful_pos_map) :
-  l(ℍ) →ₗ[ℂ] l(ℍ ⊗[ℂ] ℍ) :=
+private noncomputable def phi_map_aux (hφ : fact φ.is_faithful_pos_map)
+  (x : l(ℍ)) : l(ℍ ⊗[ℂ] ℍ) :=
+(id ⊗ₘ m) ∘ₗ υ ∘ₗ (id ⊗ₘ x ⊗ₘ id) ∘ₗ ((m).adjoint ⊗ₘ id)
+private lemma phi_map_aux_add (hφ : fact φ.is_faithful_pos_map)
+  (x y : l(ℍ)) :
+  phi_map_aux hφ (x + y) = phi_map_aux hφ x + phi_map_aux hφ y :=
 begin
-  letI := fact.mk hφ,
-  exact { to_fun := λ x, (id ⊗ₘ m) ∘ₗ υ ∘ₗ (id ⊗ₘ x ⊗ₘ id) ∘ₗ ((m).adjoint ⊗ₘ id),
-    map_add' := λ x y, by { rw tensor_product.ext_iff,
-      intros a b,
-      simp only [linear_map.comp_apply, linear_map.add_apply, map_add, tensor_product.map_tmul,
-        linear_equiv.coe_coe, tensor_product.assoc_tmul, tensor_product.map_add_right,
-        tensor_product.map_add_left], },
-    map_smul' := λ r x, by {
-      rw tensor_product.ext_iff,
-      intros a b,
-      simp only [linear_map.comp_apply, linear_map.smul_apply, smul_hom_class.map_smul,
-        tensor_product.map_tmul, linear_equiv.coe_coe, tensor_product.assoc_tmul,
-        tensor_product.map_smul_right, tensor_product.map_smul_left, ring_hom.id_apply], } },
+  simp_rw [phi_map_aux, tensor_product.map_add, tensor_product.add_map,
+      linear_map.add_comp, linear_map.comp_add],
 end
+private lemma phi_map_aux_smul (hφ : fact φ.is_faithful_pos_map)
+  (x : ℂ) (y : l(ℍ)) :
+  phi_map_aux hφ (x • y) = x • phi_map_aux hφ y :=
+begin
+  apply tensor_product.ext',
+  intros a b,
+  rw [phi_map_aux, linear_map.comp_apply, tensor_product.map_smul, tensor_product.smul_map,
+    linear_map.smul_apply, linear_map.smul_comp,
+    linear_map.comp_smul, linear_map.smul_apply, smul_hom_class.map_smul],
+  refl,
+end
+
+noncomputable def phi_map (hφ : φ.is_faithful_pos_map) :
+  l(ℍ) →ₗ[ℂ] l(ℍ ⊗[ℂ] ℍ) :=
+{ to_fun := λ x, by letI := fact.mk hφ;
+  exact (id ⊗ₘ m) ∘ₗ υ ∘ₗ (id ⊗ₘ x ⊗ₘ id) ∘ₗ ((m).adjoint ⊗ₘ id),
+  map_add' := λ x y, phi_map_aux_add (fact.mk hφ) x y,
+  map_smul' := λ x y, phi_map_aux_smul (fact.mk hφ) x y }
 
 lemma module.dual.is_faithful_pos_map.sig_is_symmetric {t : ℝ} :
   linear_map.is_symmetric (hφ.elim.sig t).to_linear_map :=
@@ -240,8 +253,8 @@ begin
     tensor_product.inner_tmul, tensor_product.smul_tmul_smul],
 end
 
-lemma φ_map_eq :
-  φ_map hφ.elim = (rmul_map_lmul : (ℍ ⊗[ℂ] ℍ) →ₗ[ℂ] l(ℍ ⊗[ℂ] ℍ)) ∘ₗ ι_map hφ.elim :=
+lemma phi_map_eq :
+  phi_map hφ.elim = (rmul_map_lmul : (ℍ ⊗[ℂ] ℍ) →ₗ[ℂ] l(ℍ ⊗[ℂ] ℍ)) ∘ₗ ι_map hφ.elim :=
 begin
   apply linear_map.ext_of_rank_one',
   intros x y,
@@ -249,7 +262,7 @@ begin
   intros a b,
   rw tensor_product.inner_ext_iff',
   intros c d,
-  simp_rw [φ_map, linear_map.coe_mk, linear_map.comp_apply, tensor_product.map_tmul],
+  simp_rw [phi_map, linear_map.coe_mk, linear_map.comp_apply, tensor_product.map_tmul],
   obtain ⟨α, β, h⟩ := tensor_product.eq_span ((m).adjoint a),
   rw ← h,
   simp_rw [map_sum, tensor_product.sum_tmul, map_sum, linear_equiv.coe_coe,
@@ -295,8 +308,8 @@ by simp_rw [tensor_one_map, linear_map.comp_apply, linear_equiv.coe_coe,
 
 private lemma grad_apply_rank_one (x y : ℍ) :
   grad hφ.elim (|x⟩⟨y|) =
-    φ_map hφ.elim (|x⟩⟨y| : l(ℍ)).real ∘ₗ tensor_one_map
-      - φ_map hφ.elim (|x⟩⟨y|) ∘ₗ one_tensor_map :=
+    phi_map hφ.elim (|x⟩⟨y| : l(ℍ)).real ∘ₗ tensor_one_map
+      - phi_map hφ.elim (|x⟩⟨y|) ∘ₗ one_tensor_map :=
 begin
   rw linear_map.ext_iff,
   intros a,
@@ -309,7 +322,7 @@ begin
   obtain ⟨α, β, h⟩ := tensor_product.eq_span ((m).adjoint a),
   rw ← h,
   simp_rw [map_sum, sum_inner, tensor_product.map_tmul, rank_one_lm_eq_rank_one,
-    φ_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
+    phi_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
     tensor_product.map_tmul, tensor_product.inner_tmul, continuous_linear_map.coe_coe,
     rank_one_apply, inner_smul_left, inner_conj_symm, linear_map.one_apply,
     mul_comm (inner (α _) _ : ℂ), mul_assoc, ← finset.mul_sum, ← tensor_product.inner_tmul,
@@ -323,7 +336,7 @@ begin
     sig_neg_one, ← module.dual.is_faithful_pos_map.inner_left_conj],
 end
 lemma grad_apply (x : l(ℍ)) :
-  grad hφ.elim x =  φ_map hφ.elim x.real ∘ₗ tensor_one_map - φ_map hφ.elim x ∘ₗ one_tensor_map :=
+  grad hφ.elim x =  phi_map hφ.elim x.real ∘ₗ tensor_one_map - phi_map hφ.elim x ∘ₗ one_tensor_map :=
 begin
   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
   rw [map_sum, linear_map.real_sum],
@@ -359,33 +372,33 @@ by simp_rw [tensor_one_map_adjoint, linear_map.comp_apply, tensor_product.map_tm
   linear_equiv.coe_coe, tensor_product.lid_tmul, linear_map.one_apply,
   nontracial.unit_adjoint_eq]
 
-private lemma φ_map_adjoint_rank_one (x y : ℍ) :
-  (φ_map hφ.elim (|x⟩⟨y|)).adjoint = φ_map hφ.elim (|x⟩⟨y| : l(ℍ)).real :=
+private lemma phi_map_adjoint_rank_one (x y : ℍ) :
+  (phi_map hφ.elim (|x⟩⟨y|)).adjoint = phi_map hφ.elim (|x⟩⟨y| : l(ℍ)).real :=
 begin
-  simp_rw [φ_map_eq, rank_one_real_apply, linear_map.comp_apply,
+  simp_rw [phi_map_eq, rank_one_real_apply, linear_map.comp_apply,
     ι_map_apply_rank_one, rmul_map_lmul_apply, tensor_product.map_adjoint, rmul_eq_mul,
     lmul_eq_mul, linear_map.matrix.mul_left_adjoint, ← linear_map.matrix.mul_right_adjoint],
 end
-lemma φ_map_adjoint (x : l(ℍ)) :
-  (φ_map hφ.elim x).adjoint = φ_map hφ.elim x.real :=
+lemma phi_map_adjoint (x : l(ℍ)) :
+  (phi_map hφ.elim x).adjoint = phi_map hφ.elim x.real :=
 begin
   obtain ⟨α, β, h⟩ := x.exists_sum_rank_one,
   rw h,
-  simp_rw [linear_map.real_sum, map_sum, φ_map_adjoint_rank_one],
+  simp_rw [linear_map.real_sum, map_sum, phi_map_adjoint_rank_one],
 end
 
 private lemma grad_adjoint_rank_one (x y : ℍ) :
   (grad hφ.elim (|x⟩⟨y|)  : ℍ →ₗ[ℂ] (ℍ ⊗[ℂ] ℍ)).adjoint
-    = τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ φ_map hφ.elim (|x⟩⟨y|)
-    - τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ φ_map hφ.elim (|x⟩⟨y| : l(ℍ)).real :=
+    = τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ phi_map hφ.elim (|x⟩⟨y|)
+    - τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ phi_map hφ.elim (|x⟩⟨y| : l(ℍ)).real :=
 begin
   simp_rw [grad_apply_rank_one, map_sub, linear_map.adjoint_comp,
-    tensor_one_map_adjoint, one_tensor_map_adjoint, ← φ_map_adjoint_rank_one,
+    tensor_one_map_adjoint, one_tensor_map_adjoint, ← phi_map_adjoint_rank_one,
     linear_map.adjoint_adjoint, linear_map.comp_assoc],
 end
 lemma grad_adjoint (x : l(ℍ)) :
-  (grad hφ.elim x).adjoint = τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ φ_map hφ.elim x
-    - τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ φ_map hφ.elim x.real :=
+  (grad hφ.elim x).adjoint = τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ phi_map hφ.elim x
+    - τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ phi_map hφ.elim x.real :=
 begin
   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
   rw [linear_map.real_sum],
@@ -397,71 +410,71 @@ lemma sig_map_mul (t : ℝ) (x y : ℍ) :
   hφ.elim.sig t (x ⬝ y) = hφ.elim.sig t x ⬝ hφ.elim.sig t y :=
 by simp only [← mul_eq_mul, _root_.map_mul]
 
-private lemma φ_map_mul_rank_one (x y z w : ℍ) :
-  φ_map hφ.elim (qam.refl_idempotent hφ.elim (|x⟩⟨y|) (|z⟩⟨w|))
-    = φ_map hφ.elim (|x⟩⟨y|) ∘ₗ φ_map hφ.elim (|z⟩⟨w|) :=
+private lemma phi_map_mul_rank_one (x y z w : ℍ) :
+  phi_map hφ.elim (qam.refl_idempotent hφ.elim (|x⟩⟨y|) (|z⟩⟨w|))
+    = phi_map hφ.elim (|x⟩⟨y|) ∘ₗ phi_map hφ.elim (|z⟩⟨w|) :=
 begin
-  simp_rw [qam.rank_one.refl_idempotent_eq, φ_map_eq, linear_map.comp_apply,
+  simp_rw [qam.rank_one.refl_idempotent_eq, phi_map_eq, linear_map.comp_apply,
     ι_map_apply_rank_one, rmul_map_lmul_apply, ← tensor_product.map_comp, lmul_eq_mul,
     rmul_eq_mul, ← linear_map.mul_right_mul, ← linear_map.mul_left_mul,
     mul_eq_mul, ← sig_map_mul, ← conj_transpose_mul],
 end
-lemma φ_map_mul (A B : l(ℍ)) :
-  φ_map hφ.elim (qam.refl_idempotent hφ.elim A B) = φ_map hφ.elim A ∘ₗ φ_map hφ.elim B :=
+lemma phi_map_mul (A B : l(ℍ)) :
+  phi_map hφ.elim (qam.refl_idempotent hφ.elim A B) = phi_map hφ.elim A ∘ₗ phi_map hφ.elim B :=
 begin
   obtain ⟨α, β, rfl⟩ := A.exists_sum_rank_one,
   obtain ⟨γ, ζ, rfl⟩ := B.exists_sum_rank_one,
   -- rw [linear_map.eq_rank_one_of_faithful_pos_map hφ A,
   --   B.eq_rank_one_of_faithful_pos_map hφ],
-  simp_rw [map_sum, linear_map.sum_apply, map_sum, φ_map_mul_rank_one,
+  simp_rw [map_sum, linear_map.sum_apply, map_sum, phi_map_mul_rank_one,
     ← linear_map.sum_comp, ← linear_map.comp_sum],
 end
 
-lemma φ_map_of_real_Schur_idempotent {x : l(ℍ)} (hx1 : x.is_real)
+lemma phi_map_of_real_Schur_idempotent {x : l(ℍ)} (hx1 : x.is_real)
   (hx2 : qam.refl_idempotent hφ.elim x x = x) :
-  ((φ_map hφ.elim x).adjoint) = φ_map hφ.elim x ∧ is_idempotent_elem (φ_map hφ.elim x) :=
+  ((phi_map hφ.elim x).adjoint) = phi_map hφ.elim x ∧ is_idempotent_elem (phi_map hφ.elim x) :=
 begin
-  simp_rw [is_idempotent_elem, φ_map_adjoint, linear_map.mul_eq_comp, ← φ_map_mul,
+  simp_rw [is_idempotent_elem, phi_map_adjoint, linear_map.mul_eq_comp, ← phi_map_mul,
     (linear_map.is_real_iff _).mp hx1, hx2, and_self],
 end
 @[instance] private def hmm {H : Type*} [normed_add_comm_group H]
   [inner_product_space ℂ H] [finite_dimensional ℂ H] (U : submodule ℂ H) :
   complete_space U :=
 finite_dimensional.complete ℂ U
-def φ_map_of_real_Schur_idempotent_orthogonal_projection {x : l(ℍ)} (hx1 : x.is_real)
+def phi_map_of_real_Schur_idempotent_orthogonal_projection {x : l(ℍ)} (hx1 : x.is_real)
   (hx2 : qam.refl_idempotent hφ.elim x x = x) :
   ∃ U : submodule ℂ (ℍ ⊗[ℂ] ℍ),
-    (orthogonal_projection' U : l(ℍ ⊗[ℂ] ℍ)) = φ_map hφ.elim x :=
+    (orthogonal_projection' U : l(ℍ ⊗[ℂ] ℍ)) = phi_map hφ.elim x :=
 begin
   rw [orthogonal_projection_iff_lm, _root_.is_self_adjoint, linear_map.star_eq_adjoint],
-  simp_rw [φ_map_of_real_Schur_idempotent hx1 hx2, and_true],
+  simp_rw [phi_map_of_real_Schur_idempotent hx1 hx2, and_true],
 end
-noncomputable def φ_map_of_real_Schur_idempotent.submodule {x : l(ℍ)} (hx1 : x.is_real)
+noncomputable def phi_map_of_real_Schur_idempotent.submodule {x : l(ℍ)} (hx1 : x.is_real)
   (hx2 : qam.refl_idempotent hφ.elim x x = x) :
   submodule ℂ (ℍ ⊗[ℂ] ℍ) :=
-by choose U hU using φ_map_of_real_Schur_idempotent_orthogonal_projection hx1 hx2; exact U
-def φ_map_of_real_Schur_idempotent.orthogonal_projection_eq {x : l(ℍ)} (hx1 : x.is_real)
+by choose U hU using phi_map_of_real_Schur_idempotent_orthogonal_projection hx1 hx2; exact U
+def phi_map_of_real_Schur_idempotent.orthogonal_projection_eq {x : l(ℍ)} (hx1 : x.is_real)
   (hx2 : qam.refl_idempotent hφ.elim x x = x) :
-  (orthogonal_projection' (φ_map_of_real_Schur_idempotent.submodule hx1 hx2) : l(ℍ ⊗[ℂ] ℍ))
-    = φ_map hφ.elim x :=
-φ_map_of_real_Schur_idempotent.submodule._proof_11 hx1 hx2
+  (orthogonal_projection' (phi_map_of_real_Schur_idempotent.submodule hx1 hx2) : l(ℍ ⊗[ℂ] ℍ))
+    = phi_map hφ.elim x :=
+phi_map_of_real_Schur_idempotent.submodule._proof_11 hx1 hx2
 
 lemma grad_apply_of_real_Schur_idempotent {x : l(ℍ)} (hx1 : x.is_real)
   (hx2 : qam.refl_idempotent hφ.elim x x = x) :
-  (φ_map hφ.elim x) ∘ₗ (grad hφ.elim x) = grad hφ.elim x :=
+  (phi_map hφ.elim x) ∘ₗ (grad hφ.elim x) = grad hφ.elim x :=
 begin
   simp_rw [grad_apply, (linear_map.is_real_iff _).mp hx1, ← linear_map.comp_sub,
-    ← linear_map.comp_assoc, ← φ_map_mul, hx2],
+    ← linear_map.comp_assoc, ← phi_map_mul, hx2],
 end
 
 lemma grad_of_real_Schur_idempotent_range {x : l(ℍ)} (hx1 : x.is_real)
   (hx2 : qam.refl_idempotent hφ.elim x x = x) :
-  (grad hφ.elim x).range ≤ φ_map_of_real_Schur_idempotent.submodule hx1 hx2 :=
+  (grad hφ.elim x).range ≤ phi_map_of_real_Schur_idempotent.submodule hx1 hx2 :=
 begin
   rw [← grad_apply_of_real_Schur_idempotent hx1 hx2,
-    ← φ_map_of_real_Schur_idempotent.orthogonal_projection_eq hx1 hx2],
+    ← phi_map_of_real_Schur_idempotent.orthogonal_projection_eq hx1 hx2],
   nth_rewrite 0 ← orthogonal_projection.range
-    (φ_map_of_real_Schur_idempotent.submodule hx1 hx2),
+    (phi_map_of_real_Schur_idempotent.submodule hx1 hx2),
   rw [linear_map.range_le_iff_comap],
   -- rw [range_le_iff_comap],
   apply submodule.ext,
@@ -506,15 +519,15 @@ begin
     tensor_product.map_tmul, linear_map.mul'_apply, linear_map.one_apply, rmul_apply],
 end
 
-lemma tensor_one_map_adjoint_comp_φ_map_comp_one_tensor_map_rank_one (x y : ℍ) :
-  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ φ_map hφ.elim (|x⟩⟨y|) ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹
+lemma tensor_one_map_adjoint_comp_phi_map_comp_one_tensor_map_rank_one (x y : ℍ) :
+  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ phi_map hφ.elim (|x⟩⟨y|) ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹
   = |x⟩⟨y| :=
 begin
   rw linear_map.ext_iff,
   intros a,
   simp_rw [linear_map.comp_apply, linear_equiv.coe_coe, tensor_product.lid_symm_apply,
     tensor_product.comm_symm_tmul, tensor_product.map_tmul, linear_map.one_apply,
-    algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, φ_map_eq, linear_map.comp_apply, ι_map_apply_rank_one,
+    algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, phi_map_eq, linear_map.comp_apply, ι_map_apply_rank_one,
     rmul_map_lmul_apply, tensor_product.map_tmul, tensor_product.lid_tmul,
     lmul_apply, rmul_apply, nontracial.unit_adjoint_eq],
   have := module.dual.is_faithful_pos_map.mul_left hφ.elim aᴴ y 1,
@@ -524,12 +537,12 @@ begin
     matrix.mul_one],
   rw [continuous_linear_map.coe_coe, rank_one_apply, module.dual.is_faithful_pos_map.inner_eq],
 end
-lemma tensor_one_map_adjoint_comp_φ_map_comp_one_tensor_map (x : l(ℍ)) :
-  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ φ_map hφ.elim x ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹ = x :=
+lemma tensor_one_map_adjoint_comp_phi_map_comp_one_tensor_map (x : l(ℍ)) :
+  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ phi_map hφ.elim x ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹ = x :=
 begin
   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
   simp only [map_sum, linear_map.sum_comp, linear_map.comp_sum,
-    linear_map.sum_apply, tensor_one_map_adjoint_comp_φ_map_comp_one_tensor_map_rank_one],
+    linear_map.sum_apply, tensor_one_map_adjoint_comp_phi_map_comp_one_tensor_map_rank_one],
 end
 
 lemma linear_functional_comp_sig (t : ℝ) :
@@ -542,14 +555,14 @@ begin
   rw [← _root_.map_mul, aut_mat_inner_trace_preserving],
 end
 
-private lemma tensor_one_map_adjoint_comp_φ_map_comp_tensor_one_map_rank_one (x y : ℍ) :
-  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ φ_map hφ.elim (|x⟩⟨y|) ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹
+private lemma tensor_one_map_adjoint_comp_phi_map_comp_tensor_one_map_rank_one (x y : ℍ) :
+  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ phi_map hφ.elim (|x⟩⟨y|) ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹
   = D_in (|x⟩⟨y| : l(ℍ)) :=
 begin
   rw linear_map.ext_iff,
   intros a,
   simp_rw [linear_map.comp_apply, linear_equiv.coe_coe, tensor_product.lid_symm_apply,
-    tensor_product.map_tmul, linear_map.one_apply, algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, φ_map_eq,
+    tensor_product.map_tmul, linear_map.one_apply, algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, phi_map_eq,
     linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
     tensor_product.map_tmul, tensor_product.lid_tmul, lmul_apply, rmul_apply, nontracial.unit_adjoint_eq,
     one_smul, one_mul, linear_map.one_apply, D_in_apply, lmul_eq_mul,
@@ -557,22 +570,22 @@ begin
     ← alg_equiv.to_linear_map_apply, ← linear_map.comp_apply, linear_functional_comp_sig,
     module.dual.is_faithful_pos_map.inner_eq, matrix.mul_one, smul_mul_assoc],
 end
-lemma tensor_one_map_adjoint_comp_φ_map_comp_tensor_one_map (x : l(ℍ)) :
-  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ φ_map hφ.elim x ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹ = D_in x :=
+lemma tensor_one_map_adjoint_comp_phi_map_comp_tensor_one_map (x : l(ℍ)) :
+  τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ phi_map hφ.elim x ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹ = D_in x :=
 begin
   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
   simp only [map_sum, linear_map.sum_comp, linear_map.comp_sum,
-    linear_map.sum_apply, tensor_one_map_adjoint_comp_φ_map_comp_tensor_one_map_rank_one],
+    linear_map.sum_apply, tensor_one_map_adjoint_comp_phi_map_comp_tensor_one_map_rank_one],
 end
 
-private lemma one_tensor_map_adjoint_comp_φ_map_comp_tensor_one_map_rank_one (x y : ℍ) :
-  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ φ_map hφ.elim (|x⟩⟨y|) ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹
+private lemma one_tensor_map_adjoint_comp_phi_map_comp_tensor_one_map_rank_one (x y : ℍ) :
+  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ phi_map hφ.elim (|x⟩⟨y|) ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹
   = (((|x⟩⟨y| : l(ℍ)).real).adjoint) :=
 begin
   rw linear_map.ext_iff,
   intros a,
   simp_rw [linear_map.comp_apply, linear_equiv.coe_coe, tensor_product.lid_symm_apply,
-    tensor_product.map_tmul, linear_map.one_apply, algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, φ_map_eq,
+    tensor_product.map_tmul, linear_map.one_apply, algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, phi_map_eq,
     linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
     tensor_product.map_tmul, tensor_product.comm_tmul, tensor_product.lid_tmul,
     lmul_apply, rmul_apply, nontracial.unit_adjoint_eq, one_smul, one_mul, linear_map.one_apply,
@@ -580,24 +593,24 @@ begin
     rank_one_lm_apply, module.dual.is_faithful_pos_map.inner_eq, conj_transpose_conj_transpose, mul_eq_mul],
 end
 
-lemma one_tensor_map_adjoint_comp_φ_map_comp_tensor_one_map (x : l(ℍ)) :
-  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ φ_map hφ.elim x ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹ = ((x.real).adjoint) :=
+lemma one_tensor_map_adjoint_comp_phi_map_comp_tensor_one_map (x : l(ℍ)) :
+  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ phi_map hφ.elim x ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹ = ((x.real).adjoint) :=
 begin
   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
   simp only [map_sum, linear_map.sum_comp, linear_map.comp_sum,
-    linear_map.sum_apply, one_tensor_map_adjoint_comp_φ_map_comp_tensor_one_map_rank_one,
+    linear_map.sum_apply, one_tensor_map_adjoint_comp_phi_map_comp_tensor_one_map_rank_one,
     linear_map.real_sum],
 end
 
-private lemma one_tensor_map_adjoint_comp_φ_map_comp_one_tensor_map_rank_one (x y : ℍ) :
-  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ φ_map hφ.elim (|x⟩⟨y|) ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹
+private lemma one_tensor_map_adjoint_comp_phi_map_comp_one_tensor_map_rank_one (x y : ℍ) :
+  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ phi_map hφ.elim (|x⟩⟨y|) ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹
   = D_out hφ.elim (|x⟩⟨y| : l(ℍ)).real :=
 begin
   rw linear_map.ext_iff,
   intros a,
   simp_rw [linear_map.comp_apply, linear_equiv.coe_coe, tensor_product.lid_symm_apply,
     tensor_product.comm_symm_tmul, tensor_product.map_tmul, linear_map.one_apply,
-    algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, φ_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
+    algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, phi_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
     tensor_product.map_tmul, tensor_product.comm_tmul, tensor_product.lid_tmul,
     lmul_apply, rmul_apply, nontracial.unit_adjoint_eq, one_smul, mul_one, linear_map.one_apply,
     D_out_apply, rmul_eq_mul, rank_one_real_apply, ← rank_one_lm_eq_rank_one,
@@ -605,15 +618,15 @@ begin
     ← alg_equiv.to_linear_map_apply, module.dual.is_faithful_pos_map.inner_eq, matrix.mul_one, conj_transpose_conj_transpose,
     mul_smul_comm],
 end
-lemma one_tensor_map_adjoint_comp_φ_map_comp_one_tensor_map (x : l(ℍ)) :
-  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ φ_map hφ.elim x ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹ = D_out hφ.elim x.real :=
+lemma one_tensor_map_adjoint_comp_phi_map_comp_one_tensor_map (x : l(ℍ)) :
+  τ ∘ₗ ϰ ∘ₗ (id ⊗ₘ (η).adjoint) ∘ₗ phi_map hφ.elim x ∘ₗ (id ⊗ₘ η) ∘ₗ ϰ⁻¹ ∘ₗ τ⁻¹ = D_out hφ.elim x.real :=
 begin
   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
   simp only [D_out_apply, map_sum, linear_map.real_sum, map_sum],
   simp_rw [← D_out_apply],
   simp only [map_sum, linear_map.sum_comp, linear_map.comp_sum,
     linear_map.sum_apply,
-    one_tensor_map_adjoint_comp_φ_map_comp_one_tensor_map_rank_one,
+    one_tensor_map_adjoint_comp_phi_map_comp_one_tensor_map_rank_one,
     linear_map.real_sum],
 end
 
@@ -715,7 +728,7 @@ lemma ι_inv_grad_apply_rank_one (a b x : ℍ) :
 begin
   simp_rw [grad_apply, ι_inv_map, linear_map.comp_apply, linear_map.sub_apply, map_sub,
     linear_map.comp_apply, tensor_one_map_apply, one_tensor_map_apply,
-    φ_map_eq, linear_map.comp_apply, rank_one_real_apply, ι_map_apply_rank_one,
+    phi_map_eq, linear_map.comp_apply, rank_one_real_apply, ι_map_apply_rank_one,
     rmul_map_lmul_apply, tensor_product.map_tmul, ten_swap_apply,
     linear_equiv.coe_coe, module.dual.is_faithful_pos_map.Psi, linear_equiv.coe_symm_mk,
     module.dual.is_faithful_pos_map.Psi_inv_fun'_apply, neg_zero,
@@ -742,15 +755,15 @@ begin
     neg_zero, module.dual.is_faithful_pos_map.sig_zero, linear_map.one_apply],
 end
 
-lemma φ_map_eq' (x : l(ℍ)) :
-  φ_map hφ.elim x = ι_map hφ.elim ∘ₗ (qam.refl_idempotent hφ.elim x) ∘ₗ ι_inv_map hφ.elim :=
+lemma phi_map_eq' (x : l(ℍ)) :
+  phi_map hφ.elim x = ι_map hφ.elim ∘ₗ (qam.refl_idempotent hφ.elim x) ∘ₗ ι_inv_map hφ.elim :=
 begin
   obtain ⟨α, β, rfl⟩ := x.exists_sum_rank_one,
   simp_rw [map_sum, linear_map.sum_comp, linear_map.comp_sum],
   apply finset.sum_congr rfl, intros,
   rw [tensor_product.ext_iff],
   intros a b,
-  simp_rw [φ_map_eq, linear_map.comp_apply, ι_inv_map_apply, ι_map_apply_rank_one,
+  simp_rw [phi_map_eq, linear_map.comp_apply, ι_inv_map_apply, ι_map_apply_rank_one,
     rmul_map_lmul_apply, tensor_product.map_tmul, qam.rank_one.refl_idempotent_eq,
     ι_map_apply_rank_one, rmul_apply, lmul_apply, conj_transpose_mul,
     module.dual.is_faithful_pos_map.sig_conj_transpose, sig_map_mul,
@@ -759,27 +772,27 @@ begin
   refl,
 end
 
-lemma φ_map_maps_to_bimodule_maps {A : l(ℍ)} :
-  (φ_map hφ.elim A).is_bimodule_map :=
+lemma phi_map_maps_to_bimodule_maps {A : l(ℍ)} :
+  (phi_map hφ.elim A).is_bimodule_map :=
 begin
   intros x y a,
   obtain ⟨α, β, rfl⟩ := tensor_product.eq_span a,
   obtain ⟨γ, ζ, rfl⟩ := A.exists_sum_rank_one,
   simp_rw [map_sum, linear_map.sum_apply, bimodule.lsmul_sum, bimodule.sum_rsmul,
-    φ_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
+    phi_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
     map_sum],
   simp only [bimodule.rsmul_apply, bimodule.lsmul_apply, tensor_product.map_tmul,
     rmul_apply, lmul_apply, matrix.mul_assoc],
   rw finset.sum_comm,
   simp only [mul_assoc],
 end
-lemma φ_map_range :
-  (φ_map hφ.elim).range ≤ is_bimodule_map.submodule :=
+lemma phi_map_range :
+  (phi_map hφ.elim).range ≤ is_bimodule_map.submodule :=
 begin
   intros A,
   simp_rw [linear_map.mem_range],
   rintros ⟨y, rfl⟩,
-  exact φ_map_maps_to_bimodule_maps,
+  exact phi_map_maps_to_bimodule_maps,
 end
 
 lemma orthonormal_basis_tensor_product_sum_repr (a b : ℍ) :
@@ -823,14 +836,14 @@ begin
   { simp_rw [orthonormal_basis_tensor_product_sum_repr], },
 end
 
-noncomputable def φ_inv_map (hφ : φ.is_faithful_pos_map) :
+noncomputable def phi_inv_map (hφ : φ.is_faithful_pos_map) :
   (is_bimodule_map.submodule : submodule ℂ l(ℍ ⊗[ℂ] ℍ)) →ₗ[ℂ] l(ℍ) :=
 { to_fun := λ x, ι_inv_map hφ ((x : l(ℍ ⊗[ℂ] ℍ)) 1),
   map_add' := λ x y, by { simp_rw [submodule.coe_add, linear_map.add_apply, map_add], },
   map_smul' := λ r x, by { simp only [submodule.coe_smul,
     linear_map.smul_apply, smul_hom_class.map_smul, ring_hom.id_apply], } }
 
-noncomputable def φ_inv'_map (hφ : φ.is_faithful_pos_map) :
+noncomputable def phi_inv'_map (hφ : φ.is_faithful_pos_map) :
   l(ℍ ⊗[ℂ] ℍ) →ₗ[ℂ] l(ℍ) :=
 begin
   letI := fact.mk hφ,
@@ -840,23 +853,23 @@ begin
     map_smul' := λ r x, by { simp only [submodule.coe_smul, linear_map.comp_smul,
       linear_map.smul_comp, smul_hom_class.map_smul, ring_hom.id_apply], } },
 end
-noncomputable def φ_inv'_map_coe (hφ : φ.is_faithful_pos_map) :
+noncomputable def phi_inv'_map_coe (hφ : φ.is_faithful_pos_map) :
   (is_bimodule_map.submodule : submodule ℂ l(ℍ ⊗[ℂ] ℍ)) →ₗ[ℂ] l(ℍ) :=
 begin
   letI := fact.mk hφ,
-  exact { to_fun := λ x, φ_inv'_map hφ x,
-    map_add' := λ x y, by { simp only [φ_inv'_map, linear_map.coe_mk, submodule.coe_add,
+  exact { to_fun := λ x, phi_inv'_map hφ x,
+    map_add' := λ x y, by { simp only [phi_inv'_map, linear_map.coe_mk, submodule.coe_add,
       linear_map.add_comp, linear_map.comp_add], },
-    map_smul' := λ r x, by { simp only [φ_inv'_map, linear_map.coe_mk, submodule.coe_smul,
+    map_smul' := λ r x, by { simp only [phi_inv'_map, linear_map.coe_mk, submodule.coe_smul,
       linear_map.comp_smul, linear_map.smul_comp, smul_hom_class.map_smul, ring_hom.id_apply], } },
 end
 
-lemma φ_inv'_map_apply (x y : l(ℍ)) :
-  φ_inv'_map hφ.elim (x ⊗ₘ y) = y ∘ₗ (|(1 : ℍ)⟩⟨(1 : ℍ)| : l(ℍ)) ∘ₗ x :=
+lemma phi_inv'_map_apply (x y : l(ℍ)) :
+  phi_inv'_map hφ.elim (x ⊗ₘ y) = y ∘ₗ (|(1 : ℍ)⟩⟨(1 : ℍ)| : l(ℍ)) ∘ₗ x :=
 begin
   simp_rw [linear_map.ext_iff],
   intros a,
-  simp_rw [φ_inv'_map, linear_map.coe_mk, linear_map.comp_apply, linear_equiv.coe_coe,
+  simp_rw [phi_inv'_map, linear_map.coe_mk, linear_map.comp_apply, linear_equiv.coe_coe,
     tensor_product.lid_symm_apply, tensor_product.comm_symm_tmul, tensor_product.map_tmul,
     tensor_product.lid_tmul, continuous_linear_map.coe_coe, linear_map.one_apply,
     algebra.linear_map_apply, algebra.algebra_map_eq_smul_one, nontracial.unit_adjoint_eq, rank_one_apply, module.dual.is_faithful_pos_map.inner_eq,
@@ -870,22 +883,39 @@ lemma ι_linear_equiv_symm_apply_eq (x : ℍ ⊗[ℂ] ℍ) :
   (ι_linear_equiv hφ.elim).symm x = ι_inv_map hφ.elim x :=
 rfl
 
-noncomputable def φ_map_coe (hφ : φ.is_faithful_pos_map) :
-  l(ℍ) →ₗ[ℂ] (is_bimodule_map.submodule : submodule ℂ l(ℍ ⊗[ℂ] ℍ)) :=
+private noncomputable def phi_map_coe_aux (hφ : fact φ.is_faithful_pos_map)
+  (x : l(ℍ)) :
+  (is_bimodule_map.submodule : submodule ℂ l(ℍ ⊗[ℂ] ℍ)) :=
+⟨phi_map hφ.elim x, phi_map_maps_to_bimodule_maps⟩
+
+private lemma phi_map_coe_aux_add (hφ : fact φ.is_faithful_pos_map) (x y : l(ℍ)) :
+  phi_map_coe_aux hφ (x + y) = phi_map_coe_aux hφ x + phi_map_coe_aux hφ y :=
 begin
-  letI := fact.mk hφ,
-  exact { to_fun := λ x, ⟨φ_map hφ x, φ_map_maps_to_bimodule_maps⟩,
-    map_add' := λ x y, by { simp only [map_add], refl, },
-    map_smul' := λ r x, by { simp only [smul_hom_class.map_smul], refl, } },
+  simp only [phi_map_coe_aux, map_add],
+  ext1,
+  simp only [linear_map.add_apply, submodule.coe_add, subtype.coe_mk],
+end
+private lemma phi_map_coe_aux_smul (hφ : fact φ.is_faithful_pos_map) (r : ℂ) (x : l(ℍ)) :
+  phi_map_coe_aux hφ (r • x) = r • phi_map_coe_aux hφ x :=
+begin
+  simp only [phi_map_coe_aux, smul_hom_class.map_smul],
+  ext1,
+  simp only [linear_map.smul_apply, submodule.coe_smul, subtype.coe_mk],
 end
 
-lemma φ_map_left_inverse :
-  φ_inv_map hφ.elim ∘ₗ φ_map_coe hφ.elim = 1 :=
+noncomputable def phi_map_coe (hφ : φ.is_faithful_pos_map) :
+  l(ℍ) →ₗ[ℂ] (is_bimodule_map.submodule : submodule ℂ l(ℍ ⊗[ℂ] ℍ)) :=
+{ to_fun := λ x, by letI := fact.mk hφ; exact ⟨phi_map hφ x, phi_map_maps_to_bimodule_maps⟩,
+  map_add' := phi_map_coe_aux_add (fact.mk hφ),
+  map_smul' := phi_map_coe_aux_smul (fact.mk hφ) }
+
+lemma phi_map_left_inverse :
+  phi_inv_map hφ.elim ∘ₗ phi_map_coe hφ.elim = 1 :=
 begin
   apply linear_map.ext_of_rank_one',
   intros x y,
-  simp_rw [linear_map.one_apply, linear_map.comp_apply, φ_map_coe,
-    linear_map.coe_mk, φ_map_eq', φ_inv_map, linear_map.coe_mk, subtype.coe_mk],
+  simp_rw [linear_map.one_apply, linear_map.comp_apply, phi_map_coe,
+    linear_map.coe_mk, phi_map_eq', phi_inv_map, linear_map.coe_mk, subtype.coe_mk],
   simp_rw [linear_map.comp_apply],
   simp_rw [← ι_linear_equiv_apply_eq, ← ι_linear_equiv_symm_apply_eq,
     linear_equiv.symm_apply_apply],
@@ -896,24 +926,24 @@ begin
   rw [this, qam.refl_idempotent, qam.refl_idempotent_complete_graph_right],
 end
 
-lemma φ_inv'_map_φ_map :
-  φ_inv'_map_coe hφ.elim ∘ₗ φ_map_coe hφ.elim = 1 :=
+lemma phi_inv'_map_phi_map :
+  phi_inv'_map_coe hφ.elim ∘ₗ phi_map_coe hφ.elim = 1 :=
 begin
   apply linear_map.ext_of_rank_one',
   intros a b,
-  simp_rw [φ_inv'_map_coe, φ_map_coe, linear_map.comp_apply, linear_map.coe_mk,
-    φ_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
-    subtype.coe_mk, φ_inv'_map_apply, rmul_eq_mul,
+  simp_rw [phi_inv'_map_coe, phi_map_coe, linear_map.comp_apply, linear_map.coe_mk,
+    phi_map_eq, linear_map.comp_apply, ι_map_apply_rank_one, rmul_map_lmul_apply,
+    subtype.coe_mk, phi_inv'_map_apply, rmul_eq_mul,
     ← linear_map.matrix.mul_right_adjoint, linear_map.rank_one_comp',
     linear_map.comp_rank_one, lmul_apply, linear_map.mul_right_apply,
     mul_one, one_mul, linear_map.one_apply],
 end
 
-lemma φ_map_right_inverse (x : {x : l(ℍ ⊗[ℂ] ℍ) // x.is_bimodule_map}) :
-  φ_map_coe hφ.elim (φ_inv_map hφ.elim x) = x :=
+lemma phi_map_right_inverse (x : {x : l(ℍ ⊗[ℂ] ℍ) // x.is_bimodule_map}) :
+  phi_map_coe hφ.elim (phi_inv_map hφ.elim x) = x :=
 begin
-  simp_rw [φ_inv_map, linear_map.coe_mk, φ_map_coe, linear_map.coe_mk,
-    φ_map_eq, linear_map.comp_apply, ← ι_linear_equiv_apply_eq,
+  simp_rw [phi_inv_map, linear_map.coe_mk, phi_map_coe, linear_map.coe_mk,
+    phi_map_eq, linear_map.comp_apply, ← ι_linear_equiv_apply_eq,
     ← ι_linear_equiv_symm_apply_eq, linear_equiv.apply_symm_apply,
     subtype.ext_iff, tensor_product.ext_iff, subtype.coe_mk],
   intros a b,
@@ -921,15 +951,15 @@ begin
     one_mul],
 end
 
-noncomputable def φ_linear_equiv (hφ : φ.is_faithful_pos_map) :
+noncomputable def phi_linear_equiv (hφ : φ.is_faithful_pos_map) :
   l(ℍ) ≃ₗ[ℂ] {x : l(ℍ ⊗[ℂ] ℍ) // x.is_bimodule_map} :=
 begin
   letI := fact.mk hφ,
-  exact { to_fun := λ x, φ_map_coe hφ x,
-    inv_fun := λ x, φ_inv_map hφ x,
-    left_inv := λ x, by simp only [← linear_map.comp_apply, φ_map_left_inverse,
+  exact { to_fun := λ x, phi_map_coe hφ x,
+    inv_fun := λ x, phi_inv_map hφ x,
+    left_inv := λ x, by simp only [← linear_map.comp_apply, phi_map_left_inverse,
       linear_map.one_apply, subtype.coe_mk],
-    right_inv := λ x, by simp only [φ_map_right_inverse x, subtype.coe_eta],
+    right_inv := λ x, by simp only [phi_map_right_inverse x, subtype.coe_eta],
     map_add' := λ x y, by simp only [map_add, subtype.coe_eta]; refl,
     map_smul' := λ r x, by { simp only [smul_hom_class.map_smul, ring_hom.id_apply], } },
 end
@@ -946,13 +976,13 @@ begin
   exact h,
 end
 
-lemma φ_inv'_map_eq_φ_inv'_map :
-  φ_inv_map hφ.elim = φ_inv'_map_coe hφ.elim :=
+lemma phi_inv'_map_eq_phi_inv'_map :
+  phi_inv_map hφ.elim = phi_inv'_map_coe hφ.elim :=
 begin
-  simp_rw [linear_equiv.comp_inj (φ_linear_equiv hφ.elim), φ_linear_equiv,
+  simp_rw [linear_equiv.comp_inj (phi_linear_equiv hφ.elim), phi_linear_equiv,
     linear_map.ext_iff, linear_map.comp_apply, linear_equiv.coe_coe,
-    linear_equiv.coe_mk, ← linear_map.comp_apply, φ_map_left_inverse,
-    φ_inv'_map_φ_map, eq_self_iff_true, forall_2_true_iff],
+    linear_equiv.coe_mk, ← linear_map.comp_apply, phi_map_left_inverse,
+    phi_inv'_map_phi_map, eq_self_iff_true, forall_2_true_iff],
 end
 
 lemma sig_apply_sig_inv {t : ℝ} {x : ℍ} :
