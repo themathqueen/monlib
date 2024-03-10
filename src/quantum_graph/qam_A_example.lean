@@ -8,7 +8,7 @@ import quantum_graph.iso
 import linear_algebra.to_matrix_of_equiv
 import linear_algebra.my_ips.mat_ips
 import quantum_graph.qam_A
-import linear_algebra.blackbox
+import linear_algebra.my_matrix.spectra
 
 section
 
@@ -289,31 +289,6 @@ begin
     finset.sum_const_zero, finset.sum_ite_eq, finset.mem_univ, if_true],
 end
 
-noncomputable def matrix.is_almost_hermitian.scalar {n : Type*}
-  {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
-  ℂ :=
-by choose α hα using hx; exact α
-noncomputable def matrix.is_almost_hermitian.matrix {n : Type*}
-  {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
-  matrix n n ℂ :=
-by choose y hy using (matrix.is_almost_hermitian.scalar._proof_1 hx); exact y
-lemma matrix.is_almost_hermitian.eq_smul_matrix
-  {n : Type*} {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
-  x = hx.scalar • hx.matrix :=
-(matrix.is_almost_hermitian.matrix._proof_1 hx).1.symm
-lemma matrix.is_almost_hermitian.matrix_is_hermitian
-  {n : Type*} {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
-  hx.matrix.is_hermitian :=
-(matrix.is_almost_hermitian.matrix._proof_1 hx).2
-
-noncomputable def matrix.is_almost_hermitian.eigenvalues {x : matrix n n ℂ}
-  (hx : x.is_almost_hermitian) :
-  n → ℂ :=
-begin
-  intros i,
-  exact hx.scalar • hx.matrix_is_hermitian.eigenvalues i,
-end
-
 private lemma prod.eq' {α β : Type*} {p r : α} {q s : β} :
   (p,q) = (r,s) ↔ (p = r ∧ q = s) :=
 prod.eq_iff_fst_eq_snd_eq
@@ -364,7 +339,148 @@ begin
   exact h,
 end
 
-theorem qam_A'.fin_two_iso (x y : {x : matrix (fin 2) (fin 2) ℂ // x ≠ 0})
+lemma spectra_fin_two {x : matrix (fin 2) (fin 2) ℂ}
+  (hx : (x : matrix (fin 2) (fin 2) ℂ).is_almost_hermitian) :
+  hx.spectra = {(hx.eigenvalues 0 : ℂ), (hx.eigenvalues 1 : ℂ)} :=
+rfl
+lemma spectra_fin_two' {x : matrix (fin 2) (fin 2) ℂ}
+  (hx : (x : matrix (fin 2) (fin 2) ℂ).is_almost_hermitian) :
+  hx.spectra = [(hx.eigenvalues 0 : ℂ), (hx.eigenvalues 1 : ℂ)] :=
+rfl
+lemma spectra_fin_two'' {α : Type*} (a : fin 2 → α) :
+  multiset.map (a : (fin 2) → α) finset.univ.val = {a 0, a 1} :=
+rfl
+lemma list.coe_inj {α : Type*} (l₁ l₂ : list α) :
+  (l₁ : multiset α) = l₂ ↔ l₁ ~ l₂ :=
+multiset.coe_eq_coe
+lemma spectra_fin_two_ext_aux {A : Type*} (α β γ : A) :
+  ({α, α} : multiset A) = {β, γ} ↔ α = β ∧ α = γ :=
+begin
+  simp only [multiset.insert_eq_cons],
+  split,
+  { intro h,
+    simp_rw [multiset.cons_eq_cons, multiset.singleton_inj, multiset.singleton_eq_cons_iff] at h,
+    rcases h with (h1 | ⟨h, cs, ⟨hcs₁, hcs₂⟩, ⟨hcs₃, hcs₄⟩⟩),
+    { exact h1, },
+    { exact ⟨hcs₁, hcs₃.symm⟩, }, },
+  { rintro ⟨rfl, rfl⟩,
+    refl, },
+end
+lemma spectra_fin_two_ext {α : Type*} (α₁ α₂ β₁ β₂ : α) :
+  ({α₁, α₂} : multiset α) = {β₁, β₂} ↔
+  ((α₁ = β₁ ∧ α₂ = β₂) ∨ (α₁ = β₂ ∧ α₂ = β₁)) :=
+begin
+  by_cases H₁ : α₁ = α₂,
+  { rw [H₁, spectra_fin_two_ext_aux],
+    split,
+    { rintros ⟨h1, h2⟩,
+      left,
+      exact ⟨h1, h2⟩, },
+    { rintros (⟨h1, h2⟩ | ⟨h1, h2⟩),
+      { exact ⟨h1, h2⟩, },
+      { exact ⟨h2, h1⟩, }, }, },
+  by_cases h' : α₁ = β₁,
+  { simp_rw [h', eq_self_iff_true, true_and, multiset.insert_eq_cons,
+      multiset.cons_inj_right, multiset.singleton_inj],
+    split,
+    { intro hi,
+      left,
+      exact hi, },
+    rintros (h | ⟨h1, h2⟩),
+    { exact h, },
+    { rw [← h', eq_comm] at h2,
+      contradiction, }, },
+  simp_rw [multiset.insert_eq_cons, multiset.cons_eq_cons,
+    multiset.singleton_inj, multiset.singleton_eq_cons_iff, ne.def, h', false_and, false_or,
+    not_false_iff, true_and],
+  simp only [exists_eq_right_right, eq_self_iff_true, and_true, and.congr_right_iff,
+    eq_comm, iff_self],
+  simp_rw [and_comm, iff_self],
+end
+@[instance] def multiset.has_smul {α : Type*} [has_smul ℂ α] :
+  has_smul ℂ (multiset α) :=
+{ smul := λ a s, s.map ((•) a), }
+lemma multiset.smul_fin_two {α : Type*} [has_smul ℂ α] (a b : α) (c : ℂ) :
+  (c • ({a, b} : multiset α) : multiset α) = {c • a, c • b} :=
+rfl
+lemma is_almost_hermitian.smul_eq {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) (c : ℂ) :
+  (hx.smul c).scalar • (hx.smul c).matrix = c • x := by
+{ rw [← (hx.smul c).eq_smul_matrix], }
+
+lemma spectra_fin_two_ext_of_traceless {α₁ α₂ β₁ β₂ : ℂ} (hα₂ : α₂ ≠ 0) (hβ₂ : β₂ ≠ 0)
+  (h₁ : α₁ = - α₂) (h₂ : β₁ = - β₂) :
+  ∃ c : ℂˣ, ({α₁, α₂} : multiset ℂ) = (c : ℂ) • {β₁, β₂} :=
+begin
+  simp_rw [h₁, h₂, multiset.smul_fin_two, smul_neg],
+  refine ⟨units.mk0 (α₂ * β₂⁻¹) (mul_ne_zero hα₂ (inv_ne_zero hβ₂)), _⟩,
+  simp_rw [units.coe_mk0, smul_eq_mul, mul_assoc, inv_mul_cancel hβ₂, mul_one],
+end
+lemma matrix.is_almost_hermitian.trace {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) :
+  x.trace = ∑ i, hx.eigenvalues i :=
+begin
+  simp_rw [is_almost_hermitian.eigenvalues, ← finset.smul_sum, ← is_hermitian.trace_eq,
+    ← trace_smul],
+  rw ← is_almost_hermitian.eq_smul_matrix hx,
+end
+noncomputable def matrix.is_almost_hermitian.eigenvector_matrix {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) :
+  matrix n n ℂ :=
+hx.matrix_is_hermitian.eigenvector_matrix
+lemma matrix.is_almost_hermitian.eigenvector_matrix_eq {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) :
+  hx.eigenvector_matrix = hx.matrix_is_hermitian.eigenvector_matrix :=
+rfl
+lemma matrix.is_almost_hermitian.eigenvector_matrix_mem_unitary_group {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) :
+  hx.eigenvector_matrix ∈ unitary_group n ℂ :=
+hx.matrix_is_hermitian.eigenvector_matrix_mem_unitary_group
+lemma matrix.is_almost_hermitian.spectral_theorem' {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) :
+  x = hx.scalar •
+  (inner_aut ⟨hx.matrix_is_hermitian.eigenvector_matrix, is_hermitian.eigenvector_matrix_mem_unitary_group _⟩
+    (diagonal (coe ∘ hx.matrix_is_hermitian.eigenvalues))) :=
+begin
+  rw [← is_hermitian.spectral_theorem', ← hx.eq_smul_matrix],
+end
+lemma matrix.is_almost_hermitian.eigenvalues_eq {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) :
+  hx.eigenvalues = hx.scalar • (coe ∘ hx.matrix_is_hermitian.eigenvalues : n → ℂ) :=
+rfl
+lemma matrix.is_almost_hermitian.spectral_theorem {x : matrix n n ℂ}
+  (hx : x.is_almost_hermitian) :
+  x = inner_aut ⟨hx.eigenvector_matrix, hx.eigenvector_matrix_mem_unitary_group⟩
+    (diagonal hx.eigenvalues) :=
+begin
+  simp_rw [hx.eigenvalues_eq, diagonal_smul, smul_hom_class.map_smul, hx.eigenvector_matrix_eq],
+  exact matrix.is_almost_hermitian.spectral_theorem' _,
+end
+lemma matrix.is_almost_hermitian.eigenvalues_eq_zero_iff
+  {x : matrix n n ℂ} (hx : x.is_almost_hermitian) :
+  hx.eigenvalues = 0 ↔ x = 0 :=
+begin
+  simp_rw [matrix.is_almost_hermitian.eigenvalues_eq, smul_eq_zero,
+    matrix.is_hermitian.eigenvalues_eq_zero_iff, ← smul_eq_zero],
+  rw [← hx.eq_smul_matrix],
+  simp only [iff_self],
+end
+private lemma matrix.is_almost_hermitian.eigenvalues_eq_zero_iff_aux
+  {x : matrix (fin 2) (fin 2) ℂ} (hx : x.is_almost_hermitian) :
+  hx.eigenvalues 0 = 0 ∧ hx.eigenvalues 1 = 0 ↔ x = 0 :=
+begin
+  rw [← hx.eigenvalues_eq_zero_iff, function.funext_iff],
+  simp_rw [fin.forall_fin_two, pi.zero_apply, iff_self],
+end
+
+lemma matrix.diagonal_eq_zero_iff {x : n → ℂ} :
+  diagonal x = 0 ↔ x = 0 :=
+begin
+  simp_rw [← diagonal_zero, diagonal_eq_diagonal_iff, function.funext_iff,
+    pi.zero_apply, iff_self],
+end
+
+theorem qam_A.fin_two_iso (x y : {x : matrix (fin 2) (fin 2) ℂ // x ≠ 0})
   (hx1 : _root_.is_self_adjoint (qam_A trace_is_faithful_pos_map.elim x))
   (hx2 : qam.refl_idempotent trace_is_faithful_pos_map.elim (qam_A trace_is_faithful_pos_map.elim x) 1 = 0)
   (hy1 : _root_.is_self_adjoint (qam_A trace_is_faithful_pos_map.elim y))
@@ -375,49 +491,69 @@ theorem qam_A'.fin_two_iso (x y : {x : matrix (fin 2) (fin 2) ℂ // x ≠ 0})
 begin
   simp_rw [qam_A.iso_iff, trace_module_dual_matrix, commute.one_left,
     and_true, smul_hom_class.map_smul],
-  have : is_almost_similar_to (x : matrix (fin 2) (fin 2) ℂ) (y : matrix (fin 2) (fin 2) ℂ)
-    ↔ ∃ (β : ℂˣ) (U : unitary_group (fin 2) ℂ), (x : matrix (fin 2) (fin 2) ℂ)
-      = (β : ℂ) • inner_aut U y :=
-  by simp_rw [is_almost_similar_to, ← inner_aut_eq_iff, smul_hom_class.map_smul,
-    eq_comm, iff_self],
   rw exists_comm,
   obtain ⟨Hx, hxq⟩ := (qam_A.is_self_adjoint_iff x).mp hx1,
   obtain ⟨Hy, hyq⟩ := (qam_A.is_self_adjoint_iff y).mp hy1,
-  simp_rw [← this, ← Hx.has_almost_equal_spectra_to_iff_is_almost_similar_to Hy,
-    has_almost_equal_spectra_to],
-  rw [Hx.eq_smul_matrix, Hy.eq_smul_matrix, Hx.matrix_is_hermitian.spectral_theorem',
-    Hy.matrix_is_hermitian.spectral_theorem'],
-  simp_rw [smul_smul, ← smul_hom_class.map_smul, inner_aut.spectrum_eq, ← diagonal_smul,
-    diagonal.spectrum, pi.smul_apply, function.comp_apply],
-  have hα : Hx.scalar ≠ 0,
-  { have := Hx.eq_smul_matrix,
-    intros i,
-    simp_rw [i, zero_smul, set.mem_set_of.mp (subtype.mem x)] at this,
-    exact this, },
-  have hβ : Hy.scalar ≠ 0,
-  { have := Hy.eq_smul_matrix,
-    intros i,
-    simp_rw [i, zero_smul, set.mem_set_of.mp (subtype.mem y)] at this,
-    exact this, },
-  have := hx2,
-  have this' := hy2,
-  rw [qam_A.is_irreflexive_iff] at this this',
-  rw [Hx.eq_smul_matrix, Hx.matrix_is_hermitian.spectral_theorem'] at this,
-  rw [Hy.eq_smul_matrix, Hy.matrix_is_hermitian.spectral_theorem'] at this',
-  rw [trace_smul, inner_aut_apply_trace_eq, smul_eq_zero] at this this',
-  simp_rw [trace_fin_two, diagonal_apply_eq, function.comp_apply, hα, hβ, false_or,
-    add_eq_zero_iff_eq_neg] at this this',
-  simp only [set.ext_iff, set.mem_set_of, fin.exists_fin_two],
-  simp_rw [this, this', smul_eq_mul, mul_neg],
-  have Hhx := example_aux Hx this 1,
-  have Hhy := example_aux Hy this' 1,
-  let eig₁ := units.mk0 _ Hhx,
-  let eig₂ := units.mk0 _ Hhy,
-  let s₁ := units.mk0 _ hα,
-  let s₂ := units.mk0 _ hβ,
-  use s₁ * eig₁ * eig₂⁻¹ * s₂⁻¹,
-  simp_rw [units.coe_mul, mul_assoc, eig₂, s₂, units.coe_inv, units.coe_mk0,
-    inv_mul_cancel_left₀ hβ, inv_mul_cancel Hhy, mul_one, iff_self, forall_true_iff],
+  simp_rw [qam_A.is_irreflexive_iff, Hx.trace, Hy.trace,
+    fin.sum_univ_two, add_eq_zero_iff_eq_neg] at hx2 hy2,
+  rw [matrix.is_almost_hermitian.spectral_theorem Hx,
+    matrix.is_almost_hermitian.spectral_theorem Hy],
+  have HX : diagonal Hx.eigenvalues = of ![![-Hx.eigenvalues 1, 0], ![0, Hx.eigenvalues 1]],
+  { rw [← hx2, ← matrix.ext_iff],
+    simp only [fin.forall_fin_two, diagonal_apply, of_apply, eq_self_iff_true, if_true,
+      one_ne_zero, if_false, zero_ne_one, if_false],
+    simp only [cons_val_zero, eq_self_iff_true, cons_val_one, head_cons, and_self], },
+  have HY : diagonal Hy.eigenvalues = of ![![-Hy.eigenvalues 1, 0], ![0, Hy.eigenvalues 1]],
+  { rw [← hy2, ← matrix.ext_iff],
+    simp only [fin.forall_fin_two, diagonal_apply, of_apply, eq_self_iff_true, if_true,
+      one_ne_zero, if_false, zero_ne_one, if_false],
+    simp only [cons_val_zero, eq_self_iff_true, cons_val_one, head_cons, and_self], },
+  simp_rw [HY, HX, inner_aut_apply_inner_aut],
+  have hx₁ : Hx.eigenvalues 1 ≠ 0,
+  { intros hx₁,
+    have : diagonal Hx.eigenvalues = 0,
+    { rw [HX, hx₁, neg_zero, ← matrix.ext_iff],
+      simp_rw [fin.forall_fin_two],
+      simp only [of_apply, pi.zero_apply],
+      simp only [cons_val_zero, cons_val_one, head_cons, and_self], },
+    rw [matrix.diagonal_eq_zero_iff, matrix.is_almost_hermitian.eigenvalues_eq_zero_iff] at this,
+    exact (subtype.mem x) this, },
+  have hy₁ : Hy.eigenvalues 1 ≠ 0,
+  { intros hy₁,
+    have : diagonal Hy.eigenvalues = 0,
+    { rw [HY, hy₁, neg_zero, ← matrix.ext_iff],
+      simp_rw [fin.forall_fin_two],
+      simp only [of_apply, pi.zero_apply],
+      simp only [cons_val_zero, cons_val_one, head_cons, and_self], },
+    rw [matrix.diagonal_eq_zero_iff, matrix.is_almost_hermitian.eigenvalues_eq_zero_iff] at this,
+    exact (subtype.mem y) this, },
+  refine ⟨units.mk0 ((Hx.eigenvalues 1) * (Hy.eigenvalues 1)⁻¹)
+    (mul_ne_zero hx₁ (inv_ne_zero hy₁)),
+    ⟨Hx.eigenvector_matrix, Hx.eigenvector_matrix_mem_unitary_group⟩
+      * ⟨Hy.eigenvector_matrix, Hy.eigenvector_matrix_mem_unitary_group⟩⁻¹, _⟩,
+  have : (Hx.eigenvalues 1 * (Hy.eigenvalues 1)⁻¹) • diagonal Hy.eigenvalues = diagonal Hx.eigenvalues,
+  { rw [HX, HY],
+    simp only [smul_of, smul_cons, algebra.id.smul_eq_mul, mul_neg, mul_zero,
+      smul_empty, embedding_like.apply_eq_iff_eq],
+    simp only [inv_mul_cancel_right₀ hy₁], },
+  simp_rw [inv_mul_cancel_right, units.coe_mk0, ← smul_hom_class.map_smul, ← HY, ← HX, this],
+end
+
+theorem qam.fin_two_iso_of_single_edge
+  {A B : matrix (fin 2) (fin 2) ℂ →ₗ[ℂ] matrix (fin 2) (fin 2) ℂ}
+  (hx0 : real_qam trace_is_faithful_pos_map.elim A)
+  (hy0 : real_qam trace_is_faithful_pos_map.elim B)
+  (hx : hx0.edges = 1) (hy : hy0.edges = 1)
+  (hx1 : _root_.is_self_adjoint A)
+  (hx2 : qam.refl_idempotent trace_is_faithful_pos_map.elim A 1 = 0)
+  (hy1 : _root_.is_self_adjoint B)
+  (hy2 : qam.refl_idempotent trace_is_faithful_pos_map.elim B 1 = 0) :
+  @qam.iso (fin 2) _ _ (trace_module_dual) A B :=
+begin
+  rw [real_qam.edges_eq_one_iff] at hx hy,
+  obtain ⟨x, rfl⟩ := hx,
+  obtain ⟨y, rfl⟩ := hy,
+  exact qam_A.fin_two_iso x y hx1 hx2 hy1 hy2,
 end
 
 end

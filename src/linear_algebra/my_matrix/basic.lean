@@ -295,7 +295,7 @@ open_locale matrix
 variables {R n m : Type*} [semiring R] [star_add_monoid R]
   [decidable_eq n] [decidable_eq m]
 
-@[simp] lemma matrix.std_basis_matrix_conj_transpose (i : n) (j : m) (a : R) :
+lemma matrix.std_basis_matrix_conj_transpose (i : n) (j : m) (a : R) :
   (matrix.std_basis_matrix i j a)ᴴ = matrix.std_basis_matrix j i (star a) :=
 begin
   simp_rw [matrix.std_basis_matrix, ite_and],
@@ -315,19 +315,19 @@ begin
     exact h H, },
 end
 
-@[simp] lemma matrix.std_basis_matrix.star_apply (i k : n) (j l : m) (a : R) :
+lemma matrix.std_basis_matrix.star_apply (i k : n) (j l : m) (a : R) :
   star (matrix.std_basis_matrix i j a k l) = matrix.std_basis_matrix j i (star a) l k :=
 begin
   rw [← matrix.std_basis_matrix_conj_transpose, ← matrix.conj_transpose_apply],
 end
 
-@[simp] lemma matrix.std_basis_matrix.star_apply' (i : n) (j : m) (x : n × m) (a : R) :
+lemma matrix.std_basis_matrix.star_apply' (i : n) (j : m) (x : n × m) (a : R) :
   star (matrix.std_basis_matrix i j a x.fst x.snd)
     = matrix.std_basis_matrix j i (star a) x.snd x.fst :=
 by rw matrix.std_basis_matrix.star_apply
 
 /-- $e_{ij}^*=e_{ji}$ -/
-@[simp] lemma matrix.std_basis_matrix.star_one {R : Type*} [semiring R]
+lemma matrix.std_basis_matrix.star_one {R : Type*} [semiring R]
   [star_ring R] (i : n) (j : m) :
   (matrix.std_basis_matrix i j (1 : R))ᴴ = matrix.std_basis_matrix j i (1 : R) :=
 begin
@@ -336,11 +336,11 @@ begin
 end
 
 open_locale big_operators
-@[simp] lemma matrix.trace_iff {R n : Type*} [add_comm_monoid R] [fintype n] (x : matrix n n R) :
+lemma matrix.trace_iff {R n : Type*} [add_comm_monoid R] [fintype n] (x : matrix n n R) :
   x.trace = ∑ k : n, (x k k) :=
 rfl
 
-@[simp] lemma matrix.std_basis_matrix.mul_apply_basis {R p q : Type*} [semiring R]
+lemma matrix.std_basis_matrix.mul_apply_basis {R p q : Type*} [semiring R]
   [decidable_eq p] [decidable_eq q] (i x : n) (j y : m) (k z : p) (l w : q) :
   matrix.std_basis_matrix k l (matrix.std_basis_matrix i j (1 : R) x y) z w
     = (matrix.std_basis_matrix i j (1 : R) x y) * (matrix.std_basis_matrix k l (1 : R) z w) :=
@@ -349,7 +349,7 @@ begin
     and_rotate, and_assoc, and_comm],
 end
 
-@[simp] lemma matrix.std_basis_matrix.mul_apply_basis' {R p q : Type*} [semiring R]
+lemma matrix.std_basis_matrix.mul_apply_basis' {R p q : Type*} [semiring R]
   [decidable_eq p] [decidable_eq q] (i x : n) (j y : m) (k z : p) (l w : q) :
   matrix.std_basis_matrix k l (matrix.std_basis_matrix i j (1 : R) x y) z w
     = ite (i = x ∧ j = y ∧ k = z ∧ l = w) 1 0 :=
@@ -358,7 +358,7 @@ begin
            zero_mul, one_mul],
 end
 
-@[simp] lemma matrix.std_basis_matrix.mul_apply {R : Type*} [fintype n] [semiring R]
+lemma matrix.std_basis_matrix.mul_apply {R : Type*} [fintype n] [semiring R]
   (i j k l m p : n) :
   ∑ (x x_1 : n × n) (x_2 x_3 : n),
     matrix.std_basis_matrix l k (matrix.std_basis_matrix p m (1 : R) x_1.snd x_1.fst) x.snd x.fst
@@ -391,7 +391,7 @@ begin
   refl,
 end
 
-@[simp] lemma matrix.std_basis_matrix.mul_std_basis_matrix
+lemma matrix.std_basis_matrix.mul_std_basis_matrix
   {R p : Type*} [semiring R] [decidable_eq p] [fintype m]
   (i x : n) (j k : m) (l y : p) (a b : R) :
   ((matrix.std_basis_matrix i j a) ⬝ (matrix.std_basis_matrix k l b)) x y =
@@ -402,7 +402,7 @@ begin
     finset.sum_const_zero, eq_comm],
 end
 
-@[simp] lemma matrix.std_basis_matrix.mul_std_basis_matrix' {R p : Type*}
+lemma matrix.std_basis_matrix.mul_std_basis_matrix' {R p : Type*}
   [fintype n] [decidable_eq p] [semiring R]
   (i : m) (j k : n) (l : p) :
   matrix.std_basis_matrix i j (1 : R) ⬝ matrix.std_basis_matrix k l (1 : R)

@@ -213,10 +213,4 @@ begin
   exact ⟨rfl, hx⟩,
 end
 
-/-- we say a matrix $x$ _has almost equal spectra to_ another matrix $y$ if
-  there exists some scalar $0\neq\beta \in \mathbb{C}$ such that $x$ and $\beta y$ have equal spectra -/
-def has_almost_equal_spectra_to [fintype n] [decidable_eq n] [field 𝕜]
-  (x y : matrix n n 𝕜) : Prop :=
-∃ β : 𝕜ˣ, spectrum 𝕜 x.to_lin' = spectrum 𝕜 ((β : 𝕜) • y).to_lin'
-
 end matrix

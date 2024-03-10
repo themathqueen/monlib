@@ -3,10 +3,6 @@ Copyright (c) 2023 Monica Omar. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Monica Omar
 -/
-import linear_algebra.contraction
-import ring_theory.matrix_algebra
-import data.matrix.kronecker
-import data.matrix.dmatrix
 import linear_algebra.my_matrix.basic
 import linear_algebra.tensor_finite
 
@@ -141,7 +137,7 @@ begin
     algebra.tensor_product.tmul_mul_tmul, matrix.mul_eq_mul],
 end
 
-def tensor_to_kronecker :
+@[simps] def tensor_to_kronecker :
   (matrix m m R ⊗[R] matrix n n R) ≃ₐ[R] (matrix (m × n) (m × n) R) :=
 { to_fun := tensor_product.to_kronecker,
   inv_fun := matrix.kronecker_to_tensor_product,
@@ -162,12 +158,12 @@ lemma kronecker_to_tensor_to_linear_map_eq :
       : matrix (n × m) (n × m) R →ₗ[R] matrix n n R ⊗[R] matrix m m R) :=
 rfl
 
-end
-
-lemma tensor_to_kronecker_to_linear_map_eq {R m n : Type*} [comm_semiring R]
-  [fintype m] [fintype n] [decidable_eq m] [decidable_eq n] :
-  (tensor_to_kronecker
-    : (matrix m m R ⊗[R] matrix n n R) ≃ₐ[R] matrix (m × n) (m × n) R).to_linear_map
+lemma tensor_to_kronecker_to_linear_map_eq :
+  (((@tensor_to_kronecker R m n _ _ _ _ _
+    : (matrix m m R ⊗[R] matrix n n R) ≃ₐ[R] _).to_linear_map)
+    : (matrix m m R ⊗[R] matrix n n R) →ₗ[R] matrix (m × n) (m × n) R)
   = (tensor_product.to_kronecker
     : (matrix m m R ⊗[R] matrix n n R) →ₗ[R] matrix (m × n) (m × n) R) :=
 rfl
+
+end
