@@ -11,6 +11,7 @@ import linear_algebra.my_ips.frob
 import linear_algebra.tensor_finite
 import linear_algebra.my_ips.op_unop
 import linear_algebra.lmul_rmul
+import linear_algebra.my_ips.quantum_set
 
 /-!
  # Schur idempotent operator
@@ -47,17 +48,6 @@ local notation x ` ⊗ₘ ` y := tensor_product.map x y
 -- local notation `id` x := (1 : x →ₗ[ℂ] x)
 
 open_locale functional
-
-class normed_add_comm_group_of_ring (B : Type*) extends ring B :=
-(to_has_norm : has_norm B)
-(to_metric_space : metric_space B)
-(dist_eq : ∀ x y : B, dist x y = has_norm.norm (x - y))
-
-instance my_normed_ring.to_normed_add_comm_group {B : Type*} [normed_add_comm_group_of_ring B] :
-  normed_add_comm_group B :=
-{ to_has_norm := normed_add_comm_group_of_ring.to_has_norm,
-  dist_eq := normed_add_comm_group_of_ring.dist_eq,
-  ..normed_add_comm_group_of_ring.to_metric_space }
 
 noncomputable instance module.dual.is_normed_add_comm_group_of_ring
   {n : Type*} [fintype n] [decidable_eq n]
