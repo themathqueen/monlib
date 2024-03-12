@@ -26,7 +26,7 @@ In both of the following results, `b` is a natural number greater than `1`.
 
 open_locale big_operators
 
-/- `(∑ i, x i) % a = (∑ i, (x i % a)) % a` -/
+/-- `(∑ i, x i) % a = (∑ i, (x i % a)) % a` -/
 lemma int.sum_mod {n : ℕ} (x : fin n → ℤ) (a : ℤ) :
   (∑ i, x i) % a = (∑ i, (x i % a)) % a :=
 begin
@@ -48,7 +48,7 @@ by
 { rw [nat.succ_eq_add_one, nat.add_mod, nat.mod_self, zero_add, nat.mod_mod],
   exact nat.mod_eq_of_lt hn, }
 
-/- `a.succ ^ n % a = 1` when `1 < a`  -/
+/-- `a.succ ^ n % a = 1` when `1 < a`  -/
 lemma fin.succ_pow_mod_self {n a : ℕ} (ha : 1 < a) :
   a.succ ^ n % a = 1 :=
 begin
@@ -69,7 +69,7 @@ begin
   rw [int.mul_mod, int.of_nat_mod, fin.succ_pow_mod_self hb, int.of_nat_one, mul_one, int.mod_mod],
 end
 
-/-
+/--
  `(∑ i, (x i * a.succ ^ i)) % a = (∑ i, x i) % a`
 -/
 lemma nat_repr_mod_eq_sum_repr_mod {a n : ℕ} (x : fin n → ℤ)
@@ -93,7 +93,7 @@ begin
     simp_rw [this, ← int.sum_mod], },
 end
 
-/-
+/--
   `a ∣ (∑ i, (x i * a.succ ^ i)) ↔ a ∣ (∑ i, x i)`
   in other words, a number in base `a.succ` is divisible by `a`, if and only if
   the sum of its digits is divisible by `a`
@@ -105,7 +105,7 @@ begin
   simp_rw [int.dvd_iff_mod_eq_zero, nat_repr_mod_eq_sum_repr_mod _ ha],
 end
 
-/-
+/--
  most natural example:
  `9 ∣ ∑ i, (x i * 10 ^ i) ↔ 9 ∣ ∑ i, x i`
  in other words, a number (in base `10`) is divisible by `9`, if and only if
@@ -115,7 +115,7 @@ example {n : ℕ} (x : fin n → ℤ) :
   9 ∣ (∑ i, x i * 10 ^ (i : ℕ)) ↔ 9 ∣ (∑ i, x i) :=
 nat_dvd_repr_iff_nat_dvd_sum_repr x (by norm_num)
 
-/- so when the base is `8`, then a number in base `8` is divisible by `7`,
+/-- so when the base is `8`, then a number in base `8` is divisible by `7`,
  if and only if the sum of its digits is divisible by `7` -/
 example {n : ℕ} (x : fin n → ℤ) :
   7 ∣ (∑ i, x i * 8 ^ (i : ℕ)) ↔ 7 ∣ (∑ i, x i) :=
