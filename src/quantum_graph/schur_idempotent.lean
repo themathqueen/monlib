@@ -11,7 +11,7 @@ import linear_algebra.my_ips.frob
 import linear_algebra.tensor_finite
 import linear_algebra.my_ips.op_unop
 import linear_algebra.lmul_rmul
-import linear_algebra.my_ips.quantum_set
+import linear_algebra.nacgor
 
 /-!
  # Schur idempotent operator

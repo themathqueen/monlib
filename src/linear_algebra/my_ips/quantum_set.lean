@@ -5,6 +5,7 @@ Authors: Monica Omar
 -/
 import linear_algebra.my_ips.rank_one
 import linear_algebra.my_ips.functional
+import linear_algebra.nacgor
 
 /-!
 
@@ -20,8 +21,6 @@ The quantum set is also equipped with a `trace` functional on `A` such that `φ 
 
 ## Main definitions
 
-* `normed_add_comm_group_of_ring A` is a structure that
-  defines `normed_add_commutative_group A` of `ring A`.
 * `quantum_set A` is a structure that defines a quantum set.
 * `quantum_set.mod_aut A t` defines the modular automorphism of a quantum set, which is
   a family of automorphisms of `A` parameterized by `t : ℝ`, given by `x ↦ Q^(-t) * x * Q^t`,
@@ -29,30 +28,30 @@ The quantum set is also equipped with a `trace` functional on `A` such that `φ 
 
 -/
 
-@[class] structure normed_add_comm_group_of_ring (B : Type*) extends ring B :=
-(to_has_norm : has_norm B)
-(to_metric_space : metric_space B)
-(dist_eq : ∀ x y : B, dist x y = has_norm.norm (x - y))
+-- def star_ordered_ring.pos_add_submonoid (A : Type*) [semiring A]
+--   [partial_order A] [star_ordered_ring A] : submonoid A :=
+-- { carrier := { x | 0 < x },
+--   add_mem' := λ x y hx hy,
+--   by { simp only [set.mem_set_of_eq, add_nonneg hx hy], }
+--    }
 
-instance my_normed_ring.to_normed_add_comm_group {B : Type*} [normed_add_comm_group_of_ring B] :
-  normed_add_comm_group B :=
-{ to_has_norm := normed_add_comm_group_of_ring.to_has_norm,
-  dist_eq := normed_add_comm_group_of_ring.dist_eq,
-  ..normed_add_comm_group_of_ring.to_metric_space }
-
-@[class] structure quantum_set (A : Type*) :=
+-- local attribute [instance] algebra.of_is_scalar_tower_smul_comm_class
+class quantum_set (A : Type*) :=
 (to_normed_add_comm_group_of_ring : normed_add_comm_group_of_ring A)
 (to_inner_product_space : inner_product_space ℂ A)
-(to_star_ring : star_ring A)
-(to_algebra : algebra ℂ A)
+(to_partial_order : partial_order A)
+(to_star_ordered_ring : star_ordered_ring A)
+(to_has_smul_comm_class : smul_comm_class ℂ A A)
+(to_is_scalar_tower : is_scalar_tower ℂ A A)
 (to_finite_dimensional : finite_dimensional ℂ A)
 (to_has_inv : has_inv A)
 (φ : module.dual ℂ A)
 (hφ : φ.is_faithful_pos_map)
 (inner_eq : ∀ x y : A, ⟪x, y⟫_ℂ = φ (star x * y))
-(functional_adjoint_eq : ∀ x,
-  (linear_map.adjoint ((φ : module.dual ℂ A) : A →ₗ[ℂ] ℂ) : ℂ →ₗ[ℂ] A) x = algebra.linear_map ℂ A x)
-(A_pos : add_submonoid A)
+(functional_adjoint_eq :
+  let _inst : algebra ℂ A := algebra.of_is_scalar_tower_smul_comm_class in
+  (linear_map.adjoint φ) = algebra.linear_map ℂ A)
+(A_pos := { x : A // 0 < x })
 -- (A_pos_has_one : has_one A_pos)
 (A_pos_has_pow : has_pow A_pos ℝ)
 (A_pos_has_inv : has_inv A_pos)
@@ -70,50 +69,24 @@ instance my_normed_ring.to_normed_add_comm_group {B : Type*} [normed_add_comm_gr
 (trace_is_tracial : trace.is_tracial)
 (functional_eq : ∀ x : A, φ x = trace (Q * x))
 
-instance quantum_set.inst_to_normed_add_comm_group_of_ring
-  {A : Type*} [quantum_set A] :
-  normed_add_comm_group_of_ring A :=
-quantum_set.to_normed_add_comm_group_of_ring
-instance quantum_set.inst_to_inner_product_space
-  {A : Type*} [quantum_set A] :
-  inner_product_space ℂ A :=
-quantum_set.to_inner_product_space
-instance quantum_set.inst_to_star_ring
-  {A : Type*} [quantum_set A] :
-  star_ring A :=
-quantum_set.to_star_ring
-instance quantum_set.inst_to_algebra
-  {A : Type*} [quantum_set A] :
-  algebra ℂ A :=
-quantum_set.to_algebra
-instance quantum_set.inst_to_finite_dimensional
-  {A : Type*} [quantum_set A] :
-  finite_dimensional ℂ A :=
-quantum_set.to_finite_dimensional
-instance quantum_set.inst_to_has_inv
-  {A : Type*} [quantum_set A] :
-  has_inv A :=
-quantum_set.to_has_inv
--- instance quantum_set.inst_A_pos_has_one
---   {A : Type*} [quantum_set A] :
---   has_one (quantum_set.A_pos : add_submonoid A) :=
--- quantum_set.A_pos_has_one
-instance quantum_set.inst_A_pos_has_pow
-  {A : Type*} [quantum_set A] :
-  has_pow (quantum_set.A_pos : add_submonoid A) ℝ :=
-quantum_set.A_pos_has_pow
-instance quantum_set.inst_A_pos_has_inv
-  {A : Type*} [quantum_set A] :
-  has_inv (quantum_set.A_pos : add_submonoid A) :=
-quantum_set.A_pos_has_inv
+attribute [instance] quantum_set.to_normed_add_comm_group_of_ring
+attribute [instance] quantum_set.to_inner_product_space
+attribute [instance] quantum_set.to_partial_order
+attribute [instance] quantum_set.to_star_ordered_ring
+attribute [instance] quantum_set.to_has_smul_comm_class
+attribute [instance] quantum_set.to_is_scalar_tower
+attribute [instance] quantum_set.to_finite_dimensional
+attribute [instance] quantum_set.to_has_inv
+attribute [instance] quantum_set.A_pos_has_pow
+attribute [instance] quantum_set.A_pos_has_inv
 
 namespace quantum_set
 
-variables {A : Type*} [quantum_set A]
-
+local attribute [instance] algebra.of_is_scalar_tower_smul_comm_class
 @[simps] def mod_aut (A : Type*) [quantum_set A] (t : ℝ) :
   A ≃ₐ[ℂ] A :=
-  let Q : (A_pos : add_submonoid A) := quantum_set.Q in
+  let A_pos := {x : A // 0 < x} in
+  let Q : A_pos := quantum_set.Q in
 { to_fun := λ x, ↑(Q ^ (-t) : A_pos) * x * ↑(Q ^ t : A_pos),
   inv_fun := λ x, ↑(Q ^ t : A_pos) * x * ↑(Q ^ (-t) : A_pos),
   left_inv := λ x,
@@ -143,6 +116,7 @@ variables {A : Type*} [quantum_set A]
   commutes' := λ r, by { simp_rw [algebra.algebra_map_eq_smul_one, mul_smul_comm, mul_one,
     smul_mul_assoc, A_pos_pow_mul, neg_add_self, A_pos_pow_zero], } }
 
+variables {A : Type*} [quantum_set A]
 lemma mod_aut_trans (t s : ℝ) :
   (mod_aut A t).trans (mod_aut A s) = mod_aut A (t + s) :=
 begin

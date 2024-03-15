@@ -10,6 +10,7 @@ import linear_algebra.End
 import linear_algebra.my_ips.rank_one
 import linear_algebra.matrix.nonsingular_inverse
 import preq.ites
+import preq.is_R_or_C_le
 
 /-!
 
@@ -446,11 +447,14 @@ begin
     exact le_of_lt (matrix.pos_def.pos_eigenvalues hx _), },
 end
 
+open_locale complex_order
 lemma pos_semidef.complex [decidable_eq n] (x : matrix n n ℂ) :
   x.pos_semidef ↔ ∀ y : n → ℂ,
-    ((star y ⬝ᵥ x.mul_vec y).re : ℂ) = star y ⬝ᵥ x.mul_vec y ∧ 0 ≤ (star y ⬝ᵥ x.mul_vec y).re :=
+    0 ≤ (star y ⬝ᵥ x.mul_vec y) :=
+    -- ((star y ⬝ᵥ x.mul_vec y).re : ℂ) = star y ⬝ᵥ x.mul_vec y ∧ 0 ≤ (star y ⬝ᵥ x.mul_vec y).re :=
 begin
-  rw [pos_semidef_eq_linear_map_positive x, linear_map.complex_is_positive],
+  simp_rw [pos_semidef_eq_linear_map_positive x, linear_map.complex_is_positive,
+    is_R_or_C.nonneg_def'],
   refl,
 end
 

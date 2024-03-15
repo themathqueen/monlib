@@ -6,6 +6,7 @@ Authors: Monica Omar
 import algebra.algebra.bilinear
 import linear_algebra.kronecker_to_tensor
 import linear_algebra.my_tensor_product
+import linear_algebra.nacgor
 
 /-!
 
@@ -53,3 +54,37 @@ begin
   rw kmul_representation x,
   simp_rw [map_sum, smul_hom_class.map_smul, h _ _],
 end
+
+private def mul_map_aux (𝕜 X : Type*) [is_R_or_C 𝕜]
+  [normed_add_comm_group_of_ring X] [normed_space 𝕜 X] [smul_comm_class 𝕜 X X] [is_scalar_tower 𝕜 X X]
+  [finite_dimensional 𝕜 X] :
+  X →ₗ[𝕜] (X →L[𝕜] X) :=
+{ to_fun := λ x,
+  { to_fun := linear_map.mul 𝕜 X x,
+    map_add' := map_add _,
+    map_smul' := map_smul _ },
+  map_add' := λ x y, by { ext, simp_rw [map_add, continuous_linear_map.coe_mk',
+    linear_map.coe_mk, linear_map.add_apply, continuous_linear_map.add_apply],
+    refl, },
+  map_smul' := λ r x, by { 
+    ext,
+    simp_rw [smul_hom_class.map_smul, continuous_linear_map.coe_mk', linear_map.coe_mk,
+      linear_map.smul_apply, continuous_linear_map.smul_apply],
+    refl, } }
+
+def linear_map.mul_to_clm (𝕜 X : Type*) [is_R_or_C 𝕜]
+  [normed_add_comm_group_of_ring X] [normed_space 𝕜 X] [smul_comm_class 𝕜 X X] [is_scalar_tower 𝕜 X X]
+  [finite_dimensional 𝕜 X] :
+  X →L[𝕜] (X →L[𝕜] X) :=
+{ to_fun := mul_map_aux 𝕜 X,
+  map_add' := map_add _,
+  map_smul' := smul_hom_class.map_smul _,
+  cont := by { simp only [linear_map.mk_coe],
+    exact map_continuous _, } }
+
+lemma linear_map.mul_to_clm_apply {𝕜 X : Type*} [is_R_or_C 𝕜]
+  [normed_add_comm_group_of_ring X] [normed_space 𝕜 X] [smul_comm_class 𝕜 X X] [is_scalar_tower 𝕜 X X]
+  [finite_dimensional 𝕜 X] (x y : X) :
+  linear_map.mul_to_clm 𝕜 X x y = x * y :=
+rfl
+
