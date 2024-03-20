@@ -545,16 +545,6 @@ begin
     linear_map.sum_apply, tensor_one_map_adjoint_comp_phi_map_comp_one_tensor_map_rank_one],
 end
 
-lemma linear_functional_comp_sig (t : ℝ) :
-  φ ∘ₗ (hφ.elim.sig t).to_linear_map = φ :=
-begin
-  ext1 x,
-  simp_rw [linear_map.comp_apply, alg_equiv.to_linear_map_apply, φ.apply],
-  nth_rewrite 0 [← sig_apply_pos_def_matrix' t],
-  simp_rw [← mul_eq_mul],
-  rw [← _root_.map_mul, aut_mat_inner_trace_preserving],
-end
-
 private lemma tensor_one_map_adjoint_comp_phi_map_comp_tensor_one_map_rank_one (x y : ℍ) :
   τ ∘ₗ ((η).adjoint ⊗ₘ id) ∘ₗ phi_map hφ.elim (|x⟩⟨y|) ∘ₗ (η ⊗ₘ id) ∘ₗ τ⁻¹
   = D_in (|x⟩⟨y| : l(ℍ)) :=
@@ -1078,10 +1068,6 @@ begin
   simp_rw [← smul_std_basis_matrix', mul_comm, ← mul_apply],
   rw [← matrix_eq_sum_std_basis (φ.matrix ⬝ x ⬝ _), sig_neg_one],
 end
-
-lemma linear_functional_apply_sig (t : ℝ) (x : ℍ) :
-  φ (hφ.elim.sig t x) = φ x :=
-by rw [← alg_equiv.to_linear_map_apply, ← linear_map.comp_apply, linear_functional_comp_sig]
 
 lemma balance_symm_1 :
   (η).adjoint ∘ₗ m ∘ₗ ((hφ.elim.sig 1).to_linear_map ⊗ₘ id)

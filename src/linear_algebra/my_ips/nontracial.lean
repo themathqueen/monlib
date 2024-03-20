@@ -521,12 +521,49 @@ begin
   { simp_rw [pos_def.rpow_mul_rpow, add_comm], },
 end
 
+lemma nontracial.inner_symm' (x y : ℍ) :
+  ⟪x, y⟫_ℂ = ⟪hφ.elim.sig (- (1/2 : ℝ)) yᴴ, hφ.elim.sig (- (1/2 : ℝ)) xᴴ⟫_ℂ :=
+begin
+  simp_rw [← alg_equiv.to_linear_map_apply, ← linear_map.adjoint_inner_left,
+    module.dual.is_faithful_pos_map.sig_adjoint, alg_equiv.to_linear_map_apply,
+    module.dual.is_faithful_pos_map.sig_apply_sig],
+  rw [nontracial.inner_symm],
+  norm_num,
+end
+
 lemma module.dual.is_faithful_pos_map.basis_apply'
   [hφ : fact (module.dual.is_faithful_pos_map φ)]
   (i j : n) :
   (hφ.elim.basis) (i,j) = std_basis_matrix i j 1
     ⬝ hφ.elim.matrix_is_pos_def.rpow (-(1 / 2)) :=
 module.dual.is_faithful_pos_map.basis_apply _ (i,j)
+
+lemma sig_apply_pos_def_matrix (t s : ℝ) :
+  hφ.elim.sig t (hφ.elim.matrix_is_pos_def.rpow s) = hφ.elim.matrix_is_pos_def.rpow s :=
+begin
+  simp_rw [module.dual.is_faithful_pos_map.sig_apply, pos_def.rpow_mul_rpow,
+    neg_add_cancel_comm],
+end
+lemma sig_apply_pos_def_matrix' (t : ℝ) :
+  hφ.elim.sig t φ.matrix = φ.matrix :=
+begin
+  nth_rewrite_rhs 0 [← pos_def.rpow_one_eq_self hφ.elim.matrix_is_pos_def],
+  rw [← sig_apply_pos_def_matrix t (1 : ℝ), pos_def.rpow_one_eq_self],
+end
+
+lemma linear_functional_comp_sig (t : ℝ) :
+  φ ∘ₗ (hφ.elim.sig t).to_linear_map = φ :=
+begin
+  ext1 x,
+  simp_rw [linear_map.comp_apply, alg_equiv.to_linear_map_apply, φ.apply],
+  nth_rewrite 0 [← sig_apply_pos_def_matrix' t],
+  simp_rw [← mul_eq_mul],
+  rw [← _root_.map_mul, aut_mat_inner_trace_preserving],
+end
+
+lemma linear_functional_apply_sig (t : ℝ) (x : ℍ) :
+  φ (hφ.elim.sig t x) = φ x :=
+by rw [← alg_equiv.to_linear_map_apply, ← linear_map.comp_apply, linear_functional_comp_sig]
 
 end single_block
 

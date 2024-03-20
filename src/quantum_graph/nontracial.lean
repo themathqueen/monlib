@@ -205,18 +205,6 @@ begin
 end
 
 
-lemma sig_apply_pos_def_matrix (t s : ℝ) :
-  hφ.elim.sig t (hφ.elim.matrix_is_pos_def.rpow s) = hφ.elim.matrix_is_pos_def.rpow s :=
-begin
-  simp_rw [module.dual.is_faithful_pos_map.sig_apply, pos_def.rpow_mul_rpow,
-    neg_add_cancel_comm],
-end
-lemma sig_apply_pos_def_matrix' (t : ℝ) :
-  hφ.elim.sig t φ.matrix = φ.matrix :=
-begin
-  nth_rewrite_rhs 0 [← pos_def.rpow_one_eq_self hφ.elim.matrix_is_pos_def],
-  rw [← sig_apply_pos_def_matrix t (1 : ℝ), pos_def.rpow_one_eq_self],
-end
 lemma sig_apply_pos_def_matrix_mul (t : ℝ) (x : ℍ) :
   hφ.elim.sig t (hφ.elim.matrix_is_pos_def.rpow t ⬝ x) = x ⬝ hφ.elim.matrix_is_pos_def.rpow t :=
 begin

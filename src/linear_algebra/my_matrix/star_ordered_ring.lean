@@ -8,6 +8,8 @@ import linear_algebra.pi_star_ordered_ring
 import linear_algebra.my_matrix.pos_def_rpow
 import linear_algebra.my_ips.functional
 import linear_algebra.my_ips.quantum_set
+import linear_algebra.pi_direct_sum
+import linear_algebra.kronecker_to_tensor
 
 /-!
 # Matrix algebras are star ordered rings

@@ -22,10 +22,12 @@ structure normed_add_comm_group_of_ring (B : Type*) extends
 (dist_eq : ∀ x y, dist x y = ‖x - y‖ . obviously)
 
 open_locale big_operators
-instance normed_add_comm_group_of_ring.to_normed_add_comm_group {B : Type*}
+def normed_add_comm_group_of_ring.to_normed_add_comm_group {B : Type*}
   [h : normed_add_comm_group_of_ring B] :
   normed_add_comm_group B :=
 { dist_eq := normed_add_comm_group_of_ring.dist_eq }
+attribute [instance] normed_add_comm_group_of_ring.to_normed_add_comm_group
+attribute [instance] normed_add_comm_group_of_ring.to_ring
 
 def algebra.of_is_scalar_tower_smul_comm_class
   {R A : Type*} [comm_semiring R] [semiring A]
